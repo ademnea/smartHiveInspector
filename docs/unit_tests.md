@@ -24,14 +24,14 @@ These tests are stored under `test/unit`. They are written to avoid live API cal
 | `test/unit/app_utils_test.dart` | `ColorUtils lightens and darkens colors` | `lib/utils/app_utils.dart` | Confirms RGB adjustment calculations. | Not run |
 | `test/unit/app_utils_test.dart` | `ColorUtils detects dark colors and picks contrasting text` | `lib/utils/app_utils.dart` | Confirms brightness detection and text color selection. | Not run |
 | `test/unit/app_utils_test.dart` | `FormatUtils formats common display values` | `lib/utils/app_utils.dart` | Confirms date, percentage, weight, duration, and temperature display helpers. | Not run |
-| `test/unit/card_widgets_test.dart` | `buildOverviewCard renders title, value, and icon` | `lib/apiary_overview_cards/build_overview_card.dart` | Confirms the apiary overview card displays its label, value, and icon. | Not run |
-| `test/unit/card_widgets_test.dart` | `buildFarmCard renders apiary details and action buttons` | `lib/farm_card.dart` | Confirms the apiary/farm card displays farm name, location, indicators, and Manage/Edit/Delete actions. | Not run |
-| `test/unit/card_widgets_test.dart` | `buildFarmCard delete action can be cancelled without deleting` | `lib/farm_card.dart` | Confirms the delete confirmation dialog opens and cancel does not call the deletion callback. | Not run |
-| `test/unit/card_widgets_test.dart` | `HiveCard renders hive state and inspection action` | `lib/components/hive_card.dart` | Confirms the hive card displays hive name, connection, colonization, and inspection action. | Not run |
-| `test/unit/card_widgets_test.dart` | `HiveStatusCard renders hive and weather readings` | `lib/notifications/hive_status_card.dart` | Confirms the hive status card displays live hive readings and weather fields. | Not run |
-| `test/unit/card_widgets_test.dart` | `NotificationCard renders severity and expected action buttons` | `lib/notifications/notification_card.dart` | Confirms notification cards show title, message, severity, and type-specific actions. | Not run |
-| `test/unit/card_widgets_test.dart` | `CustomProgressBar maps temperature values to progress and colors` | `lib/components/custom_progress_bar.dart` | Confirms temperature thresholds map to progress values and colors. | Not run |
-| `test/unit/card_widgets_test.dart` | `popup message helpers return expected threshold messages` | `lib/components/pop_up.dart` | Confirms temperature and honey modal message threshold helpers. | Not run |
+| `test/unit/overview_card_test.dart` | `buildOverviewCard renders title, value, and icon` | `lib/apiary_overview_cards/build_overview_card.dart` | Confirms the apiary overview card displays its label, value, and icon. | Not run |
+| `test/unit/farm_card_test.dart` | `buildFarmCard renders apiary details and action buttons` | `lib/farm_card.dart` | Confirms the apiary/farm card displays farm name, location, indicators, and Manage/Edit/Delete actions. | Not run |
+| `test/unit/farm_card_test.dart` | `buildFarmCard delete action can be cancelled without deleting` | `lib/farm_card.dart` | Confirms the delete confirmation dialog opens and cancel does not call the deletion callback. | Not run |
+| `test/unit/hive_card_widget_test.dart` | `HiveCard renders hive state and inspection action` | `lib/components/hive_card.dart` | Confirms the hive card displays hive name, connection, colonization, and inspection action. | Not run |
+| `test/unit/hive_status_card_test.dart` | `HiveStatusCard renders hive and weather readings` | `lib/notifications/hive_status_card.dart` | Confirms the hive status card displays live hive readings and weather fields. | Not run |
+| `test/unit/notification_card_widget_test.dart` | `NotificationCard renders severity and expected action buttons` | `lib/notifications/notification_card.dart` | Confirms notification cards show title, message, severity, and type-specific actions. | Not run |
+| `test/unit/custom_progress_bar_test.dart` | `CustomProgressBar maps temperature values to progress and colors` | `lib/components/custom_progress_bar.dart` | Confirms temperature thresholds map to progress values and colors. | Not run |
+| `test/unit/pop_up_test.dart` | `popup message helpers return expected threshold messages` | `lib/components/pop_up.dart` | Confirms temperature and honey modal message threshold helpers. | Not run |
 | `test/unit/component_widgets_test.dart` | `CustomTextField renders hint, prefix icon, suffix icon, and accepts input` | `lib/components/custom_text_field.dart` | Confirms the custom text field renders expected decoration and writes to its controller. | Not run |
 | `test/unit/component_widgets_test.dart` | `HiveTips renders title and content` | `lib/components/hive_tips.dart` | Confirms hive tip cards render their title and body text. | Not run |
 | `test/unit/component_widgets_test.dart` | `NotificationComponent renders date, title, and content` | `lib/components/notificationbar.dart` | Confirms notification banner content renders. | Not run |
@@ -90,15 +90,21 @@ Run one test file:
 flutter test test/unit/app_utils_test.dart
 flutter test test/unit/api_service_test.dart
 flutter test test/unit/bee_weatherdata_test.dart
-flutter test test/unit/card_widgets_test.dart
 flutter test test/unit/component_widgets_test.dart
+flutter test test/unit/custom_progress_bar_test.dart
 flutter test test/unit/farm_model_test.dart
+flutter test test/unit/farm_card_test.dart
 flutter test test/unit/hive_model_test.dart
+flutter test test/unit/hive_card_widget_test.dart
+flutter test test/unit/hive_status_card_test.dart
 flutter test test/unit/home_data_test.dart
 flutter test test/unit/bee_counter_model_test.dart
 flutter test test/unit/bee_video_analysis_result_test.dart
 flutter test test/unit/foraging_efficiency_metric_test.dart
 flutter test test/unit/notification_model_test.dart
+flutter test test/unit/notification_card_widget_test.dart
+flutter test test/unit/overview_card_test.dart
+flutter test test/unit/pop_up_test.dart
 flutter test test/unit/profile_screen_test.dart
 flutter test test/unit/queue_services_test.dart
 flutter test test/unit/token_storage_test.dart
