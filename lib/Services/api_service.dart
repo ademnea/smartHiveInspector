@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:HPGM/services/token_storage.dart';
 import 'package:HPGM/farm_model.dart';
@@ -8,8 +9,19 @@ import 'package:HPGM/hive_model.dart';
 class ApiService {
   static const String baseUrl = 'http://196.43.168.57/api/v1';
   static final ApiService _instance = ApiService._internal();
+  static http.Client _client = http.Client();
   factory ApiService() => _instance;
   ApiService._internal();
+
+  @visibleForTesting
+  static void setHttpClientForTesting(http.Client client) {
+    _client = client;
+  }
+
+  @visibleForTesting
+  static void resetHttpClientForTesting() {
+    _client = http.Client();
+  }
 
   /// Get headers with authorization token
   Future<Map<String, String>> _getHeaders() async {
@@ -25,7 +37,7 @@ class ApiService {
   Future<Map<String, dynamic>> _get(String endpoint) async {
     try {
       final headers = await _getHeaders();
-      final response = await http.get(
+      final response = await _client.get(
         Uri.parse('$baseUrl$endpoint'),
         headers: headers,
       );
@@ -50,7 +62,7 @@ class ApiService {
   ) async {
     try {
       final headers = await _getHeaders();
-      final response = await http.post(
+      final response = await _client.post(
         Uri.parse('$baseUrl$endpoint'),
         headers: headers,
         body: jsonEncode(data),
@@ -293,7 +305,7 @@ class ApiService {
   /// Check if the API is reachable
   Future<bool> isApiReachable() async {
     try {
-      final response = await http
+      final response = await _client
           .get(
             Uri.parse('$baseUrl/health'),
             headers: {'Accept': 'application/json'},
@@ -309,7 +321,7 @@ class ApiService {
   /// Get current API server status
   Future<Map<String, dynamic>> getServerStatus() async {
     try {
-      final response = await http.get(
+      final response = await _client.get(
         Uri.parse('$baseUrl/status'),
         headers: {'Accept': 'application/json'},
       );

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:HPGM/notifications/weather_model.dart';
@@ -7,13 +8,24 @@ class WeatherService {
   static const String _apiKey = 'pk5l7f3uii8c19rkzyr20z5b8liieenq1boytiqi';
   static const String _baseUrl =
       'https://www.meteosource.com/api/v1/free/point';
+  static http.Client _client = http.Client();
+
+  @visibleForTesting
+  static void setHttpClientForTesting(http.Client client) {
+    _client = client;
+  }
+
+  @visibleForTesting
+  static void resetHttpClientForTesting() {
+    _client = http.Client();
+  }
 
   // Get current weather data
   static Future<Map<String, dynamic>> getCurrentWeather({
     String location = 'auto:ip', // Default to IP-based location
   }) async {
     try {
-      final response = await http.get(
+      final response = await _client.get(
         Uri.parse('$_baseUrl/current.json?key=$_apiKey&q=$location'),
       );
 
@@ -54,7 +66,7 @@ class WeatherService {
     try {
       final dateStr = DateFormat('yyyy-MM-dd').format(date);
 
-      final response = await http.get(
+      final response = await _client.get(
         Uri.parse(
           '$_baseUrl/history.json?key=$_apiKey&q=$location&dt=$dateStr',
         ),
@@ -92,7 +104,7 @@ class WeatherService {
         return {'error': 'Cannot forecast more than 14 days ahead'};
       }
 
-      final response = await http.get(
+      final response = await _client.get(
         Uri.parse(
           '$_baseUrl/forecast.json?key=$_apiKey&q=$location&days=${daysAhead + 1}',
         ),
