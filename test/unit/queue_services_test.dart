@@ -73,6 +73,86 @@ void main() {
     expect(retried.retryCount, 1);
   });
 
+  test('OfflineQueueService queues typed operations and reports queue state', () async {
+    final createFarmId = await OfflineQueueService.queueCreateFarm({
+      'name': 'North Apiary',
+    });
+    final updateFarmId = await OfflineQueueService.queueUpdateFarm(7, {
+      'name': 'Updated Apiary',
+    });
+    final deleteHiveId = await OfflineQueueService.queueDeleteHive(12);
+    final createRecordId = await OfflineQueueService.queueCreateRecord({
+      'hive_id': 12,
+      'notes': 'Healthy',
+    });
+
+    final queue = await OfflineQueueService.getQueue();
+    final farmUpdates = await OfflineQueueService.getQueuedOperationsByType(
+      OperationType.UPDATE_FARM,
+    );
+
+    expect(createFarmId, startsWith('offline_'));
+    expect(updateFarmId, startsWith('offline_'));
+    expect(deleteHiveId, startsWith('offline_'));
+    expect(createRecordId, startsWith('offline_'));
+    expect(await OfflineQueueService.getQueueCount(), 4);
+    expect(await OfflineQueueService.hasQueuedOperations(), isTrue);
+    expect(queue.map((operation) => operation.type), contains(OperationType.CREATE_FARM));
+    expect(farmUpdates, hasLength(1));
+    expect(farmUpdates.first.data['id'], 7);
+  });
+
+  test('OfflineQueueService removes one operation and clears the queue', () async {
+    final firstId = await OfflineQueueService.queueCreateFarm({'name': 'One'});
+    await OfflineQueueService.queueCreateFarm({'name': 'Two'});
+
+    await OfflineQueueService.removeOperation(firstId);
+
+    var queue = await OfflineQueueService.getQueue();
+    expect(queue, hasLength(1));
+    expect(queue.first.data['name'], 'Two');
+
+    await OfflineQueueService.clearQueue();
+    queue = await OfflineQueueService.getQueue();
+    expect(queue, isEmpty);
+    expect(await OfflineQueueService.hasQueuedOperations(), isFalse);
+  });
+
+  test('OfflineQueueService stores and reads sync status', () async {
+    expect(await OfflineQueueService.isSyncing(), isFalse);
+
+    await OfflineQueueService.setSyncStatus(true);
+    expect(await OfflineQueueService.isSyncing(), isTrue);
+
+    await OfflineQueueService.setSyncStatus(false);
+    expect(await OfflineQueueService.isSyncing(), isFalse);
+  });
+
+  test('OfflineQueueService skips malformed queued operation JSON', () async {
+    SharedPreferences.setMockInitialValues({
+      'offline_operations_queue': [
+        '{bad json',
+        '{"id":"op-1","type":"OperationType.DELETE_FARM","data":{"id":9},"timestamp":"2026-04-25T10:00:00.000"}',
+      ],
+    });
+
+    final queue = await OfflineQueueService.getQueue();
+
+    expect(queue, hasLength(1));
+    expect(queue.first.type, OperationType.DELETE_FARM);
+    expect(queue.first.data['id'], 9);
+  });
+
+  test('syncQueuedOperations does not run when already syncing', () async {
+    await OfflineQueueService.setSyncStatus(true);
+    await OfflineQueueService.queueCreateFarm({'name': 'North Apiary'});
+
+    final synced = await OfflineQueueService.syncQueuedOperations();
+
+    expect(synced, 0);
+    expect(await OfflineQueueService.getQueueCount(), 1);
+  });
+
   test('SyncResult stores success, error, and response data', () {
     final success = SyncResult(success: true, responseData: {'id': 1});
     final failure = SyncResult(success: false, error: 'Network error');

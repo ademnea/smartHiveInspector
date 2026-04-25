@@ -13,6 +13,17 @@ These tests are stored under `test/unit`. They are written to avoid live API cal
 | `test/unit/api_service_test.dart` | `fetchTemperatureData includes start and end date query parameters` | `lib/Services/api_service.dart` | Confirms date-range query construction for hive temperature data. | Not run |
 | `test/unit/api_service_test.dart` | `submitInspectionRecord posts JSON and returns true on created response` | `lib/Services/api_service.dart` | Confirms inspection payload JSON is posted and `201` is treated as success. | Not run |
 | `test/unit/api_service_test.dart` | `isApiReachable and getServerStatus handle success and error states` | `lib/Services/api_service.dart` | Confirms health/status utility endpoints parse successful fake responses. | Not run |
+| `test/unit/auth_manager_test.dart` | `isAuthenticated returns false when no token is stored` | `lib/Services/auth_manager.dart` | Confirms missing auth state is treated as unauthenticated. | Not run |
+| `test/unit/auth_manager_test.dart` | `ensureValidToken returns true for a stored unexpired token` | `lib/Services/auth_manager.dart` | Confirms stored non-expired tokens are accepted. | Not run |
+| `test/unit/auth_manager_test.dart` | `authenticated GET adds bearer token and returns response` | `lib/Services/auth_manager.dart` | Confirms authenticated GET includes bearer and custom headers through a fake HTTP client. | Not run |
+| `test/unit/auth_manager_test.dart` | `authenticated POST JSON-encodes map body` | `lib/Services/auth_manager.dart` | Confirms authenticated POST serializes map bodies to JSON. | Not run |
+| `test/unit/auth_manager_test.dart` | `authenticated PUT passes string body unchanged` | `lib/Services/auth_manager.dart` | Confirms authenticated PUT preserves pre-encoded string bodies. | Not run |
+| `test/unit/auth_manager_test.dart` | `authenticated DELETE sends request with auth header` | `lib/Services/auth_manager.dart` | Confirms authenticated DELETE sends the bearer token header. | Not run |
+| `test/unit/auth_manager_test.dart` | `authenticatedRequest returns null for unsupported methods` | `lib/Services/auth_manager.dart` | Confirms unsupported HTTP methods fail safely. | Not run |
+| `test/unit/auth_manager_test.dart` | `authenticatedRequest returns null when no valid token is available` | `lib/Services/auth_manager.dart` | Confirms network requests are skipped when auth is unavailable. | Not run |
+| `test/unit/auth_manager_test.dart` | `logout clears token and cached auth state` | `lib/Services/auth_manager.dart` | Confirms logout clears stored token and user ID. | Not run |
+| `test/unit/auth_service_test.dart` | `getToken reads from TokenStorage when memory token is empty` | `lib/Services/auth_services.dart` | Confirms the auth service can resolve token state from persistent storage. | Not run |
+| `test/unit/auth_service_test.dart` | `isLoggedIn returns true when a token is stored` | `lib/Services/auth_services.dart` | Confirms stored token state is treated as logged in. | Not run |
 | `test/unit/app_utils_test.dart` | `DateTimeUtils startOfDay returns midnight for the given date` | `lib/utils/app_utils.dart` | Confirms `startOfDay` strips time values from a `DateTime`. | Not run |
 | `test/unit/app_utils_test.dart` | `DateTimeUtils formats readable and API dates` | `lib/utils/app_utils.dart` | Confirms readable, API, and date-time display formatting. | Not run |
 | `test/unit/app_utils_test.dart` | `DateTimeUtils calculates whole calendar days between two dates` | `lib/utils/app_utils.dart` | Confirms date difference is based on calendar days. | Not run |
@@ -32,6 +43,10 @@ These tests are stored under `test/unit`. They are written to avoid live API cal
 | `test/unit/notification_card_widget_test.dart` | `NotificationCard renders severity and expected action buttons` | `lib/notifications/notification_card.dart` | Confirms notification cards show title, message, severity, and type-specific actions. | Not run |
 | `test/unit/custom_progress_bar_test.dart` | `CustomProgressBar maps temperature values to progress and colors` | `lib/components/custom_progress_bar.dart` | Confirms temperature thresholds map to progress values and colors. | Not run |
 | `test/unit/pop_up_test.dart` | `popup message helpers return expected threshold messages` | `lib/components/pop_up.dart` | Confirms temperature and honey modal message threshold helpers. | Not run |
+| `test/unit/cache_service_test.dart` | `saveFarms and loadFarms persist farm cache data` | `lib/Services/cache_service.dart` | Confirms offline farm cache persistence and timestamp storage. | Not run |
+| `test/unit/cache_service_test.dart` | `saveHives and loadHives persist per-farm hive cache data` | `lib/Services/cache_service.dart` | Confirms offline hive cache persistence per farm. | Not run |
+| `test/unit/cache_service_test.dart` | `saveData loadData hasCachedData and clearCache manage generic cache` | `lib/Services/cache_service.dart` | Confirms generic offline cache save/load/existence/clear behavior. | Not run |
+| `test/unit/cache_service_test.dart` | `load methods return null for malformed cached JSON` | `lib/Services/cache_service.dart` | Confirms malformed cached values fail safely. | Not run |
 | `test/unit/component_widgets_test.dart` | `CustomTextField renders hint, prefix icon, suffix icon, and accepts input` | `lib/components/custom_text_field.dart` | Confirms the custom text field renders expected decoration and writes to its controller. | Not run |
 | `test/unit/component_widgets_test.dart` | `HiveTips renders title and content` | `lib/components/hive_tips.dart` | Confirms hive tip cards render their title and body text. | Not run |
 | `test/unit/component_widgets_test.dart` | `NotificationComponent renders date, title, and content` | `lib/components/notificationbar.dart` | Confirms notification banner content renders. | Not run |
@@ -64,6 +79,11 @@ These tests are stored under `test/unit`. They are written to avoid live API cal
 | `test/unit/queue_services_test.dart` | `ApiaryQueueItem serializes add and edit actions` | `lib/Services/apiary_queue_service.dart` | Confirms queued apiary action JSON mapping. | Not run |
 | `test/unit/queue_services_test.dart` | `ApiaryQueueService adds, reads, removes, and clears queued items` | `lib/Services/apiary_queue_service.dart` | Confirms apiary queue persistence behavior with mocked `SharedPreferences`. | Not run |
 | `test/unit/queue_services_test.dart` | `QueuedOperation serializes and increments retry count` | `lib/Services/offline_queue_service.dart` | Confirms offline operation JSON mapping and retry copy behavior. | Not run |
+| `test/unit/queue_services_test.dart` | `OfflineQueueService queues typed operations and reports queue state` | `lib/Services/offline_queue_service.dart` | Confirms offline helper methods queue farm/hive/record operations and report counts/filtering. | Not run |
+| `test/unit/queue_services_test.dart` | `OfflineQueueService removes one operation and clears the queue` | `lib/Services/offline_queue_service.dart` | Confirms queued operations can be removed individually and fully cleared. | Not run |
+| `test/unit/queue_services_test.dart` | `OfflineQueueService stores and reads sync status` | `lib/Services/offline_queue_service.dart` | Confirms offline sync status persistence. | Not run |
+| `test/unit/queue_services_test.dart` | `OfflineQueueService skips malformed queued operation JSON` | `lib/Services/offline_queue_service.dart` | Confirms malformed queue entries are ignored instead of crashing queue reads. | Not run |
+| `test/unit/queue_services_test.dart` | `syncQueuedOperations does not run when already syncing` | `lib/Services/offline_queue_service.dart` | Confirms sync is skipped when a sync is already marked in progress. | Not run |
 | `test/unit/queue_services_test.dart` | `SyncResult stores success, error, and response data` | `lib/Services/offline_queue_service.dart` | Confirms sync result value storage. | Not run |
 | `test/unit/token_storage_test.dart` | `saveLoginData stores token, user fields, and profile payload` | `lib/Services/token_storage.dart` | Confirms login data and cached profile data are saved through `TokenStorage`. | Not run |
 | `test/unit/token_storage_test.dart` | `clearLoginData removes saved authentication and profile data` | `lib/Services/token_storage.dart` | Confirms logout cleanup removes saved auth and profile values. | Not run |
@@ -89,7 +109,10 @@ Run one test file:
 ```bash
 flutter test test/unit/app_utils_test.dart
 flutter test test/unit/api_service_test.dart
+flutter test test/unit/auth_manager_test.dart
+flutter test test/unit/auth_service_test.dart
 flutter test test/unit/bee_weatherdata_test.dart
+flutter test test/unit/cache_service_test.dart
 flutter test test/unit/component_widgets_test.dart
 flutter test test/unit/custom_progress_bar_test.dart
 flutter test test/unit/farm_model_test.dart

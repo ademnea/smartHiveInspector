@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:HPGM/Services/token_storage.dart';
@@ -9,6 +10,17 @@ import 'package:HPGM/services/cache_service.dart';
 /// refresh, and automatic login redirects
 class AuthManager {
   static bool _isValidating = false;
+  static http.Client _client = http.Client();
+
+  @visibleForTesting
+  static void setHttpClientForTesting(http.Client client) {
+    _client = client;
+  }
+
+  @visibleForTesting
+  static void resetHttpClientForTesting() {
+    _client = http.Client();
+  }
 
   /// Make authenticated HTTP request with automatic token handling
   static Future<http.Response?> authenticatedRequest({
@@ -44,12 +56,12 @@ class AuthManager {
 
       switch (method.toUpperCase()) {
         case 'GET':
-          response = await http
+          response = await _client
               .get(Uri.parse(url), headers: requestHeaders)
               .timeout(Duration(seconds: 30));
           break;
         case 'POST':
-          response = await http
+          response = await _client
               .post(
                 Uri.parse(url),
                 headers: requestHeaders,
@@ -58,7 +70,7 @@ class AuthManager {
               .timeout(Duration(seconds: 30));
           break;
         case 'PUT':
-          response = await http
+          response = await _client
               .put(
                 Uri.parse(url),
                 headers: requestHeaders,
@@ -67,7 +79,7 @@ class AuthManager {
               .timeout(Duration(seconds: 30));
           break;
         case 'DELETE':
-          response = await http
+          response = await _client
               .delete(Uri.parse(url), headers: requestHeaders)
               .timeout(Duration(seconds: 30));
           break;
