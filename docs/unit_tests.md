@@ -2,22 +2,73 @@
 
 Generated: 2026-04-25
 
-| Test file | Test | What it checks | Result |
-| --- | --- | --- | --- |
-| `test/unit/profile_screen_test.dart` | `shows loaded profile details from the injected profile response` | Confirms `ProfileScreen` renders the user name, email, user ID, and role from a successful profile response. | Blocked: runner timed out before producing pass/fail output |
-| `test/unit/profile_screen_test.dart` | `change password row explains that the feature is not wired yet` | Confirms tapping the profile screen `Change Password` row shows the current placeholder SnackBar message. | Blocked: runner timed out before producing pass/fail output |
-| `test/unit/token_storage_test.dart` | `saveLoginData stores token, user fields, and profile payload` | Confirms login data and cached profile data are saved into `SharedPreferences` through `TokenStorage`. | Blocked: runner timed out before producing pass/fail output |
-| `test/unit/token_storage_test.dart` | `clearLoginData removes saved authentication and profile data` | Confirms logout cleanup removes saved auth, user, role, and profile values. | Blocked: runner timed out before producing pass/fail output |
+These tests are stored under `test/unit`. They are written to avoid live API calls and external services where possible. They have not been run in this pass because the plan is to decide how to run each suite later.
 
-## Latest Run
+## Test Inventory
 
-Command: `flutter test test/unit`
+| Test file | Test | Source unit covered | What it checks | Result |
+| --- | --- | --- | --- | --- |
+| `test/unit/app_utils_test.dart` | `DateTimeUtils startOfDay returns midnight for the given date` | `lib/utils/app_utils.dart` | Confirms `startOfDay` strips time values from a `DateTime`. | Not run |
+| `test/unit/app_utils_test.dart` | `DateTimeUtils formats readable and API dates` | `lib/utils/app_utils.dart` | Confirms readable, API, and date-time display formatting. | Not run |
+| `test/unit/app_utils_test.dart` | `DateTimeUtils calculates whole calendar days between two dates` | `lib/utils/app_utils.dart` | Confirms date difference is based on calendar days. | Not run |
+| `test/unit/app_utils_test.dart` | `StringUtils capitalizes words and preserves spacing` | `lib/utils/app_utils.dart` | Confirms title-style capitalization and empty-string handling. | Not run |
+| `test/unit/app_utils_test.dart` | `StringUtils truncates and shortens long strings` | `lib/utils/app_utils.dart` | Confirms truncation and shortened ID display. | Not run |
+| `test/unit/app_utils_test.dart` | `StringUtils removes special characters` | `lib/utils/app_utils.dart` | Confirms punctuation removal while keeping words and spaces. | Not run |
+| `test/unit/app_utils_test.dart` | `MathUtils calculates average, min, max, power, and clamp` | `lib/utils/app_utils.dart` | Confirms core numeric helper outputs and empty-list average behavior. | Not run |
+| `test/unit/app_utils_test.dart` | `MathUtils rounds to decimal places` | `lib/utils/app_utils.dart` | Confirms decimal rounding behavior. | Not run |
+| `test/unit/app_utils_test.dart` | `ColorUtils lightens and darkens colors` | `lib/utils/app_utils.dart` | Confirms RGB adjustment calculations. | Not run |
+| `test/unit/app_utils_test.dart` | `ColorUtils detects dark colors and picks contrasting text` | `lib/utils/app_utils.dart` | Confirms brightness detection and text color selection. | Not run |
+| `test/unit/app_utils_test.dart` | `FormatUtils formats common display values` | `lib/utils/app_utils.dart` | Confirms date, percentage, weight, duration, and temperature display helpers. | Not run |
+| `test/unit/farm_model_test.dart` | `Farm.fromJson supports ownerId casing and numeric conversions` | `lib/farm_model.dart` | Confirms API JSON is parsed with both `OwnerId` and numeric/string coordinate values. | Not run |
+| `test/unit/farm_model_test.dart` | `Farm.toJson emits API field names` | `lib/farm_model.dart` | Confirms serialized farm data uses expected API keys, including `longitude`. | Not run |
+| `test/unit/hive_model_test.dart` | `Hive.fromJson parses nested hive state and convenience getters` | `lib/hive_model.dart` | Confirms hive state parsing for weight, temperature, humidity, CO2, connection, and colonization. | Not run |
+| `test/unit/hive_model_test.dart` | `HiveData.fromApiHive maps missing state to safe defaults` | `lib/hive_model.dart` | Confirms UI hive data falls back safely when no sensor state exists. | Not run |
+| `test/unit/bee_counter_model_test.dart` | `ServerVideo.fromJson extracts timestamp from filename` | `lib/bee_counter/bee_counter_model.dart` | Confirms server video filenames are converted into timestamps and interval matches. | Not run |
+| `test/unit/bee_counter_model_test.dart` | `ServerVideo.fromJson falls back to lastModified timestamp` | `lib/bee_counter/bee_counter_model.dart` | Confirms Unix `last_modified` fallback timestamp parsing. | Not run |
+| `test/unit/bee_counter_model_test.dart` | `BeeCount calculates activity and serializes JSON` | `lib/bee_counter/bee_counter_model.dart` | Confirms net change, total activity, JSON output, and JSON input. | Not run |
+| `test/unit/bee_counter_model_test.dart` | `BeeCount.copyWith replaces selected fields only` | `lib/bee_counter/bee_counter_model.dart` | Confirms copy behavior preserves unchanged fields. | Not run |
+| `test/unit/bee_counter_model_test.dart` | `BeeAnalysisResult maps to and from JSON` | `lib/bee_counter/bee_counter_model.dart` | Confirms bee analysis result JSON mapping and summary string. | Not run |
+| `test/unit/bee_video_analysis_result_test.dart` | `BeeAnalysisResult serializes all video analysis fields` | `lib/bee_counter/bee_video_analysis_result.dart` | Confirms video analysis result serialization. | Not run |
+| `test/unit/bee_video_analysis_result_test.dart` | `BeeAnalysisResult.fromJson restores all values` | `lib/bee_counter/bee_video_analysis_result.dart` | Confirms video analysis result deserialization and summary string. | Not run |
+| `test/unit/foraging_efficiency_metric_test.dart` | `ForagingEfficiencyMetric.fromJson maps stored metric values` | `lib/bee_counter/foraging_efficiency_metric.dart` | Confirms stored foraging efficiency metrics are parsed. | Not run |
+| `test/unit/foraging_efficiency_metric_test.dart` | `ForagingEfficiencyMetric.toJson emits persisted fields` | `lib/bee_counter/foraging_efficiency_metric.dart` | Confirms metric JSON output for persisted fields. | Not run |
+| `test/unit/foraging_efficiency_metric_test.dart` | `ForagingEfficiencyMetric.copyWith replaces selected values` | `lib/bee_counter/foraging_efficiency_metric.dart` | Confirms copy behavior and preservation of peak time/return rate. | Not run |
+| `test/unit/foraging_efficiency_metric_test.dart` | `ForagingEfficiencyCalculator scores optimal periods higher than poor conditions` | `lib/bee_counter/foraging_efficiency_metric.dart` | Confirms efficiency scoring stays in range and rewards better conditions. | Not run |
+| `test/unit/notification_model_test.dart` | `HiveNotification.copyWith keeps existing values and overrides selected ones` | `lib/notifications/notification_model.dart` | Confirms notification copy behavior. | Not run |
+| `test/unit/notification_model_test.dart` | `HiveNotification maps type to icon and severity to color` | `lib/notifications/notification_model.dart` | Confirms notification type icons and severity colors. | Not run |
+| `test/unit/notification_model_test.dart` | `HiveNotification.timeAgo returns readable recent durations` | `lib/notifications/notification_model.dart` | Confirms recent notification time labels. | Not run |
+| `test/unit/profile_screen_test.dart` | `shows loaded profile details from the injected profile response` | `lib/profile.dart` | Confirms `ProfileScreen` renders name, email, user ID, and role from a successful profile response. | Not run |
+| `test/unit/profile_screen_test.dart` | `change password row explains that the feature is not wired yet` | `lib/profile.dart` | Confirms tapping `Change Password` shows the current placeholder SnackBar. | Not run |
+| `test/unit/token_storage_test.dart` | `saveLoginData stores token, user fields, and profile payload` | `lib/Services/token_storage.dart` | Confirms login data and cached profile data are saved through `TokenStorage`. | Not run |
+| `test/unit/token_storage_test.dart` | `clearLoginData removes saved authentication and profile data` | `lib/Services/token_storage.dart` | Confirms logout cleanup removes saved auth and profile values. | Not run |
+| `test/unit/video_file_test.dart` | `VideoFile stores local video metadata` | `lib/models/video_file.dart` | Confirms local video metadata is assigned correctly. | Not run |
+| `test/unit/weather_model_test.dart` | `WeatherData.fromJson converts numeric fields to doubles` | `lib/notifications/weather_model.dart` | Confirms weather JSON parsing, numeric conversion, timestamp parsing, and rain detection. | Not run |
+| `test/unit/weather_model_test.dart` | `WeatherData.toJson emits stored values` | `lib/notifications/weather_model.dart` | Confirms weather JSON serialization and non-rain condition detection. | Not run |
 
-Result: Blocked. The Flutter/Dart tool did not produce test output before timing out.
+## Suggested Run Commands
 
-Attempts:
+Run the whole unit suite:
 
-- `flutter test test/unit` timed out after 120 seconds.
-- `flutter test test/unit` timed out after 300 seconds.
-- `cmd /c flutter test test\unit` timed out after 180 seconds.
-- `dart --disable-dart-dev --version` also timed out after 60 seconds, which indicates the local Dart/Flutter toolchain is hanging before the test suite can execute.
+```bash
+flutter test test/unit
+```
+
+Run one test file:
+
+```bash
+flutter test test/unit/app_utils_test.dart
+flutter test test/unit/farm_model_test.dart
+flutter test test/unit/hive_model_test.dart
+flutter test test/unit/bee_counter_model_test.dart
+flutter test test/unit/bee_video_analysis_result_test.dart
+flutter test test/unit/foraging_efficiency_metric_test.dart
+flutter test test/unit/notification_model_test.dart
+flutter test test/unit/profile_screen_test.dart
+flutter test test/unit/token_storage_test.dart
+flutter test test/unit/video_file_test.dart
+flutter test test/unit/weather_model_test.dart
+```
+
+## Previous Runner Note
+
+Earlier attempts to run `flutter test test/unit` on this machine timed out before test output was produced. Because of that environment behavior, this document now marks the expanded tests as `Not run` until we choose and verify a runner strategy.
