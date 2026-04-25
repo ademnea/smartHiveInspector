@@ -61,11 +61,13 @@ void main() {
     );
 
     await tester.tap(find.text('Delete'));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('Delete Apiary North Apiary'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
 
     expect(deleted, isFalse);
   });

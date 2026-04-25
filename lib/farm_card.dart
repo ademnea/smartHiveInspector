@@ -113,8 +113,9 @@ Widget buildFarmCard(
               const SizedBox(height: 20),
 
               // Action Buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   _buildActionButton(
                     icon: Icons.settings,
@@ -339,13 +340,16 @@ Widget _buildStatusIndicator({
             children: [
               Icon(icon, color: Colors.orange[700], size: 20),
               const SizedBox(width: 8),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                  fontFamily: "Sans",
+              Expanded(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                    fontFamily: "Sans",
+                  ),
                 ),
               ),
             ],
@@ -356,6 +360,7 @@ Widget _buildStatusIndicator({
             children: [
               Text(
                 '${value.toStringAsFixed(1)}$unit',
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -363,19 +368,24 @@ Widget _buildStatusIndicator({
                   fontFamily: "Sans",
                 ),
               ),
-              SizedBox(
-                width: 60,
-                height: 12,
-                child: LiquidLinearProgressIndicator(
-                  value: value / maxValue,
-                  valueColor: AlwaysStoppedAnimation(
-                    label == 'Honey Level' ? Colors.amber : Colors.orange,
+              Flexible(
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: SizedBox(
+                    width: 60,
+                    height: 12,
+                    child: LiquidLinearProgressIndicator(
+                      value: value / maxValue,
+                      valueColor: AlwaysStoppedAnimation(
+                        label == 'Honey Level' ? Colors.amber : Colors.orange,
+                      ),
+                      backgroundColor: Colors.amber[100]!,
+                      borderColor: Colors.transparent,
+                      borderWidth: 0,
+                      borderRadius: 6,
+                      direction: Axis.horizontal,
+                    ),
                   ),
-                  backgroundColor: Colors.amber[100]!,
-                  borderColor: Colors.transparent,
-                  borderWidth: 0,
-                  borderRadius: 6,
-                  direction: Axis.horizontal,
                 ),
               ),
             ],

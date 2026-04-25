@@ -67,26 +67,36 @@ class HiveCard extends StatelessWidget {
                 child: Row(
                   children: [
                     Icon(Icons.hexagon, color: Colors.orange[700]),
-                    const Text(
-                      'Hive Name: ',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        fontFamily: "Sans",
+                    const Flexible(
+                      child: Text(
+                        'Hive Name: ',
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          fontFamily: "Sans",
+                        ),
                       ),
                     ),
                     const SizedBox(width: 10),
-                    Text(
-                      'Hive ${hive.id}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.normal,
-                        fontSize: 17,
-                        fontFamily: "Sans",
-                        color: Colors.white,
+                    Expanded(
+                      child: Text(
+                        'Hive ${hive.id}',
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.normal,
+                          fontSize: 17,
+                          fontFamily: "Sans",
+                          color: Colors.white,
+                        ),
                       ),
                     ),
-                    const Spacer(),
                     TextButton(
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(64, 40),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
                       onPressed: () async {
                         final token = await TokenStorage.getToken();
                         if (token != null) {
@@ -169,7 +179,9 @@ class HiveCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      CustomProgressBar(value: hive.temperature ?? 0),
+                      Expanded(
+                        child: CustomProgressBar(value: hive.temperature ?? 0),
+                      ),
                     ],
                   ),
                 ),
@@ -198,19 +210,24 @@ class HiveCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      SizedBox(
-                        height: 12,
-                        width: 100,
-                        child: LiquidLinearProgressIndicator(
-                          value: (hive.honeyLevel ?? 0) / 100,
-                          valueColor: const AlwaysStoppedAnimation(
-                            Colors.amber,
+                      Expanded(
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: SizedBox(
+                            height: 12,
+                            width: 100,
+                            child: LiquidLinearProgressIndicator(
+                              value: (hive.honeyLevel ?? 0) / 100,
+                              valueColor: const AlwaysStoppedAnimation(
+                                Colors.amber,
+                              ),
+                              backgroundColor: Colors.amber[100]!,
+                              borderColor: Colors.brown,
+                              borderWidth: 1.0,
+                              borderRadius: 12.0,
+                              direction: Axis.horizontal,
+                            ),
                           ),
-                          backgroundColor: Colors.amber[100]!,
-                          borderColor: Colors.brown,
-                          borderWidth: 1.0,
-                          borderRadius: 12.0,
-                          direction: Axis.horizontal,
                         ),
                       ),
                     ],

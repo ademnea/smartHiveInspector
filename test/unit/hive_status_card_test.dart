@@ -39,14 +39,16 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: HiveStatusCard(
-            hive: hive,
-            weatherData: WeatherData(
-              temperature: 24,
-              humidity: 60,
-              windSpeed: 8,
-              condition: 'Sunny',
-              timestamp: DateTime(2026, 4, 25),
+          body: SingleChildScrollView(
+            child: HiveStatusCard(
+              hive: hive,
+              weatherData: WeatherData(
+                temperature: 24,
+                humidity: 60,
+                windSpeed: 8,
+                condition: 'Sunny',
+                timestamp: DateTime(2026, 4, 25),
+              ),
             ),
           ),
         ),
