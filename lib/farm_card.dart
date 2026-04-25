@@ -1,0 +1,412 @@
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:liquid_progress_indicator_v2/liquid_progress_indicator.dart';
+import 'package:HPGM/Services/auth_manager.dart';
+
+import 'components/pop_up.dart';
+import 'editApiaryForm.dart';
+import 'farm_model.dart';
+import 'hives.dart';
+import 'ApiaryDetailsScreen.dart';
+
+Widget buildFarmCard(
+  Farm farm,
+  BuildContext context,
+  String token, {
+  Future<void> Function()? onDeleted,
+}) {
+  return Center(
+    child: SizedBox(
+      width: 350,
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 4,
+        color: Colors.brown[300],
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header Row with clickable name
+              Row(
+                children: [
+                  Icon(Icons.hive, color: Colors.orange[700], size: 28),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ApiaryDetailPage(farm: farm),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        farm.name,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: "Sans",
+                          color: Colors.white,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Location
+              _buildInfoRow(
+                icon: Icons.location_on,
+                label: 'Location',
+                value: '${farm.district}, ${farm.address}',
+              ),
+              const SizedBox(height: 16),
+
+              // Status Indicators
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildStatusIndicator(
+                      icon: Icons.thermostat,
+                      label: 'Temperature',
+                      value: farm.average_temperature ?? 0,
+                      maxValue: 50,
+                      unit: '°C',
+                      onTap:
+                          () => showModalBottomSheet(
+                            context: context,
+                            builder:
+                                (context) => buildTempSheet(
+                                  "Temperature Details",
+                                  farm.average_temperature ?? 0,
+                                ),
+                          ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildStatusIndicator(
+                      icon: Icons.scale,
+                      label: 'Honey Level',
+                      value: farm.honeypercent ?? 0,
+                      maxValue: 100,
+                      unit: '%',
+                      onTap:
+                          () => showModalBottomSheet(
+                            context: context,
+                            builder:
+                                (context) => buildHoneySheet(
+                                  "Honey Levels",
+                                  farm.honeypercent ?? 0,
+                                ),
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // Action Buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildActionButton(
+                    icon: Icons.settings,
+                    label: 'Manage',
+                    color: Colors.orange[700]!,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => Hives(
+                                farmId: farm.id,
+                                token: token,
+                                apiaryLocation:
+                                    '${farm.district}, ${farm.address}',
+                                farmName: farm.name,
+                                onHiveDeleted: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text("Hive deleted"),
+                                    ),
+                                  );
+                                },
+                              ),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildActionButton(
+                    icon: Icons.edit,
+                    label: 'Edit',
+                    color: Colors.blue[700]!,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => EditApiaryForm(
+                                farmId: farm.id,
+                                initialData: {
+                                  'ownerId': farm.ownerId,
+                                  'name': farm.name,
+                                  'address': farm.address,
+                                  'district': farm.district,
+                                  'latitude': farm.latitude,
+                                  'longitude': farm.longitude,
+                                  'description': farm.description,
+                                },
+                              ),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildActionButton(
+                    icon: Icons.delete,
+                    label: 'Delete',
+                    color: Colors.red[700]!,
+                    onTap: () => _showDeleteConfirmation(
+                      farm,
+                      context,
+                      onDeleted: onDeleted,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+Future<void> _showDeleteConfirmation(
+  Farm farm,
+  BuildContext context, {
+  Future<void> Function()? onDeleted,
+}) async {
+  final shouldDelete = await showDialog<bool>(
+    context: context,
+    builder:
+        (dialogContext) => AlertDialog(
+          title: Text(
+            'Delete Apiary ${farm.name}',
+            style: const TextStyle(fontFamily: "Sans"),
+          ),
+          content: Text(
+            'Are you sure you want to delete "${farm.name}"? This will also delete all associated hives.',
+            style: const TextStyle(fontFamily: "Sans"),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red[700]),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text(
+                'Delete',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+  );
+
+  if (shouldDelete != true) return;
+
+  final response = await AuthManager.delete(
+    'http://196.43.168.57/api/v1/farms/${farm.id}',
+    context: context,
+  );
+
+  if (!context.mounted) return;
+
+  if (response != null &&
+      (response.statusCode == 200 || response.statusCode == 204)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Apiary "${farm.name}" deleted successfully.'),
+        backgroundColor: Colors.green[700],
+      ),
+    );
+    await onDeleted?.call();
+    return;
+  }
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(_buildDeleteErrorMessage(response)),
+      backgroundColor: Colors.red[700],
+    ),
+  );
+}
+
+String _buildDeleteErrorMessage(dynamic response) {
+  if (response == null) {
+    return 'Failed to delete apiary. No response from server.';
+  }
+
+  try {
+    final body = response.body;
+    if (body is String && body.isNotEmpty) {
+      final decoded = jsonDecode(body);
+      if (decoded is Map<String, dynamic>) {
+        final message = decoded['message']?.toString();
+        if (message != null && message.isNotEmpty) {
+          return 'Failed to delete apiary: $message';
+        }
+      }
+    }
+  } catch (_) {
+    // Fall back to the HTTP status if the response is not JSON.
+  }
+
+  return 'Failed to delete apiary: HTTP ${response.statusCode}';
+}
+
+Widget _buildInfoRow({
+  required IconData icon,
+  required String label,
+  required String value,
+}) {
+  return Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Icon(icon, color: Colors.orange[700], size: 20),
+      const SizedBox(width: 12),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.white70,
+                fontWeight: FontWeight.w500,
+                fontFamily: "Sans",
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+                fontFamily: "Sans",
+              ),
+            ),
+          ],
+        ),
+      ),
+    ],
+  );
+}
+
+Widget _buildStatusIndicator({
+  required IconData icon,
+  required String label,
+  required double value,
+  required double maxValue,
+  required String unit,
+  required VoidCallback onTap,
+}) {
+  return InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(12),
+    child: Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.brown[400]?.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.brown[500]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: Colors.orange[700], size: 20),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                  fontFamily: "Sans",
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${value.toStringAsFixed(1)}$unit',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontFamily: "Sans",
+                ),
+              ),
+              SizedBox(
+                width: 60,
+                height: 12,
+                child: LiquidLinearProgressIndicator(
+                  value: value / maxValue,
+                  valueColor: AlwaysStoppedAnimation(
+                    label == 'Honey Level' ? Colors.amber : Colors.orange,
+                  ),
+                  backgroundColor: Colors.amber[100]!,
+                  borderColor: Colors.transparent,
+                  borderWidth: 0,
+                  borderRadius: 6,
+                  direction: Axis.horizontal,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget _buildActionButton({
+  required IconData icon,
+  required String label,
+  required Color color,
+  required VoidCallback onTap,
+}) {
+  return ElevatedButton.icon(
+    onPressed: onTap,
+    icon: Icon(icon, size: 18, color: Colors.white),
+    label: Text(
+      label,
+      style: const TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
+        fontFamily: "Sans",
+      ),
+    ),
+    style: ElevatedButton.styleFrom(
+      backgroundColor: color,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    ),
+  );
+}

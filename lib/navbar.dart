@@ -1,0 +1,123 @@
+import 'package:HPGM/Notifications.dart';
+import 'package:HPGM/apiaries.dart';
+import 'package:HPGM/login.dart';
+import 'package:HPGM/records.dart';
+import 'package:HPGM/services/token_storage.dart';
+import 'package:HPGM/widgets/connectivity_wrapper.dart';
+import 'package:flutter/material.dart';
+import 'package:google_nav_bar/google_nav_bar.dart';
+import './home.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      home: LoginScreen(),
+      debugShowCheckedModeBanner: false,
+    );
+  }
+}
+
+class navbar extends StatefulWidget {
+  final String token;
+  const navbar({super.key, required this.token});
+
+  @override
+  State<StatefulWidget> createState() {
+    return _navbarState();
+  }
+}
+
+class _navbarState extends State<navbar> {
+  //let me intialize the state and widget required variables here.
+  @override
+  void initState() {
+    super.initState();
+    _initializeWidgets();
+  }
+
+  void _initializeWidgets() async {
+    final token = await TokenStorage.getToken();
+    if (token != null && mounted) {
+      setState(() {
+        _widgetOptions = <Widget>[
+          Home(token: token, notify: false),
+          Apiaries(token: token),
+          const Notifications(),
+          const Records(),
+        ];
+      });
+    }
+  }
+
+  int _selectedIndex = 0;
+
+  List<Widget> _widgetOptions = <Widget>[];
+
+  @override
+  Widget build(BuildContext context) {
+    return ConnectivityWrapper(
+      child: Scaffold(
+        body: Center(
+          child:
+              _widgetOptions.isEmpty
+                  ? const CircularProgressIndicator()
+                  : _widgetOptions.elementAt(_selectedIndex),
+        ),
+
+        //bottom navbar starts from here.
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(blurRadius: 20, color: Colors.black.withOpacity(.1)),
+            ],
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 15.0,
+                vertical: 8,
+              ),
+              child: GNav(
+                rippleColor: Colors.grey[300]!,
+                hoverColor: Colors.grey[100]!,
+                gap: 8,
+                activeColor: Colors.orange, // Set active icon color
+                iconSize: 24,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+                duration: const Duration(milliseconds: 600),
+                tabBackgroundColor: Colors.grey[100]!,
+                color: Colors.black, // Set default icon color
+                tabs: const [
+                  GButton(icon: Icons.home_rounded, text: 'Home'),
+                  GButton(icon: Icons.grid_view_rounded, text: 'Apiaries'),
+                  GButton(
+                    icon: Icons.notifications_active_rounded,
+                    text: 'Updates',
+                  ),
+                  GButton(icon: Icons.folder_open_rounded, text: 'Records'),
+                ],
+                selectedIndex: _selectedIndex,
+                onTabChange: (index) {
+                  setState(() {
+                    _selectedIndex = index;
+                  });
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
