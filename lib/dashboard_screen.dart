@@ -10,6 +10,69 @@ import 'package:HPGM/profile.dart';
 import 'package:HPGM/services/token_storage.dart';
 import 'package:flutter/material.dart';
 
+// Notification Service (if not already defined elsewhere)
+class NotificationService {
+  static final NotificationService _instance = NotificationService._internal();
+  factory NotificationService() => _instance;
+  NotificationService._internal();
+
+  final List<NotificationItem> _notifications = [];
+  final StreamController<List<NotificationItem>> _notificationController = 
+      StreamController<List<NotificationItem>>.broadcast();
+
+  int get unreadCount => _notifications.where((n) => !n.isRead).length;
+  int get criticalCount => _notifications.where((n) => n.isCritical).length;
+
+  Stream<List<NotificationItem>> get notificationStream => 
+      _notificationController.stream;
+
+  void addAdvisoryRecommendation(String recommendation, String hiveId) {
+    _notifications.add(NotificationItem(
+      title: 'Advisory Alert',
+      body: recommendation,
+      isRead: false,
+      isCritical: recommendation.contains('urgent') || recommendation.contains('critical'),
+      timestamp: DateTime.now(),
+    ));
+    _notificationController.add(_notifications);
+  }
+
+  void markAsRead(int index) {
+    if (index < _notifications.length) {
+      _notifications[index].isRead = true;
+      _notificationController.add(_notifications);
+    }
+  }
+
+  void markAllAsRead() {
+    for (var notification in _notifications) {
+      notification.isRead = true;
+    }
+    _notificationController.add(_notifications);
+  }
+
+  void clearAll() {
+    _notifications.clear();
+    _notificationController.add(_notifications);
+  }
+}
+
+class NotificationItem {
+  final String title;
+  final String body;
+  bool isRead;
+  final bool isCritical;
+  final DateTime timestamp;
+
+  NotificationItem({
+    required this.title,
+    required this.body,
+    this.isRead = false,
+    this.isCritical = false,
+    required this.timestamp,
+  });
+}
+
 class DashboardScreen extends StatefulWidget {
   final String token;
   const DashboardScreen({super.key, required this.token});
@@ -63,7 +126,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         // Add recommendations as notifications
         for (final recommendation in analysis.recommendations) {
           NotificationService().addAdvisoryRecommendation(
-            recommendation,
+            recommendation.title,
             analysis.hiveId,
           );
         }
@@ -93,7 +156,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => NotificationsScreen(),
+                    builder: (context) => const NotificationsScreen(),
                   ),
                 );
               },
@@ -161,7 +224,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       // Quick notification summary
                       if (_notificationCount > 0)
                         Container(
-                          padding: EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 6,
                           ),
@@ -191,7 +254,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         ? Colors.red.shade600
                                         : Colors.orange.shade600,
                               ),
-                              SizedBox(width: 4),
+                              const SizedBox(width: 4),
                               Text(
                                 '$_notificationCount alert${_notificationCount != 1 ? 's' : ''}',
                                 style: TextStyle(
@@ -234,7 +297,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => navbar(token: token),
+                                    builder: (context) => NavBar(token: token),
                                   ),
                                 );
                               }
@@ -254,7 +317,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 MaterialPageRoute(
                                   builder:
                                       (context) =>
-                                          BeeMonitoringScreen(hiveId: '1'),
+                                          const BeeMonitoringScreen(hiveId: '1'),
                                 ),
                               );
                             },
@@ -267,7 +330,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     // Second row - two cards side by side
                     Row(
                       children: [
-                        // Notifications Card with dynamic count
+                        // Advisory Resources Card
                         Expanded(
                           child: buildFeatureCard(
                             title: 'Advisory Resources',
@@ -293,7 +356,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 context,
                                 MaterialPageRoute(
                                   builder:
-                                      (context) => EnhancedForagingDashboard(
+                                      (context) => const EnhancedForagingDashboard(
                                         hiveId: '1',
                                       ),
                                 ),
@@ -308,7 +371,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     // Third row - two cards side by side
                     Row(
                       children: [
-                        // Advisory Resources Card - FIXED
+                        // Notifications Card
                         Expanded(
                           child: buildFeatureCard(
                             title: 'Notifications',
@@ -319,7 +382,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => NotificationsScreen(),
+                                  builder: (context) => const NotificationsScreen(),
                                 ),
                               );
                             },
@@ -337,8 +400,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 context,
                                 MaterialPageRoute(
                                   builder:
-                                      (context) =>
-                                          BeeDashboardScreen(hiveId: '1'),
+                                      (context) => const BeeDashboardScreen(hiveId: '1'),
                                 ),
                               );
                             },
@@ -369,7 +431,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               if (token != null && mounted) {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => navbar(token: token)),
+                  MaterialPageRoute(builder: (context) => NavBar(token: token)),
                 );
               }
               break;
@@ -377,7 +439,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // Navigate to Notifications screen
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => NotificationsScreen()),
+                MaterialPageRoute(builder: (context) => const NotificationsScreen()),
               );
               break;
             case 3:
@@ -405,7 +467,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const BottomNavigationBarItem(icon: Icon(Icons.hive), label: 'Hives'),
           BottomNavigationBarItem(
             icon: NotificationBadge(
-              count: _notificationCount,
+              count: 0, // This will be updated dynamically
               child: const Icon(Icons.notifications),
             ),
             label: 'Alerts',
@@ -489,7 +551,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-// Notification Badge Widget (add this to the same file or create a separate widget file)
+// Notification Badge Widget
 class NotificationBadge extends StatelessWidget {
   final Widget child;
   final int count;

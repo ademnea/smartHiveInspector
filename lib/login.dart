@@ -55,35 +55,15 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // MODIFIED: Call login and get result
-      final result = await AuthService.login(
-        email: email,
-        password: password,
-      );
+      // Call the login method from AuthService
+      final result = await AuthService.logmein(context, email, password);
       
       if (!mounted) return;
       
-      if (result['success'] == true) {
-        // Get the token after successful login
-        final token = await AuthService.getToken();
-        
-        if (token != null && mounted) {
-          // Navigate to navbar with token
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => NavBar(token: token),
-            ),
-          );
-        } else {
-          _showError('Login successful but failed to get session');
-          setState(() => _isLoading = false);
-        }
-      } else {
-        // Show error message from API
-        _showError(result['error'] ?? 'Login failed. Please try again.');
-        setState(() => _isLoading = false);
-      }
+      // AuthService.logmein handles navigation internally
+      // If we get here, login failed
+      setState(() => _isLoading = false);
+      
     } catch (e) {
       _showError('Network error: Cannot connect to server. Please check your connection.');
       if (mounted) setState(() => _isLoading = false);

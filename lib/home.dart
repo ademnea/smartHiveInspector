@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:HPGM/Services/notifi_service.dart';
 import 'package:HPGM/components/pop_up.dart';
 import 'package:HPGM/navbar.dart';
+import 'package:HPGM/login.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:liquid_progress_indicator_v2/liquid_progress_indicator.dart';
 import 'services/token_storage.dart';
@@ -28,8 +29,6 @@ class HomeData {
   final double averageWeight;
   final double daysToEndSeason;
   final double percentage_time_left;
-  // final double averageTemperatureLast7Days;
-  // final String supplementaryApiaryName;
 
   HomeData({
     required this.farms,
@@ -39,8 +38,6 @@ class HomeData {
     required this.averageWeight,
     required this.daysToEndSeason,
     required this.percentage_time_left,
-    // required this.averageTemperatureLast7Days,
-    // required this.supplementaryApiaryName,
   });
 
   factory HomeData.fromJson(

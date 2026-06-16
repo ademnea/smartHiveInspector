@@ -246,4 +246,17 @@ class TokenStorage {
     await prefs.setBool('isFirstTime', true);
     await clearLoginData();
   }
+
+  // ===== FIXES FOR AUTH_SERVICES =====
+  
+  // ADD THIS METHOD - Save token (for backward compatibility with auth_services.dart)
+  static Future<void> saveToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_tokenKey, token);
+  }
+
+  // ADD THIS METHOD - Get user profile (for backward compatibility with auth_services.dart)
+  static Future<Map<String, dynamic>?> getUserProfile() async {
+    return await getStoredProfile();
+  }
 }

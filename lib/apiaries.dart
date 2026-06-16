@@ -175,7 +175,7 @@ class _ApiariesState extends State<Apiaries> {
           _errorMessage = 'Session expired. Please login again.';
         });
         
-        await AuthManager.logout(context);
+        await AuthManager.logout(context: context);
         
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted) {

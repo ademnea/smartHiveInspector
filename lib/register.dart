@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:HPGM/login.dart';
 import 'package:HPGM/Services/auth_services.dart';
 import 'package:HPGM/navbar.dart';
+import 'package:HPGM/services/token_storage.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -73,8 +74,8 @@ class _RegisterPageState extends State<RegisterPage> {
         final token = data['token'];
         
         if (token != null && token.isNotEmpty) {
-          // Save token using AuthService
-          await AuthService.saveToken(token);
+          // Save token using TokenStorage
+          await TokenStorage.saveToken(token);
           
           Fluttertoast.showToast(
             msg: '✅ Account created successfully!',
