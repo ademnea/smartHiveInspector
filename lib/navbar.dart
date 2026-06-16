@@ -2,6 +2,7 @@ import 'package:HPGM/Notifications.dart';
 import 'package:HPGM/apiaries.dart';
 import 'package:HPGM/login.dart';
 import 'package:HPGM/records.dart';
+import 'package:HPGM/services/auth_services.dart';
 import 'package:HPGM/services/token_storage.dart';
 import 'package:HPGM/widgets/connectivity_wrapper.dart';
 import 'package:flutter/material.dart';
@@ -24,59 +25,137 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class navbar extends StatefulWidget {
+class NavBar extends StatefulWidget {
   final String token;
-  const navbar({super.key, required this.token});
+  const NavBar({super.key, required this.token});
 
   @override
   State<StatefulWidget> createState() {
-    return _navbarState();
+    return _NavBarState();
   }
 }
 
-class _navbarState extends State<navbar> {
-  //let me intialize the state and widget required variables here.
+class _NavBarState extends State<NavBar> {
+  int _selectedIndex = 0;
+  List<Widget> _widgetOptions = <Widget>[];
+
   @override
   void initState() {
     super.initState();
     _initializeWidgets();
   }
 
-  void _initializeWidgets() async {
-    final token = await TokenStorage.getToken();
-    if (token != null && mounted) {
-      setState(() {
-        _widgetOptions = <Widget>[
-          Home(token: token, notify: false),
-          Apiaries(token: token),
-          const Notifications(),
-          const Records(),
-        ];
-      });
-    }
+  void _initializeWidgets() {
+    // Use the token passed from constructor instead of fetching again
+    final token = widget.token;
+    
+    setState(() {
+      _widgetOptions = <Widget>[
+        Home(token: token, notify: false),
+        Apiaries(token: token),
+        const Notifications(),
+        const Records(),
+      ];
+    });
   }
 
-  int _selectedIndex = 0;
+  // Add logout functionality
+  Future<void> _logout() async {
+    // Show confirmation dialog
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
 
-  List<Widget> _widgetOptions = <Widget>[];
+    if (confirm != true) return;
+
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    try {
+      await AuthService.logout();
+      
+      if (!mounted) return;
+      Navigator.pop(context); // Remove loading dialog
+      
+      // Navigate to login screen and remove all previous routes
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context); // Remove loading dialog
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error logging out. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return ConnectivityWrapper(
       child: Scaffold(
-        body: Center(
-          child:
-              _widgetOptions.isEmpty
-                  ? const CircularProgressIndicator()
-                  : _widgetOptions.elementAt(_selectedIndex),
+        // Add AppBar with logout button
+        appBar: AppBar(
+          title: const Text(
+            'Apiarist App',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          backgroundColor: const Color.fromARGB(255, 206, 109, 40),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: _logout,
+              tooltip: 'Logout',
+            ),
+          ],
         ),
-
-        //bottom navbar starts from here.
+        body: Center(
+          child: _widgetOptions.isEmpty
+              ? const CircularProgressIndicator()
+              : _widgetOptions.elementAt(_selectedIndex),
+        ),
+        // Bottom navbar
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: Colors.white,
             boxShadow: [
-              BoxShadow(blurRadius: 20, color: Colors.black.withOpacity(.1)),
+              BoxShadow(
+                blurRadius: 20,
+                color: Colors.black.withOpacity(.1),
+              ),
             ],
           ),
           child: SafeArea(
@@ -89,7 +168,7 @@ class _navbarState extends State<navbar> {
                 rippleColor: Colors.grey[300]!,
                 hoverColor: Colors.grey[100]!,
                 gap: 8,
-                activeColor: Colors.orange, // Set active icon color
+                activeColor: const Color.fromARGB(255, 206, 109, 40),
                 iconSize: 24,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
@@ -97,7 +176,7 @@ class _navbarState extends State<navbar> {
                 ),
                 duration: const Duration(milliseconds: 600),
                 tabBackgroundColor: Colors.grey[100]!,
-                color: Colors.black, // Set default icon color
+                color: Colors.black,
                 tabs: const [
                   GButton(icon: Icons.home_rounded, text: 'Home'),
                   GButton(icon: Icons.grid_view_rounded, text: 'Apiaries'),

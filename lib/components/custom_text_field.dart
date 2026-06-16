@@ -2,45 +2,46 @@ import 'package:flutter/material.dart';
 
 class CustomTextField extends StatelessWidget {
   final TextEditingController controller;
-
   final IconData icon;
   final bool obscureText;
   final String hintText;
-  final Widget? suffixIcon; // Add this parameter
+  final Widget? suffixIcon;
+  final TextInputType keyboardType; // ← added
 
   const CustomTextField({
     Key? key,
     required this.controller,
     required this.hintText,
     required this.icon,
-    this.obscureText = false,
-    this.suffixIcon, // Add this parameter
+    this.obscureText   = false,
+    this.suffixIcon,
+    this.keyboardType  = TextInputType.text, // ← added (default = text)
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
-      controller: controller,
-      obscureText: obscureText,
-      decoration: InputDecoration(
-        hintText: hintText,
-
-        fillColor: Colors.brown.shade100,
-        filled: true,
-        border: OutlineInputBorder(
+      controller  : controller,
+      obscureText : obscureText,
+      keyboardType: keyboardType, // ← added
+      decoration  : InputDecoration(
+        hintText  : hintText,
+        fillColor : Colors.brown.shade100,
+        filled    : true,
+        border    : OutlineInputBorder(
           borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide.none,
+          borderSide  : BorderSide.none,
         ),
         prefixIcon: Padding(
-          padding: EdgeInsets.only(left: 16),
-          child: Icon(icon),
+          padding: const EdgeInsets.only(left: 16),
+          child  : Icon(icon),
         ),
-        suffixIcon: suffixIcon, // Add this line
+        suffixIcon: suffixIcon,
       ),
       style: const TextStyle(
-        height: 1.5,
+        height    : 1.5,
         fontWeight: FontWeight.bold,
-        fontSize: 20,
+        fontSize  : 20,
       ),
     );
   }

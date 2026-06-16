@@ -39,6 +39,11 @@ void main() {
     AuthManager.setHttpClientForTesting(
       MockClient((request) async {
         requestedUri = request.url;
+        
+        echo('Debug: Request URL = ${request.url}');
+
+
+
         requestedHeaders = request.headers;
         return http.Response('{"ok":true}', 200);
       }),

@@ -1,7 +1,57 @@
 import 'dart:async';
-
-import 'package:HPGM/Services/connectivity_service.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
+class ConnectivityService {
+  static final ConnectivityService _instance = ConnectivityService._internal();
+  factory ConnectivityService() => _instance;
+  ConnectivityService._internal();
+
+  bool _isOnline = true;
+  final StreamController<bool> _connectionController = StreamController<bool>.broadcast();
+
+  Stream<bool> get connectionStream => _connectionController.stream;
+  bool get isOnline => _isOnline;
+
+  Future<void> initialize() async {
+    await checkConnection();
+    Timer.periodic(Duration(seconds: 30), (timer) async {
+      await checkConnection();
+    });
+  }
+
+  Future<void> checkConnection() async {
+    bool previousState = _isOnline;
+    
+    try {
+      // Check Google instead of backend server
+      final response = await http.get(
+        Uri.parse('https://www.google.com'),headers: {'Cache-Control': 'no-cache'},
+      ).timeout(Duration(seconds: 5));
+      
+      _isOnline = response.statusCode == 200;
+    } catch (e) {
+      _isOnline = false;
+    }
+    
+    if (previousState != _isOnline) {
+      _connectionController.add(_isOnline);
+    }
+  }
+
+  Future<void> refreshStatus({bool forceEmit = false}) async {
+    await checkConnection();
+  }
+
+  Future<bool> hasInternetConnection() async {
+    await checkConnection();
+    return _isOnline;
+  }
+
+  void dispose() {
+    _connectionController.close();
+  }
+}
 
 class ConnectivityWrapper extends StatefulWidget {
   final Widget child;
@@ -222,6 +272,7 @@ class _ConnectivityWrapperState extends State<ConnectivityWrapper> {
   @override
   void dispose() {
     _connectivitySubscription.cancel();
+    _connectivityService.dispose();
     super.dispose();
   }
 

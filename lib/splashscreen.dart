@@ -29,7 +29,6 @@ class _SplashscreenState extends State<Splashscreen> {
     print('Debug: isFirstTime = $isFirstTime');
 
     if (isFirstTime) {
-      // First-time user flow - clear any existing data
       await TokenStorage.clearLoginData();
       await prefs.setBool('isFirstTime', false);
       print('Debug: Navigating to GetStarted (first time)');
@@ -38,7 +37,6 @@ class _SplashscreenState extends State<Splashscreen> {
         MaterialPageRoute(builder: (context) => GetStarted()),
       );
     } else {
-      // Check session status using TokenStorage
       final isLoggedIn = await TokenStorage.isLoggedIn();
       final token = await TokenStorage.getToken();
 
@@ -47,7 +45,6 @@ class _SplashscreenState extends State<Splashscreen> {
       );
 
       if (isLoggedIn && token != null) {
-        // Valid session exists - navigate to Dashboard
         print('Debug: Navigating to Dashboard (logged in)');
         Navigator.pushReplacement(
           context,
@@ -56,7 +53,6 @@ class _SplashscreenState extends State<Splashscreen> {
           ),
         );
       } else {
-        // No valid session
         print('Debug: Navigating to Login (not logged in)');
         Navigator.pushReplacement(
           context,
@@ -74,7 +70,7 @@ class _SplashscreenState extends State<Splashscreen> {
         child: Center(
           child: Image.asset(
             'lib/images/log-1.png',
-            height: 200, // Added explicit height
+            height: 200,
           ),
         ),
       ),

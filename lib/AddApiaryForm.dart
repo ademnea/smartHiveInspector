@@ -124,7 +124,7 @@ class _AddApiaryFormState extends State<AddApiaryForm> {
                               ),
                             )
                             : const Text(
-                              'ADD APIARY',
+                              'SUBMIT APIARY',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,

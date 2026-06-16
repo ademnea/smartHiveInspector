@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:HPGM/AddApiaryForm.dart';
 import 'package:HPGM/hives.dart';
+import 'package:HPGM/login.dart';
 import 'editApiaryForm.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -27,6 +28,10 @@ class _ApiariesState extends State<Apiaries> {
   Map<int, ApiaryStats> apiaryStats = {};
   bool isLoading = true;
   bool isTabularView = true; // Default view is Tabular
+  String _errorMessage = '';
+
+  // API Configuration
+  static const String _baseUrl = 'http://196.43.168.57';
 
   @override
   void initState() {
@@ -37,9 +42,33 @@ class _ApiariesState extends State<Apiaries> {
   Future<void> getApiaries() async {
     setState(() {
       isLoading = true;
+      _errorMessage = '';
     });
 
     try {
+      // Get token - first try from widget, then from storage
+      String? token = widget.token;
+      if (token.isEmpty || token == 'null') {
+        token = await TokenStorage.getToken();
+      }
+
+      if (token == null || token.isEmpty) {
+        setState(() {
+          isLoading = false;
+          _errorMessage = 'Please login again';
+        });
+        
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
+            );
+          }
+        });
+        return;
+      }
+
       // Check if device is online
       final isOnline = await CacheService.isOnline();
 
@@ -47,7 +76,7 @@ class _ApiariesState extends State<Apiaries> {
       if (!isOnline) {
         print('📱 Device is offline, trying to load from cache...');
         final cachedFarms = await CacheService.loadFarms();
-        if (cachedFarms != null) {
+        if (cachedFarms != null && cachedFarms.isNotEmpty) {
           if (mounted) {
             setState(() {
               farms = cachedFarms.map((farm) => Farm.fromJson(farm)).toList();
@@ -83,6 +112,11 @@ class _ApiariesState extends State<Apiaries> {
         } else {
           // No cached data available
           if (mounted) {
+            setState(() {
+              isLoading = false;
+              _errorMessage = 'No internet connection and no saved data available';
+            });
+            
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: const Text(
@@ -98,11 +132,6 @@ class _ApiariesState extends State<Apiaries> {
               ),
             );
           }
-          if (mounted) {
-            setState(() {
-              isLoading = false;
-            });
-          }
           return;
         }
       }
@@ -112,28 +141,25 @@ class _ApiariesState extends State<Apiaries> {
 
       // Use AuthManager for authenticated API call
       final response = await AuthManager.get(
-        'http://196.43.168.57/api/v1/farms',
+        '$_baseUrl/api/v1/farms',
         context: context,
-      );
+      ).timeout(const Duration(seconds: 30));
 
       print('Response status: ${response?.statusCode}');
-      print('Response headers: ${response?.headers}');
-      print('Response body: ${response?.body}');
 
       if (response != null && response.statusCode == 200) {
         List<dynamic> data = jsonDecode(response.body);
-        print('Parsed data: $data');
+        print('Parsed ${data.length} farms');
 
         // Save to cache for offline use
         await CacheService.saveFarms(data);
 
         if (mounted) {
           setState(() {
-            farms =
-                data.map((farm) {
-                  print('Processing farm: $farm');
-                  return Farm.fromJson(farm);
-                }).toList();
+            farms = data.map((farm) {
+              return Farm.fromJson(farm);
+            }).toList();
+            isLoading = false;
           });
         }
 
@@ -142,16 +168,34 @@ class _ApiariesState extends State<Apiaries> {
         for (var farm in farms) {
           await getApiaryStats(farm.id);
         }
+      } else if (response != null && response.statusCode == 401) {
+        // Token expired
+        setState(() {
+          isLoading = false;
+          _errorMessage = 'Session expired. Please login again.';
+        });
+        
+        await AuthManager.logout(context);
+        
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
+              (route) => false,
+            );
+          }
+        });
       } else {
         print('Failed to load farms: ${response?.statusCode}');
-        print('Error response: ${response?.body}');
-
+        
         // Try loading from cache as fallback
         final cachedFarms = await CacheService.loadFarms();
-        if (cachedFarms != null) {
+        if (cachedFarms != null && cachedFarms.isNotEmpty) {
           if (mounted) {
             setState(() {
               farms = cachedFarms.map((farm) => Farm.fromJson(farm)).toList();
+              isLoading = false;
             });
           }
 
@@ -159,36 +203,29 @@ class _ApiariesState extends State<Apiaries> {
             await getApiaryStats(farm.id);
           }
 
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  '⚠️ Server error (${response?.statusCode}) - Showing saved data',
-                ),
-                backgroundColor: Colors.orange[700],
-              ),
-            );
-          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('⚠️ Server error (${response?.statusCode}) - Showing saved data'),
+              backgroundColor: Colors.orange[700],
+            ),
+          );
         } else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Failed to load farms: ${response?.statusCode}'),
-                backgroundColor: Colors.red[700],
-              ),
-            );
-          }
+          setState(() {
+            isLoading = false;
+            _errorMessage = 'Failed to load farms. Please try again.';
+          });
         }
       }
     } catch (error) {
       print('Error loading farms: $error');
-
+      
       // Try loading from cache as fallback
       final cachedFarms = await CacheService.loadFarms();
-      if (cachedFarms != null) {
+      if (cachedFarms != null && cachedFarms.isNotEmpty) {
         if (mounted) {
           setState(() {
             farms = cachedFarms.map((farm) => Farm.fromJson(farm)).toList();
+            isLoading = false;
           });
         }
 
@@ -196,61 +233,22 @@ class _ApiariesState extends State<Apiaries> {
           await getApiaryStats(farm.id);
         }
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text(
-                '⚠️ Connection error - Showing saved data',
-                style: TextStyle(fontFamily: "Sans"),
-              ),
-              backgroundColor: Colors.orange[700],
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              duration: const Duration(seconds: 3),
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              '⚠️ Connection error - Showing saved data',
+              style: TextStyle(fontFamily: "Sans"),
             ),
-          );
-        }
+            backgroundColor: Colors.orange,
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 3),
+          ),
+        );
       } else {
-        // Provide user-friendly error messages based on error type
-        String userMessage;
-        if (error.toString().contains('SocketException') ||
-            error.toString().contains('Network is unreachable') ||
-            error.toString().contains('Connection failed')) {
-          userMessage =
-              '🔌 No internet connection. Please check your network and try again.';
-        } else if (error.toString().contains('TimeoutException') ||
-            error.toString().contains('timeout')) {
-          userMessage =
-              '⏱️ Connection timeout. The server is taking too long to respond.';
-        } else if (error.toString().contains('404')) {
-          userMessage = '📍 Server endpoint not found. Please contact support.';
-        } else if (error.toString().contains('500') ||
-            error.toString().contains('502') ||
-            error.toString().contains('503')) {
-          userMessage =
-              '🔧 Server is temporarily unavailable. Please try again later.';
-        } else {
-          userMessage = '❌ Unable to load farms. Please try again later.';
-        }
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                userMessage,
-                style: const TextStyle(fontFamily: "Sans"),
-              ),
-              backgroundColor: Colors.red[700],
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              duration: const Duration(seconds: 5),
-            ),
-          );
-        }
+        setState(() {
+          isLoading = false;
+          _errorMessage = 'Network error: Cannot connect to server';
+        });
       }
     } finally {
       if (mounted) {
@@ -269,17 +267,21 @@ class _ApiariesState extends State<Apiaries> {
       if (!isOnline) {
         // Try loading from cache when offline
         final cachedHives = await CacheService.loadHives(farmId);
-        if (cachedHives != null) {
+        if (cachedHives != null && cachedHives.isNotEmpty) {
           _calculateStatsFromHives(farmId, cachedHives);
           return;
         }
       }
 
+      // Get token
+      final token = await TokenStorage.getToken();
+      if (token == null || token.isEmpty) return;
+
       // Use AuthManager for authenticated request
       final response = await AuthManager.get(
-        'http://196.43.168.57/api/v1/farms/$farmId/hives',
+        '$_baseUrl/api/v1/farms/$farmId/hives',
         context: context,
-      );
+      ).timeout(const Duration(seconds: 30));
 
       if (response != null && response.statusCode == 200) {
         List<dynamic> hives = jsonDecode(response.body);
@@ -289,14 +291,11 @@ class _ApiariesState extends State<Apiaries> {
 
         _calculateStatsFromHives(farmId, hives);
       } else {
-        print(
-          'Failed to fetch hives for stats. Status: ${response?.statusCode}',
-        );
-        print('Body: ${response?.body}');
+        print('Failed to fetch hives for stats. Status: ${response?.statusCode}');
 
         // Try loading from cache as fallback
         final cachedHives = await CacheService.loadHives(farmId);
-        if (cachedHives != null) {
+        if (cachedHives != null && cachedHives.isNotEmpty) {
           _calculateStatsFromHives(farmId, cachedHives);
         }
       }
@@ -305,7 +304,7 @@ class _ApiariesState extends State<Apiaries> {
 
       // Try loading from cache as fallback
       final cachedHives = await CacheService.loadHives(farmId);
-      if (cachedHives != null) {
+      if (cachedHives != null && cachedHives.isNotEmpty) {
         _calculateStatsFromHives(farmId, cachedHives);
       }
     }
@@ -318,17 +317,33 @@ class _ApiariesState extends State<Apiaries> {
 
     for (var hive in hives) {
       // Safe parsing with fallback values
-      dynamic colonizedRaw =
-          hive['state']?['colonization_status']?['Colonized'];
-      dynamic connectedRaw = hive['state']?['connection_status']?['Connected'];
-      dynamic honeyRaw = hive['state']?['weight']?['honey_percentage'];
-      dynamic tempRaw = hive['state']?['temperature']?['interior_temperature'];
+      bool isColonized = false;
+      bool isConnected = false;
+      double? honeyLevel;
+      double? temperature;
 
-      bool isColonized = colonizedRaw == true || colonizedRaw == 1;
-      bool isConnected = connectedRaw == true || connectedRaw == 1;
-
-      double? honeyLevel = _parseDouble(honeyRaw);
-      double? temperature = _parseDouble(tempRaw);
+      // Parse colonization status
+      if (hive['state'] != null) {
+        final state = hive['state'];
+        
+        if (state['colonization_status'] != null) {
+          final colonization = state['colonization_status'];
+          isColonized = colonization['Colonized'] == true || colonization['Colonized'] == 1;
+        }
+        
+        if (state['connection_status'] != null) {
+          final connection = state['connection_status'];
+          isConnected = connection['Connected'] == true || connection['Connected'] == 1;
+        }
+        
+        if (state['weight'] != null && state['weight']['honey_percentage'] != null) {
+          honeyLevel = _parseDouble(state['weight']['honey_percentage']);
+        }
+        
+        if (state['temperature'] != null && state['temperature']['interior_temperature'] != null) {
+          temperature = _parseDouble(state['temperature']['interior_temperature']);
+        }
+      }
 
       if (isColonized) colonizedHives++;
 
@@ -351,6 +366,7 @@ class _ApiariesState extends State<Apiaries> {
   }
 
   double? _parseDouble(dynamic value) {
+    if (value == null) return null;
     if (value is double) return value;
     if (value is int) return value.toDouble();
     if (value is String) return double.tryParse(value);
@@ -376,10 +392,10 @@ class _ApiariesState extends State<Apiaries> {
         'Content-Type': 'application/json',
       };
       var response = await http.put(
-        Uri.parse('http://196.43.168.57/api/v1/farms/$farmId'),
+        Uri.parse('$_baseUrl/api/v1/farms/$farmId'),
         headers: headers,
         body: jsonEncode(updatedData),
-      );
+      ).timeout(const Duration(seconds: 30));
 
       return response.statusCode == 200;
     } catch (error) {
@@ -390,11 +406,57 @@ class _ApiariesState extends State<Apiaries> {
 
   Future<void> _handleRefresh() async {
     await getApiaries();
-    return;
+  }
+
+  void _retry() {
+    getApiaries();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Loading apiaries...'),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_errorMessage.isNotEmpty && farms.isEmpty) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              Text(
+                _errorMessage,
+                style: const TextStyle(fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _retry,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromARGB(255, 206, 109, 40),
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       body: LiquidPullToRefresh(
         onRefresh: _handleRefresh,
@@ -483,7 +545,7 @@ class _ApiariesState extends State<Apiaries> {
                     ),
 
                     // Apiary Overview Section
-                    if (farms.isNotEmpty && !isLoading)
+                    if (farms.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16.0,
@@ -537,46 +599,47 @@ class _ApiariesState extends State<Apiaries> {
                         ),
                       ),
 
-                    if (isLoading)
+                    // Farm Cards Section
+                    if (farms.isEmpty && !isLoading)
                       const Padding(
                         padding: EdgeInsets.all(32.0),
                         child: Center(
-                          child: CircularProgressIndicator(
-                            color: Colors.orange,
+                          child: Text(
+                            'No apiaries found. Tap the + button to add one.',
+                            style: TextStyle(fontSize: 16),
+                            textAlign: TextAlign.center,
                           ),
                         ),
                       ),
 
-                    // Farm Cards Section
-                    if (!isLoading)
+                    if (farms.isNotEmpty)
                       isTabularView
                           ? Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: _buildApiariesTable(),
-                          )
+                              padding: const EdgeInsets.all(16.0),
+                              child: _buildApiariesTable(),
+                            )
                           : ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: farms.length,
-                            itemBuilder: (context, index) {
-                              final farm = farms[index];
-                              return FutureBuilder<String?>(
-                                future: TokenStorage.getToken(),
-                                builder: (context, snapshot) {
-                                  if (snapshot.hasData &&
-                                      snapshot.data != null) {
-                                    return buildFarmCard(
-                                      farm,
-                                      context,
-                                      snapshot.data!,
-                                      onDeleted: getApiaries,
-                                    );
-                                  }
-                                  return const SizedBox.shrink();
-                                },
-                              );
-                            },
-                          ),
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: farms.length,
+                              itemBuilder: (context, index) {
+                                final farm = farms[index];
+                                return FutureBuilder<String?>(
+                                  future: TokenStorage.getToken(),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.hasData && snapshot.data != null) {
+                                      return buildFarmCard(
+                                        farm,
+                                        context,
+                                        snapshot.data!,
+                                        onDeleted: getApiaries,
+                                      );
+                                    }
+                                    return const SizedBox.shrink();
+                                  },
+                                );
+                              },
+                            ),
                   ],
                 ),
               ),
@@ -589,17 +652,14 @@ class _ApiariesState extends State<Apiaries> {
           final result = await Navigator.push(
             context,
             MaterialPageRoute(
-              builder:
-                  (context) => AddApiaryForm(
-                    onApiaryAdded: () async {
-                      // Refresh the apiaries list
-                      await getApiaries();
-                    },
-                  ),
+              builder: (context) => AddApiaryForm(
+                onApiaryAdded: () async {
+                  await getApiaries();
+                },
+              ),
             ),
           );
 
-          // Also refresh when returning from the form
           if (result == true) {
             await getApiaries();
           }
@@ -654,8 +714,8 @@ class _ApiariesState extends State<Apiaries> {
           scrollDirection: Axis.horizontal,
           child: DataTable(
             headingRowColor: MaterialStateProperty.all(Colors.orange[700]),
-            dataRowHeight: 80, // Main row height
-            headingRowHeight: 60, // Header height
+            dataRowHeight: 80,
+            headingRowHeight: 60,
             dataRowColor: MaterialStateProperty.resolveWith<Color>((
               Set<MaterialState> states,
             ) {
@@ -677,173 +737,167 @@ class _ApiariesState extends State<Apiaries> {
               DataColumn(label: Text('Farm Name')),
               DataColumn(label: Text('Actions')),
             ],
-            rows:
-                farms.map((farm) {
-                  return DataRow(
-                    cells: [
-                      DataCell(
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              farm.name,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 16,
+            rows: farms.map((farm) {
+              return DataRow(
+                cells: [
+                  DataCell(
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          farm.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
+                        Text(
+                          '${farm.district} - ${farm.address}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  DataCell(
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // View/Manage button
+                        SizedBox(
+                          width: 70,
+                          height: 30,
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange[700],
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
                               ),
                             ),
-                            Text(
-                              '${farm.district} - ${farm.address}',
+                            icon: const Icon(
+                              Icons.visibility,
+                              size: 14,
+                              color: Colors.white,
+                            ),
+                            label: const Text(
+                              'View',
                               style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
+                                fontSize: 10,
+                                color: Colors.white,
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                      DataCell(
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // View/Manage button
-                            SizedBox(
-                              width: 70,
-                              height: 30,
-                              child: ElevatedButton.icon(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.orange[700],
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                ),
-                                icon: const Icon(
-                                  Icons.visibility,
-                                  size: 14,
-                                  color: Colors.white,
-                                ),
-                                label: const Text(
-                                  'View',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                onPressed: () async {
-                                  // Navigate to farm details/hives
-                                  final token = await TokenStorage.getToken();
-                                  if (token != null && mounted) {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder:
-                                            (context) => Hives(
-                                              farmId: farm.id,
-                                              token: token,
-                                              apiaryLocation: farm.address,
-                                              farmName: farm.name,
-                                              onHiveDeleted: () async {
-                                                await getApiaryStats(
-                                                  farm.id,
-                                                ); // refresh stats!
-                                              },
-                                            ),
-                                      ),
-                                    );
-                                  }
-                                },
-                              ),
-                            ),
-                            const SizedBox(height: 4, width: 4),
-                            // Settings button
-                            SizedBox(
-                              width: 70,
-                              height: 30,
-                              child: ElevatedButton.icon(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue[700],
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                ),
-                                icon: const Icon(
-                                  Icons.settings,
-                                  size: 14,
-                                  color: Colors.white,
-                                ),
-                                label: const Text(
-                                  'Edit',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                onPressed: () async {
-                                  final result = await Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder:
-                                          (context) => EditApiaryForm(
-                                            farmId: farm.id,
-                                            initialData: farm.toJson(),
-                                          ),
+                            onPressed: () async {
+                              final token = await TokenStorage.getToken();
+                              if (token != null && mounted) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => Hives(
+                                      farmId: farm.id,
+                                      token: token,
+                                      apiaryLocation: farm.address,
+                                      farmName: farm.name,
+                                      onHiveDeleted: () async {
+                                        await getApiaryStats(farm.id);
+                                      },
                                     ),
-                                  );
-
-                                  if (result == true) {
-                                    await getApiaries();
-                                  }
-                                },
-                              ),
-                            ),
-                            const SizedBox(height: 4, width: 4),
-                            // Delete button
-                            SizedBox(
-                              width: 70,
-                              height: 30,
-                              child: ElevatedButton.icon(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red[700],
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
                                   ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                ),
-                                icon: const Icon(
-                                  Icons.delete,
-                                  size: 14,
-                                  color: Colors.white,
-                                ),
-                                label: const Text(
-                                  'Delete',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                onPressed: () {
-                                  _showDeleteConfirmation(farm);
-                                },
-                              ),
-                            ),
-                          ],
+                                );
+                              }
+                            },
+                          ),
                         ),
-                      ),
-                    ],
-                  );
-                }).toList(),
+                        const SizedBox(width: 4),
+                        // Settings button
+                        SizedBox(
+                          width: 70,
+                          height: 30,
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue[700],
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                            icon: const Icon(
+                              Icons.settings,
+                              size: 14,
+                              color: Colors.white,
+                            ),
+                            label: const Text(
+                              'Edit',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.white,
+                              ),
+                            ),
+                            onPressed: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => EditApiaryForm(
+                                    farmId: farm.id,
+                                    initialData: farm.toJson(),
+                                  ),
+                                ),
+                              );
+
+                              if (result == true) {
+                                await getApiaries();
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        // Delete button
+                        SizedBox(
+                          width: 70,
+                          height: 30,
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red[700],
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                            icon: const Icon(
+                              Icons.delete,
+                              size: 14,
+                              color: Colors.white,
+                            ),
+                            label: const Text(
+                              'Delete',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.white,
+                              ),
+                            ),
+                            onPressed: () {
+                              _showDeleteConfirmation(farm);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            }).toList(),
           ),
         ),
       ),
@@ -888,19 +942,19 @@ class _ApiariesState extends State<Apiaries> {
   Future<void> _deleteFarm(int farmId) async {
     try {
       final response = await AuthManager.delete(
-        'http://196.43.168.57/api/v1/farms/$farmId',
+        '$_baseUrl/api/v1/farms/$farmId',
         context: context,
       );
 
       if (response != null &&
           (response.statusCode == 200 || response.statusCode == 204)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Farm deleted successfully!'),
-            backgroundColor: Colors.green[700],
+          const SnackBar(
+            content: Text('Farm deleted successfully!'),
+            backgroundColor: Colors.green,
           ),
         );
-        await getApiaries(); // Refresh the list
+        await getApiaries();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -935,9 +989,7 @@ class _ApiariesState extends State<Apiaries> {
           }
         }
       }
-    } catch (_) {
-      // Fall back to the HTTP status if the response is not JSON.
-    }
+    } catch (_) {}
 
     return 'Failed to delete farm: HTTP ${response.statusCode}';
   }
