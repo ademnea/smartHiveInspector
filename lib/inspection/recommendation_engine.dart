@@ -18,6 +18,8 @@ class RecommendationEngine {
     bool isYes(String key) => a[key] == 'Yes';
     bool isNo(String key) => a[key] == 'No';
     List<String> listOf(String key) => (a[key] as List?)?.cast<String>() ?? [];
+    String? singleOf(String key) =>
+        listOf(key).isNotEmpty ? listOf(key).first : null;
 
     // Weather
     final weather = listOf('weatherCondition');
@@ -28,8 +30,7 @@ class RecommendationEngine {
       score += 2;
     }
 
-    // Bee activity at entrance
-    final activity = a['beeActivityRange'];
+    final activity = singleOf('beeActivityRange');
     if (isNo('beeActivity') || activity == 'None (0)') {
       recs.add(
         'No bee activity detected at the entrance. This could indicate the colony has absconded or died — investigate urgently.',
@@ -157,7 +158,7 @@ class RecommendationEngine {
       score += 3;
     }
 
-    final broodPattern = a['broodPattern'];
+    final broodPattern = singleOf('broodPattern');
     if (broodPattern == 'Mostly gaps, very patchy' ||
         broodPattern == 'No brood seen') {
       recs.add(
@@ -167,7 +168,7 @@ class RecommendationEngine {
     }
 
     // Food stores
-    if (isNo('honeyPresent') || a['honeyCoverage'] == 'Low') {
+    if (isNo('honeyPresent') || singleOf('honeyCoverage') == 'Low') {
       recs.add(
         'Honey stores are low. Supplement feeding (sugar syrup) is recommended, especially if natural forage is scarce.',
       );
@@ -207,14 +208,14 @@ class RecommendationEngine {
     }
 
     // Colony strength
-    if (a['frameCoverageLevel'] == 'Minimally Covered') {
+    if (singleOf('frameCoverageLevel') == 'Minimally Covered') {
       recs.add(
         'Bee coverage on frames is minimal — colony may be weak or declining. Monitor population trend at next inspection.',
       );
       score += 3;
     }
-    if (a['hiveActivityLevel'] != null &&
-        (a['hiveActivityLevel'] as String).startsWith('No activity')) {
+    final hiveActivity = singleOf('hiveActivityLevel');
+    if (hiveActivity != null && hiveActivity.startsWith('No activity')) {
       recs.add(
         'No hive activity observed during inspection — combined with other findings, this is a serious warning sign.',
       );

@@ -206,13 +206,7 @@ final List<InspectionPage> inspectionPages = [
             'Are the frames properly arranged and evenly spaced inside the hive?',
         type: FieldType.yesNo,
       ),
-      InspectionField(
-        id: 'frameIssue',
-        question: 'Describe the problem',
-        type: FieldType.text,
-        showIfFieldId: 'framesArranged',
-        showIfValue: 'No',
-      ),
+
       InspectionField(
         id: 'hiveClean',
         question:
@@ -234,8 +228,14 @@ final List<InspectionPage> inspectionPages = [
       ),
       InspectionField(
         id: 'smellDescription',
-        question: 'Describe the smell',
-        type: FieldType.text,
+        question: 'What does the smell most resemble?',
+        type: FieldType.singleSelect,
+        options: [
+          'Sour or vinegar-like',
+          'Rotten or foul, like rotting meat',
+          'Moldy or musty',
+          'Sweet or fermented',
+        ],
         showIfFieldId: 'badSmell',
         showIfValue: 'Yes',
       ),

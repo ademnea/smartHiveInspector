@@ -593,10 +593,7 @@ class _InspectionFlowScreenState extends State<InspectionFlowScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                field.question,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
+              _buildQuestionLabel(field),
               TextField(
                 controller:
                     field.id == 'weatherRecommendation'
@@ -615,10 +612,7 @@ class _InspectionFlowScreenState extends State<InspectionFlowScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                field.question,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
+              _buildQuestionLabel(field),
               TextField(
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(border: OutlineInputBorder()),
@@ -627,17 +621,13 @@ class _InspectionFlowScreenState extends State<InspectionFlowScreen> {
             ],
           ),
         );
-
       case FieldType.date:
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                field.question,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
+              _buildQuestionLabel(field),
               OutlinedButton(
                 onPressed: () async {
                   final picked = await showDatePicker(
