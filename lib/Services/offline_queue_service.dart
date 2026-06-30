@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'auth_manager.dart';
 import 'cache_service.dart';
 

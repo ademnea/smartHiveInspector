@@ -6,19 +6,16 @@ class NotificationComponent extends StatelessWidget {
   final String content;
 
   const NotificationComponent({
-    Key? key,
+    super.key,
     required this.date,
     required this.title,
     required this.content,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(
-        top: 10,
-        bottom: 10,
-      ),
+      padding: const EdgeInsets.only(top: 10, bottom: 10),
       child: Container(
         width: MediaQuery.of(context).size.width * 0.9,
         decoration: BoxDecoration(

@@ -259,7 +259,7 @@ class _EditApiaryFormState extends State<EditApiaryForm> {
                             Text(
                               'ID: ${widget.farmId}',
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.8),
+                                color: Colors.white.withValues(alpha: 0.8),
                                 fontFamily: "Sans",
                               ),
                             ),
@@ -426,9 +426,9 @@ class _EditApiaryFormState extends State<EditApiaryForm> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       decoration: BoxDecoration(
-        color: Colors.orange[700]?.withOpacity(0.1),
+        color: Colors.orange[700]?.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.orange[700]!.withOpacity(0.3)),
+        border: Border.all(color: Colors.orange[700]!.withValues(alpha: 0.3)),
       ),
       child: Text(
         title,

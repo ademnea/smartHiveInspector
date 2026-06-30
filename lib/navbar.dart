@@ -48,7 +48,7 @@ class _NavBarState extends State<NavBar> {
   void _initializeWidgets() {
     // Use the token passed from constructor instead of fetching again
     final token = widget.token;
-    
+
     setState(() {
       _widgetOptions = <Widget>[
         Home(token: token, notify: false),
@@ -64,23 +64,22 @@ class _NavBarState extends State<NavBar> {
     // Show confirmation dialog
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Logout'),
+            content: const Text('Are you sure you want to logout?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Logout'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
-            ),
-            child: const Text('Logout'),
-          ),
-        ],
-      ),
     );
 
     if (confirm != true) return;
@@ -89,17 +88,15 @@ class _NavBarState extends State<NavBar> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(),
-      ),
+      builder: (context) => const Center(child: CircularProgressIndicator()),
     );
 
     try {
       await AuthService.logout();
-      
+
       if (!mounted) return;
       Navigator.pop(context); // Remove loading dialog
-      
+
       // Navigate to login screen and remove all previous routes
       Navigator.pushAndRemoveUntil(
         context,
@@ -109,7 +106,7 @@ class _NavBarState extends State<NavBar> {
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context); // Remove loading dialog
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Error logging out. Please try again.'),
@@ -127,9 +124,7 @@ class _NavBarState extends State<NavBar> {
         appBar: AppBar(
           title: const Text(
             'Apiarist App',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
           backgroundColor: const Color.fromARGB(255, 206, 109, 40),
           foregroundColor: Colors.white,
@@ -143,9 +138,10 @@ class _NavBarState extends State<NavBar> {
           ],
         ),
         body: Center(
-          child: _widgetOptions.isEmpty
-              ? const CircularProgressIndicator()
-              : _widgetOptions.elementAt(_selectedIndex),
+          child:
+              _widgetOptions.isEmpty
+                  ? const CircularProgressIndicator()
+                  : _widgetOptions.elementAt(_selectedIndex),
         ),
         // Bottom navbar
         bottomNavigationBar: Container(
@@ -154,7 +150,7 @@ class _NavBarState extends State<NavBar> {
             boxShadow: [
               BoxShadow(
                 blurRadius: 20,
-                color: Colors.black.withOpacity(.1),
+                color: Colors.black.withValues(alpha: .1),
               ),
             ],
           ),

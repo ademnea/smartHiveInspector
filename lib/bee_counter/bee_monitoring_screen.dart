@@ -12,7 +12,7 @@ import 'package:fl_chart/fl_chart.dart';
 class BeeMonitoringScreen extends StatefulWidget {
   final String hiveId;
 
-  const BeeMonitoringScreen({Key? key, required this.hiveId}) : super(key: key);
+  const BeeMonitoringScreen({super.key, required this.hiveId});
 
   @override
   _BeeMonitoringScreenState createState() => _BeeMonitoringScreenState();
@@ -321,7 +321,10 @@ class _BeeMonitoringScreenState extends State<BeeMonitoringScreen> {
           show: true,
           horizontalInterval: 10,
           getDrawingHorizontalLine: (value) {
-            return FlLine(color: Colors.grey.withOpacity(0.2), strokeWidth: 1);
+            return FlLine(
+              color: Colors.grey.withValues(alpha: 0.2),
+              strokeWidth: 1,
+            );
           },
         ),
         borderData: FlBorderData(show: false),
@@ -403,9 +406,9 @@ class _BeeMonitoringScreenState extends State<BeeMonitoringScreen> {
           backgroundColor:
               hasData
                   ? (isPlaceholder
-                      ? Colors.orange.withOpacity(0.2)
-                      : Colors.green.withOpacity(0.2))
-                  : Colors.grey.withOpacity(0.2),
+                      ? Colors.orange.withValues(alpha: 0.2)
+                      : Colors.green.withValues(alpha: 0.2))
+                  : Colors.grey.withValues(alpha: 0.2),
           child: Icon(
             hasData
                 ? (isPlaceholder ? Icons.pending : Icons.check)
@@ -516,8 +519,8 @@ class _BeeMonitoringScreenState extends State<BeeMonitoringScreen> {
         leading: CircleAvatar(
           backgroundColor:
               hasData
-                  ? Colors.amber.withOpacity(0.2)
-                  : Colors.grey.withOpacity(0.2),
+                  ? Colors.amber.withValues(alpha: 0.2)
+                  : Colors.grey.withValues(alpha: 0.2),
           child: Icon(icon, color: hasData ? Colors.amber : Colors.grey),
         ),
         title: Text(period, style: TextStyle(fontWeight: FontWeight.bold)),
@@ -568,7 +571,7 @@ class _BeeMonitoringScreenState extends State<BeeMonitoringScreen> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.purple.withOpacity(0.1),
+                          color: Colors.purple.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -608,7 +611,7 @@ class _BeeMonitoringScreenState extends State<BeeMonitoringScreen> {
             child: Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: Colors.white.withOpacity(0.2),
+                  backgroundColor: Colors.white.withValues(alpha: 0.2),
                   child: Icon(Icons.agriculture, color: Colors.white, size: 24),
                 ),
                 SizedBox(width: 12),
@@ -629,7 +632,7 @@ class _BeeMonitoringScreenState extends State<BeeMonitoringScreen> {
                         'Get data-driven recommendations for optimal bee foraging',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                         ),
                       ),
                     ],
@@ -687,10 +690,11 @@ class _BeeMonitoringScreenState extends State<BeeMonitoringScreen> {
           ),
           IconButton(
             icon: Icon(Icons.recommend),
-            onPressed: () => NavigationHelper.navigateToRecommendations(
-              context,
-              hiveId: widget.hiveId,
-            ),
+            onPressed:
+                () => NavigationHelper.navigateToRecommendations(
+                  context,
+                  hiveId: widget.hiveId,
+                ),
             tooltip: 'View Recommendations',
           ),
         ],
@@ -859,13 +863,14 @@ class _BeeMonitoringScreenState extends State<BeeMonitoringScreen> {
                 ),
               ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => NavigationHelper.navigateToRecommendations(
-          context,
-          hiveId: widget.hiveId,
-        ),
+        onPressed:
+            () => NavigationHelper.navigateToRecommendations(
+              context,
+              hiveId: widget.hiveId,
+            ),
         backgroundColor: Colors.green,
-        child: Icon(Icons.recommend, color: Colors.white),
         tooltip: 'View All Recommendations',
+        child: Icon(Icons.recommend, color: Colors.white),
       ),
     );
   }

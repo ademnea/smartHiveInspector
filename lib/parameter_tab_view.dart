@@ -37,11 +37,11 @@ class _TabViewState extends State<TabView> {
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
-                                Colors.orange.withOpacity(0.8),
-                                Colors.orange.withOpacity(0.6),
-                                Colors.orange.withOpacity(0.4),
-                                Colors.orange.withOpacity(0.2),
-                                Colors.orange.withOpacity(0.1),
+                                Colors.orange.withValues(alpha: 0.8),
+                                Colors.orange.withValues(alpha: 0.6),
+                                Colors.orange.withValues(alpha: 0.4),
+                                Colors.orange.withValues(alpha: 0.2),
+                                Colors.orange.withValues(alpha: 0.1),
                                 Colors.transparent,
                               ],
                             ),
@@ -91,7 +91,7 @@ class _TabViewState extends State<TabView> {
                       color: Colors.brown[300],
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.grey.withOpacity(0.5),
+                          color: Colors.grey.withValues(alpha: 0.5),
                           spreadRadius: 2,
                           blurRadius: 5,
                           offset: const Offset(0, 3),
@@ -115,7 +115,7 @@ class _TabViewState extends State<TabView> {
                               indicatorSize: TabBarIndicatorSize.tab,
                               dividerColor: Colors.transparent,
                               indicator: BoxDecoration(
-                                color: Colors.orange.withOpacity(0.8),
+                                color: Colors.orange.withValues(alpha: 0.8),
                                 borderRadius: const BorderRadius.all(
                                   Radius.circular(10),
                                 ),

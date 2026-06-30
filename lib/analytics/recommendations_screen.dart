@@ -5,7 +5,7 @@ import 'package:HPGM/analytics/foraging_advisory_service.dart';
 class RecommendationsScreen extends StatefulWidget {
   final DailyForagingAnalysis analysisData;
 
-  const RecommendationsScreen({Key? key, required this.analysisData}) : super(key: key);
+  const RecommendationsScreen({super.key, required this.analysisData});
 
   @override
   _RecommendationsScreenState createState() => _RecommendationsScreenState();
@@ -13,7 +13,6 @@ class RecommendationsScreen extends StatefulWidget {
 
 class _RecommendationsScreenState extends State<RecommendationsScreen>
     with SingleTickerProviderStateMixin {
-  
   late TabController _tabController;
   String _selectedPriorityFilter = 'All';
   String _selectedCategoryFilter = 'All';
@@ -32,31 +31,43 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
 
   List<DailyRecommendation> get _filteredRecommendations {
     var recommendations = widget.analysisData.recommendations;
-    
+
     // Filter by priority
     if (_selectedPriorityFilter != 'All') {
-      recommendations = recommendations.where((r) => 
-        r.priority.toLowerCase() == _selectedPriorityFilter.toLowerCase()).toList();
+      recommendations =
+          recommendations
+              .where(
+                (r) =>
+                    r.priority.toLowerCase() ==
+                    _selectedPriorityFilter.toLowerCase(),
+              )
+              .toList();
     }
-    
+
     // Filter by category (simple text-based filtering)
     if (_selectedCategoryFilter != 'All') {
-      recommendations = recommendations.where((r) => 
-        r.title.toLowerCase().contains(_selectedCategoryFilter.toLowerCase()) ||
-        r.description.toLowerCase().contains(_selectedCategoryFilter.toLowerCase())).toList();
+      recommendations =
+          recommendations
+              .where(
+                (r) =>
+                    r.title.toLowerCase().contains(
+                      _selectedCategoryFilter.toLowerCase(),
+                    ) ||
+                    r.description.toLowerCase().contains(
+                      _selectedCategoryFilter.toLowerCase(),
+                    ),
+              )
+              .toList();
     }
-    
+
     // Sort by priority
     recommendations.sort((a, b) {
-      const priorityOrder = {
-        'Critical': 0,
-        'High': 1,
-        'Medium': 2,
-        'Low': 3,
-      };
-      return (priorityOrder[a.priority] ?? 3).compareTo(priorityOrder[b.priority] ?? 3);
+      const priorityOrder = {'Critical': 0, 'High': 1, 'Medium': 2, 'Low': 3};
+      return (priorityOrder[a.priority] ?? 3).compareTo(
+        priorityOrder[b.priority] ?? 3,
+      );
     });
-    
+
     return recommendations;
   }
 
@@ -71,7 +82,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
           controller: _tabController,
           indicatorColor: Colors.white,
           labelColor: Colors.white,
-          unselectedLabelColor: Colors.white.withOpacity(0.7),
+          unselectedLabelColor: Colors.white.withValues(alpha: 0.7),
           tabs: [
             Tab(text: 'Actions', icon: Icon(Icons.checklist)),
             Tab(text: 'Plants', icon: Icon(Icons.local_florist)),
@@ -81,11 +92,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [
-          _buildActionsTab(),
-          _buildPlantsTab(),
-          _buildScienceTab(),
-        ],
+        children: [_buildActionsTab(), _buildPlantsTab(), _buildScienceTab()],
       ),
     );
   }
@@ -96,16 +103,17 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
         _buildFilters(),
         _buildRecommendationsSummary(),
         Expanded(
-          child: _filteredRecommendations.isEmpty
-              ? _buildNoRecommendations()
-              : ListView.builder(
-                  padding: EdgeInsets.all(16),
-                  itemCount: _filteredRecommendations.length,
-                  itemBuilder: (context, index) {
-                    final recommendation = _filteredRecommendations[index];
-                    return _buildRecommendationCard(recommendation);
-                  },
-                ),
+          child:
+              _filteredRecommendations.isEmpty
+                  ? _buildNoRecommendations()
+                  : ListView.builder(
+                    padding: EdgeInsets.all(16),
+                    itemCount: _filteredRecommendations.length,
+                    itemBuilder: (context, index) {
+                      final recommendation = _filteredRecommendations[index];
+                      return _buildRecommendationCard(recommendation);
+                    },
+                  ),
         ),
       ],
     );
@@ -113,10 +121,12 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
 
   Widget _buildRecommendationsSummary() {
     final recommendations = widget.analysisData.recommendations;
-    final criticalCount = recommendations.where((r) => r.priority == 'Critical').length;
+    final criticalCount =
+        recommendations.where((r) => r.priority == 'Critical').length;
     final highCount = recommendations.where((r) => r.priority == 'High').length;
-    final mediumCount = recommendations.where((r) => r.priority == 'Medium').length;
-    
+    final mediumCount =
+        recommendations.where((r) => r.priority == 'Medium').length;
+
     return Container(
       margin: EdgeInsets.all(16),
       padding: EdgeInsets.all(16),
@@ -150,21 +160,29 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
             'For ${DateFormat('MMMM dd, yyyy').format(widget.analysisData.date)}',
             style: TextStyle(
               fontSize: 14,
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
             ),
           ),
           SizedBox(height: 16),
           Row(
             children: [
               if (criticalCount > 0)
-                _buildPriorityBadge('Critical', criticalCount, Colors.red.shade600),
+                _buildPriorityBadge(
+                  'Critical',
+                  criticalCount,
+                  Colors.red.shade600,
+                ),
               if (highCount > 0) ...[
                 if (criticalCount > 0) SizedBox(width: 8),
                 _buildPriorityBadge('High', highCount, Colors.orange.shade600),
               ],
               if (mediumCount > 0) ...[
                 if (criticalCount > 0 || highCount > 0) SizedBox(width: 8),
-                _buildPriorityBadge('Medium', mediumCount, Colors.green.shade600),
+                _buildPriorityBadge(
+                  'Medium',
+                  mediumCount,
+                  Colors.green.shade600,
+                ),
               ],
               if (recommendations.isEmpty)
                 _buildPriorityBadge('All Good', 0, Colors.green.shade600),
@@ -220,15 +238,22 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
         children: [
           Expanded(
             child: DropdownButtonFormField<String>(
-              value: _selectedPriorityFilter,
+              initialValue: _selectedPriorityFilter,
               decoration: InputDecoration(
                 labelText: 'Priority',
                 border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
               ),
-              items: ['All', 'Critical', 'High', 'Medium', 'Low'].map((priority) {
-                return DropdownMenuItem(value: priority, child: Text(priority));
-              }).toList(),
+              items:
+                  ['All', 'Critical', 'High', 'Medium', 'Low'].map((priority) {
+                    return DropdownMenuItem(
+                      value: priority,
+                      child: Text(priority),
+                    );
+                  }).toList(),
               onChanged: (value) {
                 setState(() {
                   _selectedPriorityFilter = value!;
@@ -239,16 +264,26 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
           SizedBox(width: 16),
           Expanded(
             child: DropdownButtonFormField<String>(
-              value: _selectedCategoryFilter,
+              initialValue: _selectedCategoryFilter,
               decoration: InputDecoration(
                 labelText: 'Category',
                 border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
               ),
-              items: ['All', 'Temperature', 'Activity', 'Weight', 'Seasonal', 'Environmental']
-                  .map((type) {
-                return DropdownMenuItem(value: type, child: Text(type));
-              }).toList(),
+              items:
+                  [
+                    'All',
+                    'Temperature',
+                    'Activity',
+                    'Weight',
+                    'Seasonal',
+                    'Environmental',
+                  ].map((type) {
+                    return DropdownMenuItem(value: type, child: Text(type));
+                  }).toList(),
               onChanged: (value) {
                 setState(() {
                   _selectedCategoryFilter = value!;
@@ -281,7 +316,8 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
                 : 'Try adjusting your filter settings',
             style: TextStyle(color: Colors.grey.shade600),
           ),
-          if (_selectedPriorityFilter == 'All' && _selectedCategoryFilter == 'All') ...[
+          if (_selectedPriorityFilter == 'All' &&
+              _selectedCategoryFilter == 'All') ...[
             SizedBox(height: 24),
             Container(
               padding: EdgeInsets.all(16),
@@ -323,7 +359,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
   Widget _buildRecommendationCard(DailyRecommendation recommendation) {
     final priorityColor = _getPriorityColor(recommendation.priority);
     final priorityIcon = _getPriorityIcon(recommendation.priority);
-    
+
     return Card(
       elevation: 3,
       margin: EdgeInsets.only(bottom: 16),
@@ -333,7 +369,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
           Container(
             padding: EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: priorityColor.withOpacity(0.1),
+              color: priorityColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(8),
                 topRight: Radius.circular(8),
@@ -362,10 +398,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
                 SizedBox(height: 8),
                 Text(
                   recommendation.description,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade700,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
                 ),
               ],
             ),
@@ -384,9 +417,11 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
                   ),
                 ),
                 SizedBox(height: 8),
-                ...recommendation.actionItems.map((action) => _buildActionItem(action, priorityColor)).toList(),
+                ...recommendation.actionItems.map(
+                  (action) => _buildActionItem(action, priorityColor),
+                ),
                 SizedBox(height: 16),
-                
+
                 // Recommendation details
                 _buildDetailSection(recommendation, priorityColor),
               ],
@@ -401,27 +436,27 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
     return Column(
       children: [
         _buildRecommendationDetail(
-          Icons.schedule, 
-          'Timeline', 
+          Icons.schedule,
+          'Timeline',
           recommendation.timeRelevance,
-          Colors.blue.shade600
+          Colors.blue.shade600,
         ),
         SizedBox(height: 8),
         _buildRecommendationDetail(
-          Icons.trending_up, 
-          'Expected outcome', 
+          Icons.trending_up,
+          'Expected outcome',
           recommendation.expectedOutcome,
-          Colors.green.shade600
+          Colors.green.shade600,
         ),
         SizedBox(height: 8),
         _buildRecommendationDetail(
-          Icons.agriculture, 
-          'Foraging impact', 
+          Icons.agriculture,
+          'Foraging impact',
           recommendation.foragingImpact,
-          Colors.orange.shade600
+          Colors.orange.shade600,
         ),
         SizedBox(height: 12),
-        
+
         // Scientific basis
         Container(
           padding: EdgeInsets.all(12),
@@ -466,7 +501,12 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
     );
   }
 
-  Widget _buildRecommendationDetail(IconData icon, String label, String value, Color color) {
+  Widget _buildRecommendationDetail(
+    IconData icon,
+    String label,
+    String value,
+    Color color,
+  ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -483,10 +523,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
         Expanded(
           child: Text(
             value,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey.shade700,
-            ),
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
           ),
         ),
       ],
@@ -503,20 +540,11 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
             margin: EdgeInsets.only(top: 6),
             width: 6,
             height: 6,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           SizedBox(width: 12),
           Expanded(
-            child: Text(
-              action,
-              style: TextStyle(
-                fontSize: 14,
-                height: 1.4,
-              ),
-            ),
+            child: Text(action, style: TextStyle(fontSize: 14, height: 1.4)),
           ),
         ],
       ),
@@ -623,7 +651,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
           Text(
             'Based on your hive activity patterns and current season',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               fontSize: 14,
             ),
           ),
@@ -634,8 +662,9 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
 
   Widget _buildSeasonalPlantRecommendations() {
     final currentSeason = _getCurrentSeason();
-    final seasonalPlants = EnhancedForagingAdvisoryService.seasonalPlants[currentSeason] ?? [];
-    
+    final seasonalPlants =
+        EnhancedForagingAdvisoryService.seasonalPlants[currentSeason] ?? [];
+
     return Card(
       elevation: 2,
       child: Padding(
@@ -653,7 +682,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
             ),
             SizedBox(height: 16),
             if (seasonalPlants.isNotEmpty)
-              ...seasonalPlants.map((plant) => _buildPlantCard(plant)).toList()
+              ...seasonalPlants.map((plant) => _buildPlantCard(plant))
             else
               Text('No specific recommendations for this season'),
           ],
@@ -699,7 +728,11 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
             children: [
               _buildPlantDetail('Planting', plant.plantingTime, Icons.schedule),
               SizedBox(width: 16),
-              _buildPlantDetail('Bloom', plant.bloomPeriod, Icons.local_florist),
+              _buildPlantDetail(
+                'Bloom',
+                plant.bloomPeriod,
+                Icons.local_florist,
+              ),
             ],
           ),
           SizedBox(height: 8),
@@ -722,10 +755,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
           SizedBox(height: 8),
           Text(
             'Instructions: ${plant.plantingInstructions}',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.green.shade600,
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.green.shade600),
           ),
         ],
       ),
@@ -748,10 +778,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
         ),
         Text(
           value,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.green.shade600,
-          ),
+          style: TextStyle(fontSize: 12, color: Colors.green.shade600),
         ),
       ],
     );
@@ -774,40 +801,65 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
               ),
             ),
             SizedBox(height: 16),
-            _buildCalendarSeason('Spring (Mar-May)', [
-              'Plant fruit trees for early nectar',
-              'Sow wildflower mixes',
-              'Establish willow for pollen',
-              'Prepare soil for summer plants',
-            ], Colors.green.shade100, Icons.eco),
+            _buildCalendarSeason(
+              'Spring (Mar-May)',
+              [
+                'Plant fruit trees for early nectar',
+                'Sow wildflower mixes',
+                'Establish willow for pollen',
+                'Prepare soil for summer plants',
+              ],
+              Colors.green.shade100,
+              Icons.eco,
+            ),
             SizedBox(height: 12),
-            _buildCalendarSeason('Summer (Jun-Aug)', [
-              'Plant sunflowers and basswood',
-              'Succession plant buckwheat',
-              'Maintain water sources',
-              'Monitor for summer dearth',
-            ], Colors.yellow.shade100, Icons.wb_sunny),
+            _buildCalendarSeason(
+              'Summer (Jun-Aug)',
+              [
+                'Plant sunflowers and basswood',
+                'Succession plant buckwheat',
+                'Maintain water sources',
+                'Monitor for summer dearth',
+              ],
+              Colors.yellow.shade100,
+              Icons.wb_sunny,
+            ),
             SizedBox(height: 12),
-            _buildCalendarSeason('Fall (Sep-Nov)', [
-              'Plant asters and goldenrod',
-              'Prepare winter feed if needed',
-              'Plant trees for next year',
-              'Assess honey stores',
-            ], Colors.orange.shade100, Icons.nature),
+            _buildCalendarSeason(
+              'Fall (Sep-Nov)',
+              [
+                'Plant asters and goldenrod',
+                'Prepare winter feed if needed',
+                'Plant trees for next year',
+                'Assess honey stores',
+              ],
+              Colors.orange.shade100,
+              Icons.nature,
+            ),
             SizedBox(height: 12),
-            _buildCalendarSeason('Winter (Dec-Feb)', [
-              'Plan next year\'s plantings',
-              'Order seeds and saplings',
-              'Prepare planting areas',
-              'Monitor hive health',
-            ], Colors.blue.shade100, Icons.ac_unit),
+            _buildCalendarSeason(
+              'Winter (Dec-Feb)',
+              [
+                'Plan next year\'s plantings',
+                'Order seeds and saplings',
+                'Prepare planting areas',
+                'Monitor hive health',
+              ],
+              Colors.blue.shade100,
+              Icons.ac_unit,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCalendarSeason(String season, List<String> activities, Color color, IconData icon) {
+  Widget _buildCalendarSeason(
+    String season,
+    List<String> activities,
+    Color color,
+    IconData icon,
+  ) {
     return Container(
       padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -832,21 +884,20 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
             ],
           ),
           SizedBox(height: 8),
-          ...activities.map((activity) => Padding(
-            padding: EdgeInsets.only(bottom: 4),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('• ', style: TextStyle(fontWeight: FontWeight.bold)),
-                Expanded(
-                  child: Text(
-                    activity,
-                    style: TextStyle(fontSize: 12),
+          ...activities.map(
+            (activity) => Padding(
+              padding: EdgeInsets.only(bottom: 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('• ', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Expanded(
+                    child: Text(activity, style: TextStyle(fontSize: 12)),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          )).toList(),
+          ),
         ],
       ),
     );
@@ -871,10 +922,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
             SizedBox(height: 8),
             Text(
               'Fast-growing plants for poor foraging conditions',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             ),
             SizedBox(height: 16),
             _buildEmergencyPlant(
@@ -901,7 +949,12 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
     );
   }
 
-  Widget _buildEmergencyPlant(String name, String timing, String benefit, IconData icon) {
+  Widget _buildEmergencyPlant(
+    String name,
+    String timing,
+    String benefit,
+    IconData icon,
+  ) {
     return Container(
       margin: EdgeInsets.only(bottom: 8),
       padding: EdgeInsets.all(12),
@@ -927,10 +980,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
                 ),
                 Text(
                   '$timing • $benefit',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.red.shade600,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.red.shade600),
                 ),
               ],
             ),
@@ -992,7 +1042,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
           Text(
             'Understanding the research behind your hive\'s foraging optimization',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               fontSize: 14,
             ),
           ),
@@ -1003,7 +1053,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
 
   Widget _buildAnalysisBasedInsights() {
     final analysis = widget.analysisData;
-    
+
     return Card(
       elevation: 2,
       child: Padding(
@@ -1023,7 +1073,10 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
             _buildInsightCard(
               'Temperature Correlation',
               'Your hive shows ${analysis.correlations.temperatureActivity >= 0 ? 'positive' : 'negative'} correlation (${analysis.correlations.temperatureActivity.toStringAsFixed(2)}) between temperature and activity.',
-              _getCorrelationAdvice(analysis.correlations.temperatureActivity, 'temperature'),
+              _getCorrelationAdvice(
+                analysis.correlations.temperatureActivity,
+                'temperature',
+              ),
               Icons.thermostat,
               Colors.red.shade600,
             ),
@@ -1031,7 +1084,9 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
             _buildInsightCard(
               'Foraging Patterns',
               'Analysis shows: ${analysis.foragingPatterns.overallForagingAssessment}',
-              _getForagingAdvice(analysis.foragingPatterns.overallForagingAssessment),
+              _getForagingAdvice(
+                analysis.foragingPatterns.overallForagingAssessment,
+              ),
               Icons.navigation,
               Colors.orange.shade600,
             ),
@@ -1039,7 +1094,12 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
             _buildInsightCard(
               'Activity Level',
               'Total daily activity: ${analysis.beeCountData.fold(0, (sum, hour) => sum + hour.totalActivity)} bee movements',
-              _getActivityAdvice(analysis.beeCountData.fold(0, (sum, hour) => sum + hour.totalActivity)),
+              _getActivityAdvice(
+                analysis.beeCountData.fold(
+                  0,
+                  (sum, hour) => sum + hour.totalActivity,
+                ),
+              ),
               Icons.trending_up,
               Colors.green.shade600,
             ),
@@ -1081,13 +1141,19 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
     }
   }
 
-  Widget _buildInsightCard(String title, String data, String advice, IconData icon, Color color) {
+  Widget _buildInsightCard(
+    String title,
+    String data,
+    String advice,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1111,17 +1177,14 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
           SizedBox(height: 8),
           Text(
             data,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey.shade700,
-            ),
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
           ),
           SizedBox(height: 6),
           Text(
             advice,
             style: TextStyle(
               fontSize: 12,
-              color: color.withOpacity(0.8),
+              color: color.withValues(alpha: 0.8),
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -1188,7 +1251,13 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
     );
   }
 
-  Widget _buildResearchSection(String title, String summary, List<String> keyPoints, IconData icon, Color color) {
+  Widget _buildResearchSection(
+    String title,
+    String summary,
+    List<String> keyPoints,
+    IconData icon,
+    Color color,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1211,39 +1280,35 @@ class _RecommendationsScreenState extends State<RecommendationsScreen>
         SizedBox(height: 8),
         Text(
           summary,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey.shade700,
-          ),
+          style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
         ),
         SizedBox(height: 8),
-        ...keyPoints.map((point) => Padding(
-          padding: EdgeInsets.only(bottom: 4),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                margin: EdgeInsets.only(top: 6),
-                width: 4,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  point,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey.shade600,
+        ...keyPoints.map(
+          (point) => Padding(
+            padding: EdgeInsets.only(bottom: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  margin: EdgeInsets.only(top: 6),
+                  width: 4,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
                   ),
                 ),
-              ),
-            ],
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    point,
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                  ),
+                ),
+              ],
+            ),
           ),
-        )).toList(),
+        ),
       ],
     );
   }

@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:fluttertoast/fluttertoast.dart';
 
 class ForgotPassword extends StatefulWidget {
-  const ForgotPassword({Key? key}) : super(key: key);
+  const ForgotPassword({super.key});
 
   @override
   State<ForgotPassword> createState() => _ForgotPasswordState();
@@ -59,13 +59,14 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: _isSubmitting
-                          ? null
-                          : () async {
-                              setState(() => _isSubmitting = true);
-                              await _handlePasswordReset();
-                              setState(() => _isSubmitting = false);
-                            },
+                      onPressed:
+                          _isSubmitting
+                              ? null
+                              : () async {
+                                setState(() => _isSubmitting = true);
+                                await _handlePasswordReset();
+                                setState(() => _isSubmitting = false);
+                              },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color.fromARGB(
                           255,

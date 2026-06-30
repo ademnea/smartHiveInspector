@@ -32,9 +32,11 @@ class TokenStorage {
       await prefs.setString(_displayNameKey, displayName);
     }
     if (role != null) await prefs.setString(_roleKey, role);
-    if (profile != null) await prefs.setString(_profileKey, jsonEncode(profile));
-    if (refreshToken != null)
+    if (profile != null)
+      await prefs.setString(_profileKey, jsonEncode(profile));
+    if (refreshToken != null) {
       await prefs.setString(_refreshTokenKey, refreshToken);
+    }
   }
 
   // Get saved token
@@ -248,7 +250,7 @@ class TokenStorage {
   }
 
   // ===== FIXES FOR AUTH_SERVICES =====
-  
+
   // ADD THIS METHOD - Save token (for backward compatibility with auth_services.dart)
   static Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();

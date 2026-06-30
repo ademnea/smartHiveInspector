@@ -11,11 +11,7 @@ class ProfileScreen extends StatefulWidget {
   final String token;
   final Future<http.Response?> Function(String? storedUserId)? profileFetcher;
 
-  const ProfileScreen({
-    Key? key,
-    required this.token,
-    this.profileFetcher,
-  }) : super(key: key);
+  const ProfileScreen({super.key, required this.token, this.profileFetcher});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -78,15 +74,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return 'Bee Keeper';
   }
 
-  String _resolveEmail(
-    Map<String, dynamic>? user, {
-    String? fallbackEmail,
-  }) {
-    final candidates = [
-      user?['email'],
-      user?['username'],
-      fallbackEmail,
-    ];
+  String _resolveEmail(Map<String, dynamic>? user, {String? fallbackEmail}) {
+    final candidates = [user?['email'], user?['username'], fallbackEmail];
 
     for (final candidate in candidates) {
       final value = candidate?.toString().trim();
@@ -98,10 +87,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return 'No email';
   }
 
-  String _resolveRole(
-    Map<String, dynamic>? user, {
-    String? fallbackRole,
-  }) {
+  String _resolveRole(Map<String, dynamic>? user, {String? fallbackRole}) {
     final candidates = [user?['role'], fallbackRole];
 
     for (final candidate in candidates) {
@@ -202,7 +188,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               user['id']?.toString().trim().isNotEmpty == true
                   ? user['id'].toString().trim()
                   : (storedUserId?.trim() ?? '');
-          final resolvedName = _resolveDisplayName(user, fallbackName: userName);
+          final resolvedName = _resolveDisplayName(
+            user,
+            fallbackName: userName,
+          );
           final resolvedEmail = _resolveEmail(user, fallbackEmail: email);
           final resolvedRole = _resolveRole(user, fallbackRole: role);
 
@@ -451,10 +440,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         child: Row(
                           children: [
-                            Icon(
-                              Icons.info_outline,
-                              color: Colors.orange[800],
-                            ),
+                            Icon(Icons.info_outline, color: Colors.orange[800]),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
@@ -610,7 +596,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -683,12 +669,12 @@ class EditProfileScreen extends StatefulWidget {
   final String currentRole;
 
   const EditProfileScreen({
-    Key? key,
+    super.key,
     required this.userId,
     required this.initialName,
     required this.initialEmail,
     required this.currentRole,
-  }) : super(key: key);
+  });
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -907,10 +893,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               if (_errorMessage != null) ...[
                 const SizedBox(height: 16),
-                Text(
-                  _errorMessage!,
-                  style: const TextStyle(color: Colors.red),
-                ),
+                Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
               ],
               const SizedBox(height: 24),
               ElevatedButton(

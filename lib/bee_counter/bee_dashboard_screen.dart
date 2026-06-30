@@ -10,11 +10,13 @@ import 'package:HPGM/bee_counter/weather-service.dart';
 import 'package:HPGM/bee_counter/foraging_efficiency_metric.dart' as efficiency;
 import 'package:HPGM/bee_counter/weatherdata.dart';
 import 'package:HPGM/bee_counter/foraging_report_generator.dart' as report_gen;
+import 'package:HPGM/inspection/inspection_flow_screen.dart';
+import 'package:HPGM/inspection/inspection_storage.dart';
 
 class BeeDashboardScreen extends StatefulWidget {
   final String hiveId;
 
-  const BeeDashboardScreen({Key? key, required this.hiveId}) : super(key: key);
+  const BeeDashboardScreen({super.key, required this.hiveId});
 
   @override
   _BeeDashboardScreenState createState() => _BeeDashboardScreenState();
@@ -24,10 +26,10 @@ class _BeeDashboardScreenState extends State<BeeDashboardScreen> {
   List<BeeCount> _recentCounts = [];
   Map<String, dynamic> _quickStats = {};
   bool _isLoading = true;
-  DateTime _selectedDate = DateTime.now();
+  final DateTime _selectedDate = DateTime.now();
   bool _generatingReport = false;
   int _selectedTimeRange = 30; // Default to 30 days
-
+  DateTime? _lastInspectionDate;
   // Report generator - use correct class name with alias
   final report_gen.ForagingReportGenerator _reportGenerator =
       report_gen.ForagingReportGenerator(
@@ -46,6 +48,15 @@ class _BeeDashboardScreenState extends State<BeeDashboardScreen> {
     setState(() {
       _isLoading = true;
     });
+
+    final lastInspection = await InspectionStorage.getLastInspectionDate(
+      widget.hiveId,
+    );
+    if (mounted) {
+      setState(() {
+        _lastInspectionDate = lastInspection;
+      });
+    }
 
     try {
       // Calculate date range based on selected time range
@@ -562,8 +573,15 @@ class _BeeDashboardScreenState extends State<BeeDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Time range indicator
-          _buildTimeRangeSelector(),
+          // Inspect Hive card + Time range indicator, side by side
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: 1, child: _buildInspectHiveCard()),
+              const SizedBox(width: 12),
+              Expanded(flex: 2, child: _buildTimeRangeSelector()),
+            ],
+          ),
           const SizedBox(height: 16),
 
           // Quick stats cards
@@ -582,6 +600,46 @@ class _BeeDashboardScreenState extends State<BeeDashboardScreen> {
           _buildActionsSection(),
           const SizedBox(height: 32),
         ],
+      ),
+    );
+  }
+
+  Widget _buildInspectHiveCard() {
+    return Card(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => InspectionFlowScreen(hiveId: widget.hiveId),
+            ),
+          );
+          if (result == true) {
+            _loadData(); // refresh last inspection date after completing inspection
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.fact_check, color: Colors.amber, size: 28),
+              const SizedBox(height: 8),
+              Text(
+                'Inspect Hive',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                _lastInspectionDate != null
+                    ? 'Last: ${DateFormat('MMM d, yyyy').format(_lastInspectionDate!)}'
+                    : 'No inspections yet',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -869,9 +927,9 @@ class _BeeDashboardScreenState extends State<BeeDashboardScreen> {
 
     // Calculate max Y value for chart
     double maxY = 0;
-    activity.values.forEach((value) {
+    for (var value in activity.values) {
       if (value > maxY) maxY = value.toDouble();
-    });
+    }
 
     // Add 20% to max Y for better visualization
     maxY = (maxY * 1.2).ceilToDouble();
@@ -884,7 +942,10 @@ class _BeeDashboardScreenState extends State<BeeDashboardScreen> {
           drawVerticalLine: false,
           horizontalInterval: maxY / 5,
           getDrawingHorizontalLine: (value) {
-            return FlLine(color: Colors.grey.withOpacity(0.2), strokeWidth: 1);
+            return FlLine(
+              color: Colors.grey.withValues(alpha: 0.2),
+              strokeWidth: 1,
+            );
           },
         ),
         titlesData: FlTitlesData(
@@ -945,7 +1006,10 @@ class _BeeDashboardScreenState extends State<BeeDashboardScreen> {
         ),
         borderData: FlBorderData(
           show: true,
-          border: Border.all(color: Colors.grey.withOpacity(0.5), width: 1),
+          border: Border.all(
+            color: Colors.grey.withValues(alpha: 0.5),
+            width: 1,
+          ),
         ),
         minX: 0,
         maxX: (dates.length - 1).toDouble(),
@@ -961,13 +1025,13 @@ class _BeeDashboardScreenState extends State<BeeDashboardScreen> {
             dotData: FlDotData(show: false),
             belowBarData: BarAreaData(
               show: true,
-              color: Theme.of(context).primaryColor.withOpacity(0.2),
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
             ),
           ),
         ],
         lineTouchData: LineTouchData(
           touchTooltipData: LineTouchTooltipData(
-            tooltipBgColor: Colors.blueGrey.withOpacity(0.8),
+            tooltipBgColor: Colors.blueGrey.withValues(alpha: 0.8),
             getTooltipItems: (touchedSpots) {
               return touchedSpots.map((touchedSpot) {
                 final date = dates[touchedSpot.x.toInt()];
@@ -1037,7 +1101,7 @@ class _BeeDashboardScreenState extends State<BeeDashboardScreen> {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.2),
+            color: color.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: color, size: 20),

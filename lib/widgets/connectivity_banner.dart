@@ -4,7 +4,7 @@ import 'package:HPGM/Services/connectivity_service.dart';
 class ConnectivityBanner extends StatelessWidget {
   final Widget child;
 
-  const ConnectivityBanner({Key? key, required this.child}) : super(key: key);
+  const ConnectivityBanner({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +20,10 @@ class ConnectivityBanner extends StatelessWidget {
               Container(
                 width: double.infinity,
                 color: Colors.red[700],
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 16,
+                ),
                 child: SafeArea(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,

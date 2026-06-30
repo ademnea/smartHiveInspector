@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 
 class GetStarted extends StatefulWidget {
-  const GetStarted({Key? key}) : super(key: key);
+  const GetStarted({super.key});
 
   @override
   _GetStartedState createState() => _GetStartedState();
@@ -60,12 +60,15 @@ class _GetStartedState extends State<GetStarted> {
           ),
           // Opacity overlay
           Container(
-            color: Colors.black.withOpacity(0.5), // Adjust opacity as needed
+            color: Colors.black.withValues(
+              alpha: 0.5,
+            ), // Adjust opacity as needed
           ),
           // Content
           Padding(
-            padding:
-                const EdgeInsets.only(top: 300.0), // Add space above the text
+            padding: const EdgeInsets.only(
+              top: 300.0,
+            ), // Add space above the text
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -112,10 +115,10 @@ class _GetStartedState extends State<GetStarted> {
                       );
                     },
                     style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all<Color>(
+                      backgroundColor: WidgetStateProperty.all<Color>(
                         const Color.fromARGB(255, 206, 109, 40), // RGB color
                       ),
-                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      shape: WidgetStateProperty.all<RoundedRectangleBorder>(
                         RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20.0),
                         ),

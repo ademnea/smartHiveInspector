@@ -8,8 +8,7 @@ class HiveStatusCard extends StatelessWidget {
   final Hive hive;
   final WeatherData? weatherData;
 
-  const HiveStatusCard({Key? key, required this.hive, this.weatherData})
-    : super(key: key);
+  const HiveStatusCard({super.key, required this.hive, this.weatherData});
 
   @override
   Widget build(BuildContext context) {
@@ -193,7 +192,7 @@ class HiveStatusCard extends StatelessWidget {
         border: Border.all(color: Colors.grey[200]!),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 1,
             blurRadius: 3,
             offset: const Offset(0, 1),
@@ -228,7 +227,7 @@ class HiveStatusCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
+              color: color.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(

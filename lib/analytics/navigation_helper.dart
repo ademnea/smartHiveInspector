@@ -15,21 +15,22 @@ class NavigationHelper {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => Center(
-          child: Card(
-            child: Padding(
-              padding: EdgeInsets.all(20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('Loading recommendations...'),
-                ],
+        builder:
+            (context) => Center(
+              child: Card(
+                child: Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Loading recommendations...'),
+                    ],
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
       );
 
       // Get foraging analysis
@@ -46,25 +47,27 @@ class NavigationHelper {
         // Navigate to recommendations screen
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => RecommendationsScreen(
-              analysisData: analysisData,
-            ),
+            builder:
+                (context) => RecommendationsScreen(analysisData: analysisData),
           ),
         );
       } else {
         // Show error dialog
         showDialog(
           context: context,
-          builder: (context) => AlertDialog(
-            title: Text('No Data Available'),
-            content: Text('Unable to load recommendations. Please try again later.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text('OK'),
+          builder:
+              (context) => AlertDialog(
+                title: Text('No Data Available'),
+                content: Text(
+                  'Unable to load recommendations. Please try again later.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text('OK'),
+                  ),
+                ],
               ),
-            ],
-          ),
         );
       }
     } catch (e) {
@@ -76,16 +79,17 @@ class NavigationHelper {
       // Show error dialog
       showDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Error'),
-          content: Text('Failed to load recommendations: $e'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('OK'),
+        builder:
+            (context) => AlertDialog(
+              title: Text('Error'),
+              content: Text('Failed to load recommendations: $e'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text('OK'),
+                ),
+              ],
             ),
-          ],
-        ),
       );
     }
   }
@@ -97,9 +101,7 @@ class NavigationHelper {
   }) async {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => EnhancedForagingDashboard(
-          hiveId: hiveId,
-        ),
+        builder: (context) => EnhancedForagingDashboard(hiveId: hiveId),
       ),
     );
   }
@@ -114,9 +116,7 @@ class NavigationHelper {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => Center(
-          child: CircularProgressIndicator(),
-        ),
+        builder: (context) => Center(child: CircularProgressIndicator()),
       );
 
       // Get recommendations
@@ -133,71 +133,83 @@ class NavigationHelper {
         // Show quick view dialog
         showDialog(
           context: context,
-          builder: (context) => AlertDialog(
-            title: Text('Today\'s Recommendations'),
-            content: Container(
-              width: double.maxFinite,
-              constraints: BoxConstraints(maxHeight: 400),
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: analysisData.recommendations.length,
-                itemBuilder: (context, index) {
-                  final rec = analysisData.recommendations[index];
-                  return Card(
-                    child: ListTile(
-                      leading: Icon(
-                        rec.priority == 'Critical' ? Icons.error :
-                        rec.priority == 'High' ? Icons.warning :
-                        Icons.info,
-                        color: rec.priority == 'Critical' ? Colors.red :
-                               rec.priority == 'High' ? Colors.orange :
-                               Colors.blue,
-                      ),
-                      title: Text(
-                        rec.title,
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        rec.description,
-                        style: TextStyle(fontSize: 12),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      dense: true,
-                    ),
-                  );
-                },
+          builder:
+              (context) => AlertDialog(
+                title: Text('Today\'s Recommendations'),
+                content: Container(
+                  width: double.maxFinite,
+                  constraints: BoxConstraints(maxHeight: 400),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: analysisData.recommendations.length,
+                    itemBuilder: (context, index) {
+                      final rec = analysisData.recommendations[index];
+                      return Card(
+                        child: ListTile(
+                          leading: Icon(
+                            rec.priority == 'Critical'
+                                ? Icons.error
+                                : rec.priority == 'High'
+                                ? Icons.warning
+                                : Icons.info,
+                            color:
+                                rec.priority == 'Critical'
+                                    ? Colors.red
+                                    : rec.priority == 'High'
+                                    ? Colors.orange
+                                    : Colors.blue,
+                          ),
+                          title: Text(
+                            rec.title,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          subtitle: Text(
+                            rec.description,
+                            style: TextStyle(fontSize: 12),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          dense: true,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text('Close'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      navigateToRecommendations(context, hiveId: hiveId);
+                    },
+                    child: Text('View All'),
+                  ),
+                ],
               ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text('Close'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  navigateToRecommendations(context, hiveId: hiveId);
-                },
-                child: Text('View All'),
-              ),
-            ],
-          ),
         );
       } else {
         // No recommendations available
         showDialog(
           context: context,
-          builder: (context) => AlertDialog(
-            title: Text('No Recommendations'),
-            content: Text('No recommendations available for today. Your hive appears to be performing well!'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text('OK'),
+          builder:
+              (context) => AlertDialog(
+                title: Text('No Recommendations'),
+                content: Text(
+                  'No recommendations available for today. Your hive appears to be performing well!',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text('OK'),
+                  ),
+                ],
               ),
-            ],
-          ),
         );
       }
     } catch (e) {
@@ -229,54 +241,68 @@ class NavigationHelper {
       );
 
       if (analysisData != null) {
-        final criticalRecs = analysisData.recommendations
-            .where((r) => r.priority == 'Critical')
-            .toList();
+        final criticalRecs =
+            analysisData.recommendations
+                .where((r) => r.priority == 'Critical')
+                .toList();
 
         if (criticalRecs.isNotEmpty) {
           // Show critical alert dialog
           showDialog(
             context: context,
-            builder: (context) => AlertDialog(
-              title: Row(
-                children: [
-                  Icon(Icons.error, color: Colors.red),
-                  SizedBox(width: 8),
-                  Text('Critical Alert'),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Your hive has ${criticalRecs.length} critical recommendation${criticalRecs.length > 1 ? 's' : ''} that need immediate attention:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+            builder:
+                (context) => AlertDialog(
+                  title: Row(
+                    children: [
+                      Icon(Icons.error, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('Critical Alert'),
+                    ],
                   ),
-                  SizedBox(height: 12),
-                  ...criticalRecs.take(3).map((rec) => Padding(
-                    padding: EdgeInsets.only(bottom: 8),
-                    child: Text('• ${rec.title}', style: TextStyle(fontSize: 14)),
-                  )).toList(),
-                  if (criticalRecs.length > 3)
-                    Text('...and ${criticalRecs.length - 3} more'),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text('Later'),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Your hive has ${criticalRecs.length} critical recommendation${criticalRecs.length > 1 ? 's' : ''} that need immediate attention:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 12),
+                      ...criticalRecs
+                          .take(3)
+                          .map(
+                            (rec) => Padding(
+                              padding: EdgeInsets.only(bottom: 8),
+                              child: Text(
+                                '• ${rec.title}',
+                                style: TextStyle(fontSize: 14),
+                              ),
+                            ),
+                          ),
+                      if (criticalRecs.length > 3)
+                        Text('...and ${criticalRecs.length - 3} more'),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text('Later'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        navigateToRecommendations(context, hiveId: hiveId);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                      ),
+                      child: Text(
+                        'View Now',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
                 ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    navigateToRecommendations(context, hiveId: hiveId);
-                  },
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                  child: Text('View Now', style: TextStyle(color: Colors.white)),
-                ),
-              ],
-            ),
           );
           return true;
         }

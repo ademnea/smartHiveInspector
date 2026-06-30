@@ -111,7 +111,7 @@ class _EditHiveFormState extends State<EditHiveForm> {
                             Text(
                               '${widget.farmName} - ${widget.apiaryLocation}',
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.8),
+                                color: Colors.white.withValues(alpha: 0.8),
                                 fontFamily: "Sans",
                               ),
                             ),
@@ -228,9 +228,9 @@ class _EditHiveFormState extends State<EditHiveForm> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       decoration: BoxDecoration(
-        color: Colors.orange[700]?.withOpacity(0.1),
+        color: Colors.orange[700]?.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.orange[700]!.withOpacity(0.3)),
+        border: Border.all(color: Colors.orange[700]!.withValues(alpha: 0.3)),
       ),
       child: Text(
         title,
@@ -301,7 +301,7 @@ class _EditHiveFormState extends State<EditHiveForm> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: Colors.orange[700],
+            activeThumbColor: Colors.orange[700],
             activeTrackColor: Colors.orange[200],
           ),
         ],
@@ -322,15 +322,17 @@ class _EditHiveFormState extends State<EditHiveForm> {
     };
     if (!isConnected) {
       // Queue the edit hive action for later sync
-      await ApiaryQueueService.addToQueue(ApiaryQueueItem(
-        actionType: ApiaryActionType.edit,
-        data: {
-          'hive': updateData,
-          'hiveId': widget.hiveId,
-          'endpoint': 'http://196.43.168.57/api/v1/hives/${widget.hiveId}',
-        },
-        apiaryId: widget.hiveId,
-      ));
+      await ApiaryQueueService.addToQueue(
+        ApiaryQueueItem(
+          actionType: ApiaryActionType.edit,
+          data: {
+            'hive': updateData,
+            'hiveId': widget.hiveId,
+            'endpoint': 'http://196.43.168.57/api/v1/hives/${widget.hiveId}',
+          },
+          apiaryId: widget.hiveId,
+        ),
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(

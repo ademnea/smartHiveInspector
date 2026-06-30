@@ -10,10 +10,10 @@ class BeeCountResultsScreen extends StatefulWidget {
   final DateTime date;
 
   const BeeCountResultsScreen({
-    Key? key,
+    super.key,
     required this.hiveId,
     required this.date,
-  }) : super(key: key);
+  });
 
   @override
   _BeeCountResultsScreenState createState() => _BeeCountResultsScreenState();
@@ -269,7 +269,7 @@ class _BeeCountResultsScreenState extends State<BeeCountResultsScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -295,7 +295,7 @@ class _BeeCountResultsScreenState extends State<BeeCountResultsScreen> {
                 Text(
                   'Bee Activity Summary',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 14,
                   ),
                 ),
@@ -404,9 +404,9 @@ class _BeeCountResultsScreenState extends State<BeeCountResultsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
       ),
       child: Column(
         children: [
@@ -423,7 +423,10 @@ class _BeeCountResultsScreenState extends State<BeeCountResultsScreen> {
           SizedBox(height: 4),
           Text(
             title,
-            style: TextStyle(color: _textColor.withOpacity(0.8), fontSize: 14),
+            style: TextStyle(
+              color: _textColor.withValues(alpha: 0.8),
+              fontSize: 14,
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -474,7 +477,7 @@ class _BeeCountResultsScreenState extends State<BeeCountResultsScreen> {
               ],
             ),
             SizedBox(height: 24),
-            Container(
+            SizedBox(
               height: 250,
               child: LineChart(
                 LineChartData(
@@ -501,7 +504,7 @@ class _BeeCountResultsScreenState extends State<BeeCountResultsScreen> {
                               child: Text(
                                 time,
                                 style: TextStyle(
-                                  color: _textColor.withOpacity(0.7),
+                                  color: _textColor.withValues(alpha: 0.7),
                                   fontSize: 10,
                                 ),
                               ),
@@ -520,7 +523,7 @@ class _BeeCountResultsScreenState extends State<BeeCountResultsScreen> {
                           return Text(
                             value.toInt().toString(),
                             style: TextStyle(
-                              color: _textColor.withOpacity(0.7),
+                              color: _textColor.withValues(alpha: 0.7),
                               fontSize: 12,
                             ),
                           );
@@ -558,7 +561,7 @@ class _BeeCountResultsScreenState extends State<BeeCountResultsScreen> {
                       dotData: FlDotData(show: true),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: _enteringColor.withOpacity(0.2),
+                        color: _enteringColor.withValues(alpha: 0.2),
                       ),
                     ),
                     LineChartBarData(
@@ -570,7 +573,7 @@ class _BeeCountResultsScreenState extends State<BeeCountResultsScreen> {
                       dotData: FlDotData(show: true),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: _exitingColor.withOpacity(0.2),
+                        color: _exitingColor.withValues(alpha: 0.2),
                       ),
                     ),
                   ],
@@ -663,7 +666,7 @@ class _BeeCountResultsScreenState extends State<BeeCountResultsScreen> {
               Icon(
                 Icons.access_time,
                 size: 16,
-                color: _textColor.withOpacity(0.7),
+                color: _textColor.withValues(alpha: 0.7),
               ),
               SizedBox(width: 8),
               Text(
@@ -678,10 +681,10 @@ class _BeeCountResultsScreenState extends State<BeeCountResultsScreen> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: netChangeColor.withOpacity(0.1),
+                  color: netChangeColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: netChangeColor.withOpacity(0.3),
+                    color: netChangeColor.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -691,7 +694,7 @@ class _BeeCountResultsScreenState extends State<BeeCountResultsScreen> {
                     Icon(netChangeIcon, size: 14, color: netChangeColor),
                     SizedBox(width: 4),
                     Text(
-                      '${netChange >= 0 ? "+" : ""}${netChange}',
+                      '${netChange >= 0 ? "+" : ""}$netChange',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -739,7 +742,7 @@ class _BeeCountResultsScreenState extends State<BeeCountResultsScreen> {
               style: TextStyle(
                 fontSize: 14,
                 fontStyle: FontStyle.italic,
-                color: _textColor.withOpacity(0.7),
+                color: _textColor.withValues(alpha: 0.7),
               ),
             ),
           ],

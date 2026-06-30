@@ -102,7 +102,7 @@ class TimeBasedReturnRateDatabase {
       return id;
     } catch (e) {
       print('Error saving time block analysis: $e');
-      throw e;
+      rethrow;
     }
   }
 
@@ -143,7 +143,7 @@ class TimeBasedReturnRateDatabase {
       return id;
     } catch (e) {
       print('Error saving trip duration distribution: $e');
-      throw e;
+      rethrow;
     }
   }
 

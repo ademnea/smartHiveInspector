@@ -173,11 +173,12 @@ Widget buildFarmCard(
                     icon: Icons.delete,
                     label: 'Delete',
                     color: Colors.red[700]!,
-                    onTap: () => _showDeleteConfirmation(
-                      farm,
-                      context,
-                      onDeleted: onDeleted,
-                    ),
+                    onTap:
+                        () => _showDeleteConfirmation(
+                          farm,
+                          context,
+                          onDeleted: onDeleted,
+                        ),
                   ),
                 ],
               ),
@@ -329,7 +330,7 @@ Widget _buildStatusIndicator({
     child: Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.brown[400]?.withOpacity(0.5),
+        color: Colors.brown[400]?.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.brown[500]!),
       ),

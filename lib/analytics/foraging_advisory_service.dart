@@ -11,8 +11,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 // ENUMS
 // ============================================
 enum Season { spring, summer, fall, winter }
+
 enum Priority { critical, high, medium, low }
-enum RecommendationType { immediate, environmental, optimization, urgent, seasonal }
+
+enum RecommendationType {
+  immediate,
+  environmental,
+  optimization,
+  urgent,
+  seasonal,
+}
 
 // ============================================
 // DATA MODELS
@@ -311,7 +319,8 @@ class EnhancedForagingAdvisoryService {
         bloomPeriod: 'April-June',
         nectarValue: 'Good',
         pollenValue: 'Excellent',
-        scientificBasis: 'Provides 25% of spring pollen needs in temperate regions',
+        scientificBasis:
+            'Provides 25% of spring pollen needs in temperate regions',
         plantingInstructions: 'Allow natural growth in designated areas',
       ),
       PlantRecommendation(
@@ -405,10 +414,16 @@ class EnhancedForagingAdvisoryService {
       final endDate = DateTime(date.year, date.month, date.day, 23, 59, 59);
 
       final temperatureData = await _fetchLatestTemperatureData(
-        hiveId, token, startDate, endDate
+        hiveId,
+        token,
+        startDate,
+        endDate,
       );
       final humidityData = await _fetchLatestHumidityData(
-        hiveId, token, startDate, endDate
+        hiveId,
+        token,
+        startDate,
+        endDate,
       );
       final weightData = await _fetchLatestWeightData(hiveId, token);
       final beeCountData = await _fetchHourlyBeeCountData(hiveId, date);
@@ -420,20 +435,32 @@ class EnhancedForagingAdvisoryService {
         'weight=${weightData.length}, beeCount=${beeCountData.length}',
       );
 
-      if (beeCountData.isEmpty && temperatureData.isEmpty && humidityData.isEmpty) {
+      if (beeCountData.isEmpty &&
+          temperatureData.isEmpty &&
+          humidityData.isEmpty) {
         print('No data available for analysis');
         return null;
       }
 
       final foragingPatterns = _analyzeForagingPatterns(
-        beeCountData, temperatureData, humidityData
+        beeCountData,
+        temperatureData,
+        humidityData,
       );
 
       final correlations = _calculateTimeSyncedCorrelations(
-        temperatureData, humidityData, weightData, beeCountData, date
+        temperatureData,
+        humidityData,
+        weightData,
+        beeCountData,
+        date,
       );
 
-      final weightAnalysis = _analyzeWeightChanges(weightData, beeCountData, date);
+      final weightAnalysis = _analyzeWeightChanges(
+        weightData,
+        beeCountData,
+        date,
+      );
 
       final recommendations = _generateEnhancedDailyRecommendations(
         date,
@@ -482,14 +509,18 @@ class EnhancedForagingAdvisoryService {
       final startDateStr = DateFormat('yyyy-MM-dd').format(startDate);
       final endDateStr = DateFormat('yyyy-MM-dd').format(endDate);
 
-      final response = await http.get(
-        Uri.parse('$baseUrl/hives/$hiveId/temperature/$startDateStr/$endDateStr'),
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      ).timeout(Duration(seconds: 30));
+      final response = await http
+          .get(
+            Uri.parse(
+              '$baseUrl/hives/$hiveId/temperature/$startDateStr/$endDateStr',
+            ),
+            headers: {
+              'Accept': 'application/json',
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+          )
+          .timeout(Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
@@ -502,14 +533,18 @@ class EnhancedForagingAdvisoryService {
                 dataPoint['date'] ?? dataPoint['timestamp'],
               );
               final temperature = double.tryParse(
-                dataPoint['temperature']?.toString() ?? '0'
+                dataPoint['temperature']?.toString() ?? '0',
               );
-              if (temperature != null && temperature > -50 && temperature < 100) {
-                parameters.add(TimestampedParameter(
-                  timestamp: timestamp,
-                  value: temperature,
-                  type: 'temperature',
-                ));
+              if (temperature != null &&
+                  temperature > -50 &&
+                  temperature < 100) {
+                parameters.add(
+                  TimestampedParameter(
+                    timestamp: timestamp,
+                    value: temperature,
+                    type: 'temperature',
+                  ),
+                );
               }
             } catch (e) {
               print('Error parsing temperature data point: $e');
@@ -535,14 +570,18 @@ class EnhancedForagingAdvisoryService {
       final startDateStr = DateFormat('yyyy-MM-dd').format(startDate);
       final endDateStr = DateFormat('yyyy-MM-dd').format(endDate);
 
-      final response = await http.get(
-        Uri.parse('$baseUrl/hives/$hiveId/humidity/$startDateStr/$endDateStr'),
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      ).timeout(Duration(seconds: 30));
+      final response = await http
+          .get(
+            Uri.parse(
+              '$baseUrl/hives/$hiveId/humidity/$startDateStr/$endDateStr',
+            ),
+            headers: {
+              'Accept': 'application/json',
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+          )
+          .timeout(Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
@@ -555,14 +594,16 @@ class EnhancedForagingAdvisoryService {
                 dataPoint['date'] ?? dataPoint['timestamp'],
               );
               final humidity = double.tryParse(
-                dataPoint['humidity']?.toString() ?? '0'
+                dataPoint['humidity']?.toString() ?? '0',
               );
               if (humidity != null && humidity >= 0 && humidity <= 100) {
-                parameters.add(TimestampedParameter(
-                  timestamp: timestamp,
-                  value: humidity,
-                  type: 'humidity',
-                ));
+                parameters.add(
+                  TimestampedParameter(
+                    timestamp: timestamp,
+                    value: humidity,
+                    type: 'humidity',
+                  ),
+                );
               }
             } catch (e) {
               print('Error parsing humidity data point: $e');
@@ -583,14 +624,16 @@ class EnhancedForagingAdvisoryService {
     String token,
   ) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/hives/$hiveId/latest-weight'),
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      ).timeout(Duration(seconds: 30));
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/hives/$hiveId/latest-weight'),
+            headers: {
+              'Accept': 'application/json',
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+          )
+          .timeout(Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         final latestData = jsonDecode(response.body);
@@ -609,11 +652,13 @@ class EnhancedForagingAdvisoryService {
           timestamp = DateTime.now();
         }
         if (weight != null && weight > 0) {
-          return [TimestampedParameter(
-            timestamp: timestamp!,
-            value: weight,
-            type: 'weight',
-          )];
+          return [
+            TimestampedParameter(
+              timestamp: timestamp,
+              value: weight,
+              type: 'weight',
+            ),
+          ];
         }
       }
     } catch (e) {
@@ -627,8 +672,11 @@ class EnhancedForagingAdvisoryService {
     DateTime date,
   ) async {
     try {
-      final beeCounts = await BeeCountDatabase.instance.readBeeCountsByDate(date);
-      final hiveCounts = beeCounts.where((count) => count.hiveId == hiveId).toList();
+      final beeCounts = await BeeCountDatabase.instance.readBeeCountsByDate(
+        date,
+      );
+      final hiveCounts =
+          beeCounts.where((count) => count.hiveId == hiveId).toList();
 
       if (hiveCounts.isEmpty) return [];
 
@@ -656,16 +704,18 @@ class EnhancedForagingAdvisoryService {
 
         if (hourData.isNotEmpty) {
           avgConfidence /= hourData.length;
-          hourlyActivities.add(HourlyBeeActivity(
-            hour: hour,
-            beesEntering: totalEntering,
-            beesExiting: totalExiting,
-            totalActivity: totalEntering + totalExiting,
-            netChange: totalEntering - totalExiting,
-            confidence: avgConfidence,
-            videoCount: hourData.length,
-            timestamp: DateTime(date.year, date.month, date.day, hour),
-          ));
+          hourlyActivities.add(
+            HourlyBeeActivity(
+              hour: hour,
+              beesEntering: totalEntering,
+              beesExiting: totalExiting,
+              totalActivity: totalEntering + totalExiting,
+              netChange: totalEntering - totalExiting,
+              confidence: avgConfidence,
+              videoCount: hourData.length,
+              timestamp: DateTime(date.year, date.month, date.day, hour),
+            ),
+          );
         }
       }
       hourlyActivities.sort((a, b) => a.hour.compareTo(b.hour));
@@ -693,8 +743,13 @@ class EnhancedForagingAdvisoryService {
 
       final Map<DateTime, int> dailyTotals = {};
       for (final count in weeklyBeeCounts) {
-        final day = DateTime(count.timestamp.year, count.timestamp.month, count.timestamp.day);
-        dailyTotals[day] = (dailyTotals[day] ?? 0) + count.beesEntering + count.beesExiting;
+        final day = DateTime(
+          count.timestamp.year,
+          count.timestamp.month,
+          count.timestamp.day,
+        );
+        dailyTotals[day] =
+            (dailyTotals[day] ?? 0) + count.beesEntering + count.beesExiting;
       }
 
       final sortedDays = dailyTotals.keys.toList()..sort();
@@ -704,11 +759,16 @@ class EnhancedForagingAdvisoryService {
         return WeeklyTrendAnalysis.empty();
       }
 
-      final firstHalfAvg = dailyValues.take(dailyValues.length ~/ 2).reduce((a, b) => a + b) / (dailyValues.length ~/ 2);
-      final secondHalfAvg = dailyValues.skip(dailyValues.length ~/ 2).reduce((a, b) => a + b) / (dailyValues.length - dailyValues.length ~/ 2);
+      final firstHalfAvg =
+          dailyValues.take(dailyValues.length ~/ 2).reduce((a, b) => a + b) /
+          (dailyValues.length ~/ 2);
+      final secondHalfAvg =
+          dailyValues.skip(dailyValues.length ~/ 2).reduce((a, b) => a + b) /
+          (dailyValues.length - dailyValues.length ~/ 2);
       final trendChange = ((secondHalfAvg - firstHalfAvg) / firstHalfAvg) * 100;
 
-      final weeklyAverage = dailyValues.reduce((a, b) => a + b) / dailyValues.length;
+      final weeklyAverage =
+          dailyValues.reduce((a, b) => a + b) / dailyValues.length;
       final maxDay = dailyValues.reduce((a, b) => a > b ? a : b);
       final minDay = dailyValues.reduce((a, b) => a < b ? a : b);
       final variance = _calculateVariance(dailyValues);
@@ -775,18 +835,24 @@ class EnhancedForagingAdvisoryService {
         String distanceAssessment;
         String reasoning;
 
-        if (enteringRatio > enhancedThresholds['foraging_patterns']!['closeForageRatio']!) {
+        if (enteringRatio >
+            enhancedThresholds['foraging_patterns']!['closeForageRatio']!) {
           distanceAssessment = 'Close Forage';
-          reasoning = 'High entering ratio suggests bees returning from nearby sources';
-        } else if (enteringRatio < enhancedThresholds['foraging_patterns']!['distantForageRatio']!) {
+          reasoning =
+              'High entering ratio suggests bees returning from nearby sources';
+        } else if (enteringRatio <
+            enhancedThresholds['foraging_patterns']!['distantForageRatio']!) {
           distanceAssessment = 'Distant Forage';
           reasoning = 'Low entering ratio suggests long foraging trips';
-        } else if (exitingRatio > enhancedThresholds['foraging_patterns']!['scoutingActivity']!) {
+        } else if (exitingRatio >
+            enhancedThresholds['foraging_patterns']!['scoutingActivity']!) {
           distanceAssessment = 'Scouting Activity';
-          reasoning = 'High exiting ratio indicates exploration for new sources';
+          reasoning =
+              'High exiting ratio indicates exploration for new sources';
         } else {
           distanceAssessment = 'Mixed Activity';
-          reasoning = 'Balanced entering/exiting ratios suggest varied forage sources';
+          reasoning =
+              'Balanced entering/exiting ratios suggest varied forage sources';
         }
 
         distanceIndicators[activity.hour] = ForageDistanceIndicator(
@@ -807,7 +873,8 @@ class EnhancedForagingAdvisoryService {
       overallAssessment = 'Excellent foraging conditions with peak activity';
     } else if (maxActivity > enhancedThresholds['activity']!['highActivity']!) {
       overallAssessment = 'Good foraging activity levels';
-    } else if (maxActivity > enhancedThresholds['activity']!['moderateActivity']!) {
+    } else if (maxActivity >
+        enhancedThresholds['activity']!['moderateActivity']!) {
       overallAssessment = 'Moderate foraging activity';
     } else {
       overallAssessment = 'Low foraging activity - investigation needed';
@@ -831,13 +898,17 @@ class EnhancedForagingAdvisoryService {
       );
     }
 
-    final sortedActivities = beeData.map((b) => b.totalActivity).toList()..sort();
+    final sortedActivities =
+        beeData.map((b) => b.totalActivity).toList()..sort();
     final baselineCount = (sortedActivities.length * 0.25).ceil();
-    final baseline = baselineCount > 0
-        ? sortedActivities.take(baselineCount).reduce((a, b) => a + b) / baselineCount
-        : 0.0;
+    final baseline =
+        baselineCount > 0
+            ? sortedActivities.take(baselineCount).reduce((a, b) => a + b) /
+                baselineCount
+            : 0.0;
 
-    final peakThreshold = baseline * enhancedThresholds['foraging_patterns']!['nectarFlowRatio']!;
+    final peakThreshold =
+        baseline * enhancedThresholds['foraging_patterns']!['nectarFlowRatio']!;
     final List<int> peakHours = [];
 
     for (final activity in beeData) {
@@ -897,33 +968,75 @@ class EnhancedForagingAdvisoryService {
     }
 
     final tempActivityCorr = _calculateCorrelation(
-      beeData.map((b) => hourlyTemperature[b.hour]).where((t) => t != null).cast<double>().toList(),
-      beeData.where((b) => hourlyTemperature[b.hour] != null).map((b) => b.totalActivity.toDouble()).toList(),
+      beeData
+          .map((b) => hourlyTemperature[b.hour])
+          .where((t) => t != null)
+          .cast<double>()
+          .toList(),
+      beeData
+          .where((b) => hourlyTemperature[b.hour] != null)
+          .map((b) => b.totalActivity.toDouble())
+          .toList(),
     );
 
     final tempEnteringCorr = _calculateCorrelation(
-      beeData.map((b) => hourlyTemperature[b.hour]).where((t) => t != null).cast<double>().toList(),
-      beeData.where((b) => hourlyTemperature[b.hour] != null).map((b) => b.beesEntering.toDouble()).toList(),
+      beeData
+          .map((b) => hourlyTemperature[b.hour])
+          .where((t) => t != null)
+          .cast<double>()
+          .toList(),
+      beeData
+          .where((b) => hourlyTemperature[b.hour] != null)
+          .map((b) => b.beesEntering.toDouble())
+          .toList(),
     );
 
     final tempExitingCorr = _calculateCorrelation(
-      beeData.map((b) => hourlyTemperature[b.hour]).where((t) => t != null).cast<double>().toList(),
-      beeData.where((b) => hourlyTemperature[b.hour] != null).map((b) => b.beesExiting.toDouble()).toList(),
+      beeData
+          .map((b) => hourlyTemperature[b.hour])
+          .where((t) => t != null)
+          .cast<double>()
+          .toList(),
+      beeData
+          .where((b) => hourlyTemperature[b.hour] != null)
+          .map((b) => b.beesExiting.toDouble())
+          .toList(),
     );
 
     final humidityActivityCorr = _calculateCorrelation(
-      beeData.map((b) => hourlyHumidity[b.hour]).where((h) => h != null).cast<double>().toList(),
-      beeData.where((b) => hourlyHumidity[b.hour] != null).map((b) => b.totalActivity.toDouble()).toList(),
+      beeData
+          .map((b) => hourlyHumidity[b.hour])
+          .where((h) => h != null)
+          .cast<double>()
+          .toList(),
+      beeData
+          .where((b) => hourlyHumidity[b.hour] != null)
+          .map((b) => b.totalActivity.toDouble())
+          .toList(),
     );
 
     final humidityEnteringCorr = _calculateCorrelation(
-      beeData.map((b) => hourlyHumidity[b.hour]).where((h) => h != null).cast<double>().toList(),
-      beeData.where((b) => hourlyHumidity[b.hour] != null).map((b) => b.beesEntering.toDouble()).toList(),
+      beeData
+          .map((b) => hourlyHumidity[b.hour])
+          .where((h) => h != null)
+          .cast<double>()
+          .toList(),
+      beeData
+          .where((b) => hourlyHumidity[b.hour] != null)
+          .map((b) => b.beesEntering.toDouble())
+          .toList(),
     );
 
     final humidityExitingCorr = _calculateCorrelation(
-      beeData.map((b) => hourlyHumidity[b.hour]).where((h) => h != null).cast<double>().toList(),
-      beeData.where((b) => hourlyHumidity[b.hour] != null).map((b) => b.beesExiting.toDouble()).toList(),
+      beeData
+          .map((b) => hourlyHumidity[b.hour])
+          .where((h) => h != null)
+          .cast<double>()
+          .toList(),
+      beeData
+          .where((b) => hourlyHumidity[b.hour] != null)
+          .map((b) => b.beesExiting.toDouble())
+          .toList(),
     );
 
     return TimeSyncedCorrelations(
@@ -947,7 +1060,9 @@ class EnhancedForagingAdvisoryService {
     final sumX2 = x.map((v) => v * v).reduce((a, b) => a + b);
     final sumY2 = y.map((v) => v * v).reduce((a, b) => a + b);
     final numerator = (n * sumXY) - (sumX * sumY);
-    final denominator = sqrt(((n * sumX2) - (sumX * sumX)) * ((n * sumY2) - (sumY * sumY)));
+    final denominator = sqrt(
+      ((n * sumX2) - (sumX * sumX)) * ((n * sumY2) - (sumY * sumY)),
+    );
     if (denominator == 0) return 0.0;
     return numerator / denominator;
   }
@@ -975,28 +1090,43 @@ class EnhancedForagingAdvisoryService {
 
     String interpretation;
     if (dailyChange > enhancedThresholds['weight']!['dailyGainForaging']!) {
-      interpretation = 'Excellent daily weight gain indicates strong nectar flow and successful foraging';
+      interpretation =
+          'Excellent daily weight gain indicates strong nectar flow and successful foraging';
     } else if (dailyChange > 0) {
-      interpretation = 'Positive weight gain shows productive foraging activity';
-    } else if (dailyChange > enhancedThresholds['weight']!['dailyLossThreshold']!) {
-      interpretation = 'Small weight loss may indicate honey ripening or normal daily fluctuation';
+      interpretation =
+          'Positive weight gain shows productive foraging activity';
+    } else if (dailyChange >
+        enhancedThresholds['weight']!['dailyLossThreshold']!) {
+      interpretation =
+          'Small weight loss may indicate honey ripening or normal daily fluctuation';
     } else {
-      interpretation = 'Significant weight loss suggests poor foraging conditions or colony stress';
+      interpretation =
+          'Significant weight loss suggests poor foraging conditions or colony stress';
     }
 
-    final totalActivity = beeData.isNotEmpty
-        ? beeData.map((b) => b.totalActivity).reduce((a, b) => a + b)
-        : 0;
+    final totalActivity =
+        beeData.isNotEmpty
+            ? beeData.map((b) => b.totalActivity).reduce((a, b) => a + b)
+            : 0;
 
     String activityCorrelation;
-    if (totalActivity > enhancedThresholds['activity']!['highActivity']! && dailyChange > 0) {
-      activityCorrelation = 'High activity with weight gain confirms excellent foraging conditions';
-    } else if (totalActivity > enhancedThresholds['activity']!['moderateActivity']! && dailyChange < 0) {
-      activityCorrelation = 'Moderate activity with weight loss suggests distant forage or poor nectar quality';
-    } else if (totalActivity < enhancedThresholds['activity']!['lowActivity']! && dailyChange < 0) {
-      activityCorrelation = 'Low activity with weight loss indicates serious foraging problems';
+    if (totalActivity > enhancedThresholds['activity']!['highActivity']! &&
+        dailyChange > 0) {
+      activityCorrelation =
+          'High activity with weight gain confirms excellent foraging conditions';
+    } else if (totalActivity >
+            enhancedThresholds['activity']!['moderateActivity']! &&
+        dailyChange < 0) {
+      activityCorrelation =
+          'Moderate activity with weight loss suggests distant forage or poor nectar quality';
+    } else if (totalActivity <
+            enhancedThresholds['activity']!['lowActivity']! &&
+        dailyChange < 0) {
+      activityCorrelation =
+          'Low activity with weight loss indicates serious foraging problems';
     } else {
-      activityCorrelation = 'Activity and weight patterns suggest normal colony behavior';
+      activityCorrelation =
+          'Activity and weight patterns suggest normal colony behavior';
     }
 
     List<String> recommendations = [];
@@ -1007,7 +1137,8 @@ class EnhancedForagingAdvisoryService {
         'Check local forage availability within 2km radius',
         'Monitor for robbing behavior from other colonies',
       ]);
-    } else if (dailyChange > enhancedThresholds['weight']!['dailyGainForaging']!) {
+    } else if (dailyChange >
+        enhancedThresholds['weight']!['dailyGainForaging']!) {
       recommendations.addAll([
         'Consider adding supers if weight gain continues',
         'Monitor for potential swarming due to rapid population growth',
@@ -1048,138 +1179,170 @@ class EnhancedForagingAdvisoryService {
     final List<DailyRecommendation> recommendations = [];
     final now = DateTime.now();
 
-    final avgActivity = beeData.isNotEmpty
-        ? beeData.map((b) => b.totalActivity).reduce((a, b) => a + b) / beeData.length
-        : 0.0;
+    final avgActivity =
+        beeData.isNotEmpty
+            ? beeData.map((b) => b.totalActivity).reduce((a, b) => a + b) /
+                beeData.length
+            : 0.0;
 
-    final totalDailyActivity = beeData.isNotEmpty
-        ? beeData.map((b) => b.totalActivity).reduce((a, b) => a + b)
-        : 0;
+    final totalDailyActivity =
+        beeData.isNotEmpty
+            ? beeData.map((b) => b.totalActivity).reduce((a, b) => a + b)
+            : 0;
 
-    final currentTemp = temperatureData.isNotEmpty ? temperatureData.first.value : null;
+    final currentTemp =
+        temperatureData.isNotEmpty ? temperatureData.first.value : null;
 
     print('Generating enhanced daily recommendations...');
 
     // Weekly trend-based recommendations
     if (weeklyTrends.daysWithData >= 5) {
-      if (weeklyTrends.trendPercentage <= enhancedThresholds['activity']!['weeklyDeclineThreshold']!) {
-        recommendations.add(DailyRecommendation(
-          id: 'weekly_decline_${now.millisecondsSinceEpoch}',
-          priority: 'Critical',
-          title: 'Significant Weekly Activity Decline Detected',
-          description: 'Activity has declined ${weeklyTrends.trendPercentage.abs().toStringAsFixed(1)}% over the past week.',
-          actionItems: [
-            'Conduct immediate hive inspection for disease, pests, or queen issues',
-            'Check local forage availability within 3km radius',
-            'Monitor for robbing behavior from other colonies',
-            'Consider emergency supplemental feeding if weight is declining',
-          ],
-          scientificBasis: 'Weekly activity decline >25% typically indicates colony stress or disease onset.',
-          expectedOutcome: 'Activity stabilization within 5-7 days',
-          timeRelevance: 'Immediate - inspect within 24 hours',
-          foragingImpact: 'Critical - colony viability at risk',
-        ));
+      if (weeklyTrends.trendPercentage <=
+          enhancedThresholds['activity']!['weeklyDeclineThreshold']!) {
+        recommendations.add(
+          DailyRecommendation(
+            id: 'weekly_decline_${now.millisecondsSinceEpoch}',
+            priority: 'Critical',
+            title: 'Significant Weekly Activity Decline Detected',
+            description:
+                'Activity has declined ${weeklyTrends.trendPercentage.abs().toStringAsFixed(1)}% over the past week.',
+            actionItems: [
+              'Conduct immediate hive inspection for disease, pests, or queen issues',
+              'Check local forage availability within 3km radius',
+              'Monitor for robbing behavior from other colonies',
+              'Consider emergency supplemental feeding if weight is declining',
+            ],
+            scientificBasis:
+                'Weekly activity decline >25% typically indicates colony stress or disease onset.',
+            expectedOutcome: 'Activity stabilization within 5-7 days',
+            timeRelevance: 'Immediate - inspect within 24 hours',
+            foragingImpact: 'Critical - colony viability at risk',
+          ),
+        );
       }
     }
 
     // Temperature-based recommendations
-    if (currentTemp != null && currentTemp > enhancedThresholds['temperature']!['criticalHigh']!) {
-      recommendations.add(DailyRecommendation(
-        id: 'extreme_heat_${now.millisecondsSinceEpoch}',
-        priority: 'Critical',
-        title: 'Extreme Heat Alert',
-        description: 'Current temperature (${currentTemp.toStringAsFixed(1)}°C) is causing severe heat stress.',
-        actionItems: [
-          'Provide immediate shade for hives',
-          'Ensure multiple water sources within 50m',
-          'Add emergency ventilation',
-          'Avoid any hive disturbance during heat',
-        ],
-        scientificBasis: 'Above 35°C, bee flight muscles cease function.',
-        expectedOutcome: 'Temperature regulation within 2-4 hours',
-        timeRelevance: 'EMERGENCY - within 1 hour',
-        foragingImpact: 'Severe - complete foraging cessation',
-      ));
+    if (currentTemp != null &&
+        currentTemp > enhancedThresholds['temperature']!['criticalHigh']!) {
+      recommendations.add(
+        DailyRecommendation(
+          id: 'extreme_heat_${now.millisecondsSinceEpoch}',
+          priority: 'Critical',
+          title: 'Extreme Heat Alert',
+          description:
+              'Current temperature (${currentTemp.toStringAsFixed(1)}°C) is causing severe heat stress.',
+          actionItems: [
+            'Provide immediate shade for hives',
+            'Ensure multiple water sources within 50m',
+            'Add emergency ventilation',
+            'Avoid any hive disturbance during heat',
+          ],
+          scientificBasis: 'Above 35°C, bee flight muscles cease function.',
+          expectedOutcome: 'Temperature regulation within 2-4 hours',
+          timeRelevance: 'EMERGENCY - within 1 hour',
+          foragingImpact: 'Severe - complete foraging cessation',
+        ),
+      );
     }
 
     // Low activity recommendations
-    if (totalDailyActivity < enhancedThresholds['activity']!['lowActivity']! && weeklyTrends.daysWithData > 0) {
-      recommendations.add(DailyRecommendation(
-        id: 'low_activity_${now.millisecondsSinceEpoch}',
-        priority: 'High',
-        title: 'Low Activity Alert',
-        description: 'Current activity (${totalDailyActivity} bees today) is critically low.',
-        actionItems: [
-          'Immediate hive inspection for queen presence',
-          'Check for disease signs',
-          'Survey 2km radius for available flowering plants',
-          'Begin emergency feeding with 1:1 sugar syrup',
-        ],
-        scientificBasis: 'Activity <20 bees/day indicates colony stress or failing queen.',
-        expectedOutcome: 'Activity increase within 3-7 days',
-        timeRelevance: 'Urgent - inspect today',
-        foragingImpact: 'Critical - colony survival threatened',
-      ));
+    if (totalDailyActivity < enhancedThresholds['activity']!['lowActivity']! &&
+        weeklyTrends.daysWithData > 0) {
+      recommendations.add(
+        DailyRecommendation(
+          id: 'low_activity_${now.millisecondsSinceEpoch}',
+          priority: 'High',
+          title: 'Low Activity Alert',
+          description:
+              'Current activity ($totalDailyActivity bees today) is critically low.',
+          actionItems: [
+            'Immediate hive inspection for queen presence',
+            'Check for disease signs',
+            'Survey 2km radius for available flowering plants',
+            'Begin emergency feeding with 1:1 sugar syrup',
+          ],
+          scientificBasis:
+              'Activity <20 bees/day indicates colony stress or failing queen.',
+          expectedOutcome: 'Activity increase within 3-7 days',
+          timeRelevance: 'Urgent - inspect today',
+          foragingImpact: 'Critical - colony survival threatened',
+        ),
+      );
     }
 
     // Weight loss recommendations
-    if (weightAnalysis.dailyChange <= enhancedThresholds['weight']!['dailyLossThreshold']!) {
-      recommendations.add(DailyRecommendation(
-        id: 'weight_loss_${now.millisecondsSinceEpoch}',
-        priority: 'Critical',
-        title: 'Weight Loss Detected',
-        description: 'Weight loss of ${weightAnalysis.dailyChange.toStringAsFixed(2)}kg detected.',
-        actionItems: [
-          'Begin immediate emergency feeding with 2:1 sugar syrup',
-          'Provide protein supplement (pollen patties)',
-          'Check for robbing behavior',
-          'Assess local forage availability',
-        ],
-        scientificBasis: 'Daily weight loss >0.1kg indicates negative energy balance.',
-        expectedOutcome: 'Weight stabilization within 3-5 days',
-        timeRelevance: 'Emergency - begin feeding immediately',
-        foragingImpact: 'Critical - colony survival at immediate risk',
-      ));
+    if (weightAnalysis.dailyChange <=
+        enhancedThresholds['weight']!['dailyLossThreshold']!) {
+      recommendations.add(
+        DailyRecommendation(
+          id: 'weight_loss_${now.millisecondsSinceEpoch}',
+          priority: 'Critical',
+          title: 'Weight Loss Detected',
+          description:
+              'Weight loss of ${weightAnalysis.dailyChange.toStringAsFixed(2)}kg detected.',
+          actionItems: [
+            'Begin immediate emergency feeding with 2:1 sugar syrup',
+            'Provide protein supplement (pollen patties)',
+            'Check for robbing behavior',
+            'Assess local forage availability',
+          ],
+          scientificBasis:
+              'Daily weight loss >0.1kg indicates negative energy balance.',
+          expectedOutcome: 'Weight stabilization within 3-5 days',
+          timeRelevance: 'Emergency - begin feeding immediately',
+          foragingImpact: 'Critical - colony survival at immediate risk',
+        ),
+      );
     }
 
     // Seasonal recommendations
     final season = _getCurrentSeason(date);
     if (season == Season.spring) {
-      recommendations.add(DailyRecommendation(
-        id: 'spring_buildup_${now.millisecondsSinceEpoch}',
-        priority: 'High',
-        title: 'Spring Buildup - Prepare for Swarming',
-        description: 'Spring activity increase indicates strong colony buildup requiring swarm management.',
-        actionItems: [
-          'Add supers immediately for growing population',
-          'Check for queen cells weekly',
-          'Ensure adequate ventilation',
-          'Consider making splits if overcrowded',
-        ],
-        scientificBasis: 'Rapid spring growth often leads to swarming without space management.',
-        expectedOutcome: 'Controlled expansion without swarming',
-        timeRelevance: 'Immediate - space management critical',
-        foragingImpact: 'Critical - prevents loss of foragers through swarming',
-      ));
+      recommendations.add(
+        DailyRecommendation(
+          id: 'spring_buildup_${now.millisecondsSinceEpoch}',
+          priority: 'High',
+          title: 'Spring Buildup - Prepare for Swarming',
+          description:
+              'Spring activity increase indicates strong colony buildup requiring swarm management.',
+          actionItems: [
+            'Add supers immediately for growing population',
+            'Check for queen cells weekly',
+            'Ensure adequate ventilation',
+            'Consider making splits if overcrowded',
+          ],
+          scientificBasis:
+              'Rapid spring growth often leads to swarming without space management.',
+          expectedOutcome: 'Controlled expansion without swarming',
+          timeRelevance: 'Immediate - space management critical',
+          foragingImpact:
+              'Critical - prevents loss of foragers through swarming',
+        ),
+      );
     }
 
     if (season == Season.fall && weeklyTrends.trendPercentage < -10) {
-      recommendations.add(DailyRecommendation(
-        id: 'fall_prep_${now.millisecondsSinceEpoch}',
-        priority: 'Critical',
-        title: 'Fall Activity Decline - Winter Preparation',
-        description: 'Activity declining ${weeklyTrends.trendPercentage.abs().toStringAsFixed(1)}% weekly.',
-        actionItems: [
-          'Assess honey stores - minimum 25kg needed',
-          'Begin heavy feeding with 2:1 sugar syrup',
-          'Treat for varroa mites',
-          'Reduce hive entrance',
-        ],
-        scientificBasis: 'Rapid fall decline indicates inadequate winter preparation.',
-        expectedOutcome: 'Successful overwintering with 85%+ survival rate',
-        timeRelevance: 'Emergency - complete within 3 weeks',
-        foragingImpact: 'Critical - last opportunity for store building',
-      ));
+      recommendations.add(
+        DailyRecommendation(
+          id: 'fall_prep_${now.millisecondsSinceEpoch}',
+          priority: 'Critical',
+          title: 'Fall Activity Decline - Winter Preparation',
+          description:
+              'Activity declining ${weeklyTrends.trendPercentage.abs().toStringAsFixed(1)}% weekly.',
+          actionItems: [
+            'Assess honey stores - minimum 25kg needed',
+            'Begin heavy feeding with 2:1 sugar syrup',
+            'Treat for varroa mites',
+            'Reduce hive entrance',
+          ],
+          scientificBasis:
+              'Rapid fall decline indicates inadequate winter preparation.',
+          expectedOutcome: 'Successful overwintering with 85%+ survival rate',
+          timeRelevance: 'Emergency - complete within 3 weeks',
+          foragingImpact: 'Critical - last opportunity for store building',
+        ),
+      );
     }
 
     return recommendations;

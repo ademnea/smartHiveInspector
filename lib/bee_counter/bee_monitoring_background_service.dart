@@ -3,13 +3,13 @@ import 'dart:isolate';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
-import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:HPGM/Services/bee_analysis_service.dart';
 import 'package:HPGM/Services/connectivity_service.dart';
 import 'package:HPGM/bee_counter/server_video_service.dart';
 import 'package:HPGM/bee_counter/bee_count_database.dart';
 import 'package:HPGM/bee_counter/bee_counter_model.dart';
+
 const String PORT_NAME = 'bee_monitoring_port';
 
 @pragma('vm:entry-point')
@@ -31,8 +31,6 @@ class AutomaticBeeMonitoringService {
 
   /// Initialize and AUTO-START the service
   Future<void> initializeAndStart() async {
-  
-
     try {
       await _setupNotifications();
       print('✓ Notifications configured');
@@ -63,34 +61,43 @@ class AutomaticBeeMonitoringService {
   Future<void> _setupIsolateCommunication() async {
     // Create receive port for background isolate to send tasks to main isolate
     _backgroundReceivePort = ReceivePort();
-    
+
     // Listen for video processing requests from background isolate
     _backgroundReceivePort!.listen((message) async {
       if (message is Map && message['type'] == 'process_video') {
         try {
           print('Main isolate received video processing request');
-          
+
           final videoUrl = message['videoUrl'] as String;
           final videoId = message['videoId'] as String;
           final hiveId = message['hiveId'] as String;
-          final timestamp = message['timestamp'] != null 
-              ? DateTime.parse(message['timestamp']) 
-              : DateTime.now();
+          final timestamp =
+              message['timestamp'] != null
+                  ? DateTime.parse(message['timestamp'])
+                  : DateTime.now();
 
           // Process video in main isolate where FFmpeg works
-          final result = await _processVideoInMainIsolate(videoUrl, videoId, hiveId, timestamp);
-          
+          final result = await _processVideoInMainIsolate(
+            videoUrl,
+            videoId,
+            hiveId,
+            timestamp,
+          );
+
           // Send result back to background isolate
           final backgroundPort = message['responsePort'] as SendPort;
           backgroundPort.send({
             'type': 'processing_result',
             'success': result != null,
             'data': result?.toJson(),
-            'beeCount': result != null ? {
-              'beesEntering': result.beesEntering,
-              'beesExiting': result.beesExiting,
-              'confidence': result.confidence,
-            } : null,
+            'beeCount':
+                result != null
+                    ? {
+                      'beesEntering': result.beesEntering,
+                      'beesExiting': result.beesExiting,
+                      'confidence': result.confidence,
+                    }
+                    : null,
           });
         } catch (e) {
           print('Error processing video in main isolate: $e');
@@ -108,45 +115,48 @@ class AutomaticBeeMonitoringService {
     // Register the port for background isolate to find
     IsolateNameServer.removePortNameMapping('main_isolate_port');
     IsolateNameServer.registerPortWithName(
-      _backgroundReceivePort!.sendPort, 
-      'main_isolate_port'
+      _backgroundReceivePort!.sendPort,
+      'main_isolate_port',
     );
   }
 
   /// Process video in main isolate where plugins work
   Future<BeeCount?> _processVideoInMainIsolate(
-    String videoUrl, 
-    String videoId, 
+    String videoUrl,
+    String videoId,
     String hiveId,
     DateTime timestamp,
   ) async {
     try {
       print('Processing video in main isolate: $videoId');
-      
+
       // Check if already processed to avoid duplicate work
-      final isProcessed = await BeeCountDatabase.instance.isVideoProcessed(videoId);
+      final isProcessed = await BeeCountDatabase.instance.isVideoProcessed(
+        videoId,
+      );
       if (isProcessed) {
         print('Video already processed: $videoId');
         // Return existing count
         final counts = await BeeCountDatabase.instance.getAllBeeCounts();
         final existingCount = counts.firstWhere(
           (count) => count.videoId == videoId,
-          orElse: () => BeeCount(
-            hiveId: hiveId,
-            videoId: videoId,
-            beesEntering: 0,
-            beesExiting: 0,
-            timestamp: timestamp,
-          ),
+          orElse:
+              () => BeeCount(
+                hiveId: hiveId,
+                videoId: videoId,
+                beesEntering: 0,
+                beesExiting: 0,
+                timestamp: timestamp,
+              ),
         );
         return existingCount;
       }
-      
+
       final beeAnalysisService = BeeAnalysisService.instance;
-      
+
       // Initialize ML model if needed
       await beeAnalysisService.initialize();
-      
+
       // Download video
       print('Downloading video from: $videoUrl');
       final videoPath = await beeAnalysisService.downloadVideo(
@@ -176,13 +186,14 @@ class AutomaticBeeMonitoringService {
       if (result != null) {
         // Ensure correct timestamp is used
         final correctedResult = result.copyWith(timestamp: timestamp);
-        print(' Video processed successfully: ${correctedResult.beesEntering} in, ${correctedResult.beesExiting} out');
+        print(
+          ' Video processed successfully: ${correctedResult.beesEntering} in, ${correctedResult.beesExiting} out',
+        );
         return correctedResult;
       } else {
         print(' Video processing failed');
         return null;
       }
-
     } catch (e, stack) {
       print('Error in main isolate video processing: $e');
       print('Stack trace: $stack');
@@ -274,11 +285,13 @@ class AutomaticBeeMonitoringService {
 
     // Get reference to main isolate port
     SendPort? mainIsolatePort;
-    
+
     Timer.periodic(Duration(seconds: 5), (timer) {
       // Try to get main isolate port if we don't have it
       if (mainIsolatePort == null) {
-        mainIsolatePort = IsolateNameServer.lookupPortByName('main_isolate_port');
+        mainIsolatePort = IsolateNameServer.lookupPortByName(
+          'main_isolate_port',
+        );
         if (mainIsolatePort != null) {
           print('Connected to main isolate for video processing');
         }
@@ -287,7 +300,11 @@ class AutomaticBeeMonitoringService {
 
     Timer.periodic(_checkInterval, (timer) async {
       print('\n PERIODIC CHECK: ${DateTime.now()} ');
-      await _performAutomaticVideoCheck(service, lastCheckTime, mainIsolatePort);
+      await _performAutomaticVideoCheck(
+        service,
+        lastCheckTime,
+        mainIsolatePort,
+      );
     });
   }
 
@@ -299,7 +316,7 @@ class AutomaticBeeMonitoringService {
   ) async {
     try {
       print('Checking for new videos...');
-      
+
       if (service is AndroidServiceInstance) {
         service.setForegroundNotificationInfo(
           title: 'Bee Monitor',
@@ -309,12 +326,14 @@ class AutomaticBeeMonitoringService {
 
       // Simple check without processing - just fetch latest video info
       final serverVideoService = ServerVideoService();
-      final latestVideo = await serverVideoService.fetchLatestVideoFromServer('1');
+      final latestVideo = await serverVideoService.fetchLatestVideoFromServer(
+        '1',
+      );
 
       if (latestVideo == null) {
         // Check if it's a connectivity issue or genuinely no videos
         final isConnected = await ConnectivityService().hasInternetConnection();
-        
+
         String message;
         if (!isConnected) {
           message = 'Offline - checking will resume when connected';
@@ -323,7 +342,7 @@ class AutomaticBeeMonitoringService {
           message = 'No new videos found on server';
           print('No videos found on server');
         }
-        
+
         if (service is AndroidServiceInstance) {
           service.setForegroundNotificationInfo(
             title: 'Bee Monitor Active',
@@ -337,18 +356,25 @@ class AutomaticBeeMonitoringService {
       print('Video timestamp: ${latestVideo.timestamp}');
 
       // Check if already processed
-      final isProcessed = await BeeCountDatabase.instance.isVideoProcessed(latestVideo.id);
-      
-      final lastCheck = lastCheckTime['1'] ?? DateTime.now().subtract(Duration(days: 1));
-      final isNewerThanLastCheck = latestVideo.timestamp != null && 
+      final isProcessed = await BeeCountDatabase.instance.isVideoProcessed(
+        latestVideo.id,
+      );
+
+      final lastCheck =
+          lastCheckTime['1'] ?? DateTime.now().subtract(Duration(days: 1));
+      final isNewerThanLastCheck =
+          latestVideo.timestamp != null &&
           latestVideo.timestamp!.isAfter(lastCheck);
-      
+
       if (isProcessed && !isNewerThanLastCheck) {
-        print('Video already processed and not newer than last check, skipping');
+        print(
+          'Video already processed and not newer than last check, skipping',
+        );
         if (service is AndroidServiceInstance) {
           service.setForegroundNotificationInfo(
             title: 'Bee Monitor Active',
-            content: 'Monitoring hive activity (${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')})',
+            content:
+                'Monitoring hive activity (${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')})',
           );
         }
         return;
@@ -357,14 +383,14 @@ class AutomaticBeeMonitoringService {
       // If main isolate communication is available, delegate processing
       if (mainIsolatePort != null) {
         print('Delegating video processing to main isolate');
-        
+
         if (service is AndroidServiceInstance) {
           service.setForegroundNotificationInfo(
             title: 'Processing Video',
             content: 'Analyzing ${latestVideo.id}...',
           );
         }
-        
+
         final responsePort = ReceivePort();
         mainIsolatePort.send({
           'type': 'process_video',
@@ -382,32 +408,37 @@ class AutomaticBeeMonitoringService {
             onTimeout: () => {'type': 'timeout'},
           );
 
-          if (response['type'] == 'processing_result' && response['success'] == true) {
+          if (response['type'] == 'processing_result' &&
+              response['success'] == true) {
             final beeCount = response['beeCount'];
             print('✓ Video processed successfully in main isolate');
-            
+
             if (beeCount != null) {
-              print('Results: ${beeCount['beesEntering']} in, ${beeCount['beesExiting']} out');
-              print('Confidence: ${beeCount['confidence'].toStringAsFixed(1)}%');
+              print(
+                'Results: ${beeCount['beesEntering']} in, ${beeCount['beesExiting']} out',
+              );
+              print(
+                'Confidence: ${beeCount['confidence'].toStringAsFixed(1)}%',
+              );
             }
-            
+
             // Update last check time
             lastCheckTime['1'] = DateTime.now();
-            
+
             if (service is AndroidServiceInstance) {
-              final message = beeCount != null 
-                  ? 'Processed: ${beeCount['beesEntering']} in, ${beeCount['beesExiting']} out'
-                  : 'Latest video processed successfully';
-              
+              final message =
+                  beeCount != null
+                      ? 'Processed: ${beeCount['beesEntering']} in, ${beeCount['beesExiting']} out'
+                      : 'Latest video processed successfully';
+
               service.setForegroundNotificationInfo(
                 title: 'Bee Monitor Active',
                 content: message,
               );
             }
-            
+
             // Show success notification
             await _showProcessingNotification(1, 1, beeCount);
-            
           } else if (response['type'] == 'timeout') {
             print(' Video processing timed out');
             if (service is AndroidServiceInstance) {
@@ -417,7 +448,9 @@ class AutomaticBeeMonitoringService {
               );
             }
           } else {
-            print(' Video processing failed: ${response['error'] ?? 'Unknown error'}');
+            print(
+              ' Video processing failed: ${response['error'] ?? 'Unknown error'}',
+            );
             if (service is AndroidServiceInstance) {
               service.setForegroundNotificationInfo(
                 title: 'Bee Monitor Active',
@@ -430,17 +463,16 @@ class AutomaticBeeMonitoringService {
         } finally {
           responsePort.close();
         }
-        
       } else {
         print('Main isolate communication not available');
-        
+
         if (service is AndroidServiceInstance) {
           service.setForegroundNotificationInfo(
             title: 'Bee Monitor Limited',
             content: 'Main app needed for video processing',
           );
         }
-        
+
         // Create a placeholder entry to avoid reprocessing
         final placeholderCount = BeeCount(
           hiveId: '1',
@@ -451,7 +483,7 @@ class AutomaticBeeMonitoringService {
           notes: 'Processed in background - main app needed for full analysis',
           confidence: 0.0,
         );
-        
+
         try {
           await BeeCountDatabase.instance.createBeeCount(placeholderCount);
           print('Created placeholder entry for video: ${latestVideo.id}');
@@ -459,11 +491,10 @@ class AutomaticBeeMonitoringService {
           print('Error creating placeholder entry: $e');
         }
       }
-
     } catch (e, stack) {
       print('ERROR in automatic processing: $e');
       print('Stack trace: $stack');
-      
+
       if (service is AndroidServiceInstance) {
         service.setForegroundNotificationInfo(
           title: 'Bee Monitor Error',
@@ -483,13 +514,14 @@ class AutomaticBeeMonitoringService {
 
     String title = 'New Bee Video Processed';
     String body = 'Successfully analyzed $successful out of $processed videos';
-    
+
     if (beeCount != null) {
       final beesIn = beeCount['beesEntering'] ?? 0;
       final beesOut = beeCount['beesExiting'] ?? 0;
       final confidence = beeCount['confidence'] ?? 0.0;
-      
-      body = 'Detected: $beesIn bees in, $beesOut bees out (${confidence.toStringAsFixed(0)}% confidence)';
+
+      body =
+          'Detected: $beesIn bees in, $beesOut bees out (${confidence.toStringAsFixed(0)}% confidence)';
     }
 
     await notificationsPlugin.show(

@@ -5,10 +5,7 @@ import 'package:liquid_progress_indicator_v2/liquid_progress_indicator.dart';
 class CustomProgressBar extends StatelessWidget {
   final double value;
 
-  const CustomProgressBar({
-    Key? key,
-    required this.value,
-  }) : super(key: key);
+  const CustomProgressBar({super.key, required this.value});
 
   Color getFillColor(double myvalue) {
     if (value >= 20 && myvalue <= 29) {

@@ -5,11 +5,7 @@ class NotificationCard extends StatelessWidget {
   final HiveNotification notification;
   final VoidCallback? onTap;
 
-  const NotificationCard({
-    Key? key,
-    required this.notification,
-    this.onTap,
-  }) : super(key: key);
+  const NotificationCard({super.key, required this.notification, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -19,9 +15,10 @@ class NotificationCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: notification.isRead
-              ? Colors.transparent
-              : notification.color.withOpacity(0.5),
+          color:
+              notification.isRead
+                  ? Colors.transparent
+                  : notification.color.withValues(alpha: 0.5),
           width: 1,
         ),
       ),
@@ -49,9 +46,10 @@ class NotificationCard extends StatelessWidget {
                               child: Text(
                                 notification.title,
                                 style: TextStyle(
-                                  fontWeight: notification.isRead
-                                      ? FontWeight.normal
-                                      : FontWeight.bold,
+                                  fontWeight:
+                                      notification.isRead
+                                          ? FontWeight.normal
+                                          : FontWeight.bold,
                                   fontSize: 16,
                                 ),
                               ),
@@ -106,17 +104,13 @@ class NotificationCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: notification.color.withOpacity(0.2),
+        color: notification.color.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            notification.icon,
-            color: notification.color,
-            size: 16,
-          ),
+          Icon(notification.icon, color: notification.color, size: 16),
           const SizedBox(width: 4),
           Text(
             severityText,
@@ -149,9 +143,7 @@ class NotificationCard extends StatelessWidget {
       case NotificationType.weather:
         return Row(
           mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            _buildActionButton('View Forecast', Icons.cloud),
-          ],
+          children: [_buildActionButton('View Forecast', Icons.cloud)],
         );
       case NotificationType.connection:
         return Row(
@@ -165,9 +157,7 @@ class NotificationCard extends StatelessWidget {
       case NotificationType.colonization:
         return Row(
           mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            _buildActionButton('Inspect Hive', Icons.search),
-          ],
+          children: [_buildActionButton('Inspect Hive', Icons.search)],
         );
     }
   }
@@ -181,9 +171,7 @@ class NotificationCard extends StatelessWidget {
         foregroundColor: Colors.grey[700],
         side: BorderSide(color: Colors.grey[300]!),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }

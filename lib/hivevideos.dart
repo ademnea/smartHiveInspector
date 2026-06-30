@@ -147,11 +147,11 @@ class _HiveVideosState extends State<HiveVideos> {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.orange.withOpacity(0.8),
-                        Colors.orange.withOpacity(0.6),
-                        Colors.orange.withOpacity(0.4),
-                        Colors.orange.withOpacity(0.2),
-                        Colors.orange.withOpacity(0.1),
+                        Colors.orange.withValues(alpha: 0.8),
+                        Colors.orange.withValues(alpha: 0.6),
+                        Colors.orange.withValues(alpha: 0.4),
+                        Colors.orange.withValues(alpha: 0.2),
+                        Colors.orange.withValues(alpha: 0.1),
                         Colors.transparent,
                       ],
                     ),
@@ -307,7 +307,7 @@ class _VideoItemState extends State<VideoItem> {
       return Container(
         width: double.infinity,
         height: 200,
-        color: Colors.grey.withOpacity(0.5),
+        color: Colors.grey.withValues(alpha: 0.5),
         child: const Center(
           child: Text(
             'Unsupported video format',

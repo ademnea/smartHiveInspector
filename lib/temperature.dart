@@ -11,7 +11,7 @@ import 'services/cache_service.dart';
 class Temperature extends StatefulWidget {
   final int hiveId;
 
-  const Temperature({Key? key, required this.hiveId}) : super(key: key);
+  const Temperature({super.key, required this.hiveId});
 
   @override
   State<Temperature> createState() => _TemperatureState();
@@ -285,28 +285,31 @@ class _TemperatureState extends State<Temperature> {
 
   Future<void> _exportData() async {
     final formatter = DateFormat('yyyy-MM-dd HH:mm');
-    final rows =
-        List<List<String>>.generate(dates.length, (index) {
-          final interior =
-              index < interiorTemperatures.length
-                  ? interiorTemperatures[index]
-                  : null;
-          final exterior =
-              index < exteriorTemperatures.length
-                  ? exteriorTemperatures[index]
-                  : null;
+    final rows = List<List<String>>.generate(dates.length, (index) {
+      final interior =
+          index < interiorTemperatures.length
+              ? interiorTemperatures[index]
+              : null;
+      final exterior =
+          index < exteriorTemperatures.length
+              ? exteriorTemperatures[index]
+              : null;
 
-          return [
-            formatter.format(dates[index]),
-            interior?.toStringAsFixed(1) ?? '',
-            exterior?.toStringAsFixed(1) ?? '',
-          ];
-        });
+      return [
+        formatter.format(dates[index]),
+        interior?.toStringAsFixed(1) ?? '',
+        exterior?.toStringAsFixed(1) ?? '',
+      ];
+    });
 
     await CsvExportService.shareCsv(
       context: context,
       filePrefix: 'hive_${widget.hiveId}_temperature_',
-      headers: const ['Date', 'Interior Temperature (C)', 'Exterior Temperature (C)'],
+      headers: const [
+        'Date',
+        'Interior Temperature (C)',
+        'Exterior Temperature (C)',
+      ],
       rows: rows,
       shareText: 'Temperature export for Hive ${widget.hiveId}',
       emptyMessage: 'No temperature data available to export.',

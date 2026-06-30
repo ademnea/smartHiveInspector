@@ -8,11 +8,11 @@ class RecommendationsWidget extends StatefulWidget {
   final bool autoRefresh;
 
   const RecommendationsWidget({
-    Key? key,
+    super.key,
     this.hiveId,
     this.showCriticalOnly = false,
     this.autoRefresh = true,
-  }) : super(key: key);
+  });
 
   @override
   _RecommendationsWidgetState createState() => _RecommendationsWidgetState();
@@ -27,17 +27,19 @@ class _RecommendationsWidgetState extends State<RecommendationsWidget> {
   void initState() {
     super.initState();
     _loadRecommendations();
-    
+
     // Auto-refresh every 30 minutes if enabled
     if (widget.autoRefresh) {
-      Stream.periodic(Duration(minutes: 30), (_) => null)
-          .listen((_) => _loadRecommendations());
+      Stream.periodic(
+        Duration(minutes: 30),
+        (_) => null,
+      ).listen((_) => _loadRecommendations());
     }
   }
 
   Future<void> _loadRecommendations() async {
     if (!mounted) return;
-    
+
     try {
       setState(() {
         _isLoading = true;
@@ -53,11 +55,15 @@ class _RecommendationsWidgetState extends State<RecommendationsWidget> {
       if (mounted) {
         setState(() {
           if (analysisData != null) {
-            _recommendations = widget.showCriticalOnly
-                ? analysisData.recommendations
-                    .where((r) => r.priority == 'Critical' || r.priority == 'High')
-                    .toList()
-                : analysisData.recommendations;
+            _recommendations =
+                widget.showCriticalOnly
+                    ? analysisData.recommendations
+                        .where(
+                          (r) =>
+                              r.priority == 'Critical' || r.priority == 'High',
+                        )
+                        .toList()
+                    : analysisData.recommendations;
           } else {
             _error = 'No data available';
           }
@@ -97,14 +103,20 @@ class _RecommendationsWidgetState extends State<RecommendationsWidget> {
   }
 
   Widget _buildHeader() {
-    final criticalCount = _recommendations?.where((r) => r.priority == 'Critical').length ?? 0;
-    final highCount = _recommendations?.where((r) => r.priority == 'High').length ?? 0;
-    
+    final criticalCount =
+        _recommendations?.where((r) => r.priority == 'Critical').length ?? 0;
+    final highCount =
+        _recommendations?.where((r) => r.priority == 'High').length ?? 0;
+
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: criticalCount > 0 ? Colors.red.shade50 : 
-               highCount > 0 ? Colors.orange.shade50 : Colors.green.shade50,
+        color:
+            criticalCount > 0
+                ? Colors.red.shade50
+                : highCount > 0
+                ? Colors.orange.shade50
+                : Colors.green.shade50,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(8),
           topRight: Radius.circular(8),
@@ -113,10 +125,17 @@ class _RecommendationsWidgetState extends State<RecommendationsWidget> {
       child: Row(
         children: [
           Icon(
-            criticalCount > 0 ? Icons.error : 
-            highCount > 0 ? Icons.warning : Icons.check_circle,
-            color: criticalCount > 0 ? Colors.red.shade600 : 
-                   highCount > 0 ? Colors.orange.shade600 : Colors.green.shade600,
+            criticalCount > 0
+                ? Icons.error
+                : highCount > 0
+                ? Icons.warning
+                : Icons.check_circle,
+            color:
+                criticalCount > 0
+                    ? Colors.red.shade600
+                    : highCount > 0
+                    ? Colors.orange.shade600
+                    : Colors.green.shade600,
             size: 24,
           ),
           SizedBox(width: 12),
@@ -125,21 +144,24 @@ class _RecommendationsWidgetState extends State<RecommendationsWidget> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.showCriticalOnly ? 'Critical Alerts' : 'Daily Recommendations',
+                  widget.showCriticalOnly
+                      ? 'Critical Alerts'
+                      : 'Daily Recommendations',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: criticalCount > 0 ? Colors.red.shade700 : 
-                           highCount > 0 ? Colors.orange.shade700 : Colors.green.shade700,
+                    color:
+                        criticalCount > 0
+                            ? Colors.red.shade700
+                            : highCount > 0
+                            ? Colors.orange.shade700
+                            : Colors.green.shade700,
                   ),
                 ),
                 if (_recommendations != null)
                   Text(
                     '${_recommendations!.length} item${_recommendations!.length != 1 ? 's' : ''}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
               ],
             ),
@@ -152,10 +174,11 @@ class _RecommendationsWidgetState extends State<RecommendationsWidget> {
             ),
             IconButton(
               icon: Icon(Icons.open_in_new, size: 20),
-              onPressed: () => NavigationHelper.navigateToRecommendations(
-                context,
-                hiveId: widget.hiveId,
-              ),
+              onPressed:
+                  () => NavigationHelper.navigateToRecommendations(
+                    context,
+                    hiveId: widget.hiveId,
+                  ),
               tooltip: 'View all',
             ),
           ],
@@ -197,10 +220,7 @@ class _RecommendationsWidgetState extends State<RecommendationsWidget> {
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _loadRecommendations,
-            child: Text('Retry'),
-          ),
+          ElevatedButton(onPressed: _loadRecommendations, child: Text('Retry')),
         ],
       ),
     );
@@ -219,7 +239,9 @@ class _RecommendationsWidgetState extends State<RecommendationsWidget> {
             ),
             SizedBox(height: 12),
             Text(
-              widget.showCriticalOnly ? 'No Critical Alerts' : 'No Recommendations',
+              widget.showCriticalOnly
+                  ? 'No Critical Alerts'
+                  : 'No Recommendations',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -228,13 +250,10 @@ class _RecommendationsWidgetState extends State<RecommendationsWidget> {
             ),
             SizedBox(height: 8),
             Text(
-              widget.showCriticalOnly 
+              widget.showCriticalOnly
                   ? 'Your hive is operating normally'
                   : 'Your hive is performing well!',
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
               textAlign: TextAlign.center,
             ),
           ],
@@ -246,7 +265,7 @@ class _RecommendationsWidgetState extends State<RecommendationsWidget> {
   Widget _buildRecommendationsList() {
     // Show max 3 recommendations in compact view
     final displayRecommendations = _recommendations!.take(3).toList();
-    
+
     return Column(
       children: [
         ListView.separated(
@@ -268,16 +287,14 @@ class _RecommendationsWidgetState extends State<RecommendationsWidget> {
               children: [
                 Text(
                   '${_recommendations!.length - 3} more recommendation${_recommendations!.length - 3 != 1 ? 's' : ''}',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                 ),
                 TextButton(
-                  onPressed: () => NavigationHelper.navigateToRecommendations(
-                    context,
-                    hiveId: widget.hiveId,
-                  ),
+                  onPressed:
+                      () => NavigationHelper.navigateToRecommendations(
+                        context,
+                        hiveId: widget.hiveId,
+                      ),
                   child: Text('View All'),
                 ),
               ],
@@ -290,10 +307,11 @@ class _RecommendationsWidgetState extends State<RecommendationsWidget> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 TextButton(
-                  onPressed: () => NavigationHelper.navigateToRecommendations(
-                    context,
-                    hiveId: widget.hiveId,
-                  ),
+                  onPressed:
+                      () => NavigationHelper.navigateToRecommendations(
+                        context,
+                        hiveId: widget.hiveId,
+                      ),
                   child: Text('View Details'),
                 ),
               ],
@@ -306,18 +324,19 @@ class _RecommendationsWidgetState extends State<RecommendationsWidget> {
   Widget _buildRecommendationItem(DailyRecommendation recommendation) {
     final priorityColor = _getPriorityColor(recommendation.priority);
     final priorityIcon = _getPriorityIcon(recommendation.priority);
-    
+
     return GestureDetector(
-      onTap: () => NavigationHelper.navigateToRecommendations(
-        context,
-        hiveId: widget.hiveId,
-      ),
+      onTap:
+          () => NavigationHelper.navigateToRecommendations(
+            context,
+            hiveId: widget.hiveId,
+          ),
       child: Container(
         padding: EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: priorityColor.withOpacity(0.1),
+          color: priorityColor.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: priorityColor.withOpacity(0.3)),
+          border: Border.all(color: priorityColor.withValues(alpha: 0.3)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -356,15 +375,16 @@ class _RecommendationsWidgetState extends State<RecommendationsWidget> {
             SizedBox(height: 6),
             Text(
               recommendation.description,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade700,
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            if (recommendation.timeRelevance.toLowerCase().contains('immediate') ||
-                recommendation.timeRelevance.toLowerCase().contains('today')) ...[
+            if (recommendation.timeRelevance.toLowerCase().contains(
+                  'immediate',
+                ) ||
+                recommendation.timeRelevance.toLowerCase().contains(
+                  'today',
+                )) ...[
               SizedBox(height: 6),
               Row(
                 children: [

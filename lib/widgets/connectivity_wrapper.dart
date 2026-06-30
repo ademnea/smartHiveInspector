@@ -8,7 +8,8 @@ class ConnectivityService {
   ConnectivityService._internal();
 
   bool _isOnline = true;
-  final StreamController<bool> _connectionController = StreamController<bool>.broadcast();
+  final StreamController<bool> _connectionController =
+      StreamController<bool>.broadcast();
 
   Stream<bool> get connectionStream => _connectionController.stream;
   bool get isOnline => _isOnline;
@@ -22,18 +23,21 @@ class ConnectivityService {
 
   Future<void> checkConnection() async {
     bool previousState = _isOnline;
-    
+
     try {
       // Check Google instead of backend server
-      final response = await http.get(
-        Uri.parse('https://www.google.com'),headers: {'Cache-Control': 'no-cache'},
-      ).timeout(Duration(seconds: 5));
-      
+      final response = await http
+          .get(
+            Uri.parse('https://www.google.com'),
+            headers: {'Cache-Control': 'no-cache'},
+          )
+          .timeout(Duration(seconds: 5));
+
       _isOnline = response.statusCode == 200;
     } catch (e) {
       _isOnline = false;
     }
-    
+
     if (previousState != _isOnline) {
       _connectionController.add(_isOnline);
     }
@@ -295,7 +299,7 @@ class _ConnectivityWrapperState extends State<ConnectivityWrapper> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),

@@ -86,7 +86,7 @@ class CacheService {
       final dataJson = jsonEncode(data);
       await prefs.setString('cached_$key', dataJson);
       await prefs.setString(
-        '${_lastUpdatePrefix}$key',
+        '$_lastUpdatePrefix$key',
         DateTime.now().toIso8601String(),
       );
       print('✓ Data cached with key: $key');
@@ -115,7 +115,7 @@ class CacheService {
   static Future<DateTime?> getLastUpdateTime(String key) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final timeString = prefs.getString('${_lastUpdatePrefix}$key');
+      final timeString = prefs.getString('$_lastUpdatePrefix$key');
       if (timeString != null) {
         return DateTime.parse(timeString);
       }

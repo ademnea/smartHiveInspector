@@ -425,7 +425,7 @@ class BeeVideoAnalyzer {
 
         // Set the video file
         this.videoFile = cachedVideoFile;
-        this.currentVideoId = videoId;
+        currentVideoId = videoId;
         onStatusUpdate?.call("Loading video...");
   
         // Initialize video controller
@@ -690,7 +690,7 @@ class BeeVideoAnalyzer {
             totalBeesIn = (estimatedActivity * 0.6).round(); // 60% entering
             totalBeesOut = (estimatedActivity * 0.4).round(); // 40% exiting
             
-            print('Estimated activity from ${totalBeesSeen} total detections: ${totalBeesIn} in, ${totalBeesOut} out');
+            print('Estimated activity from $totalBeesSeen total detections: $totalBeesIn in, $totalBeesOut out');
           }
         }
         

@@ -17,7 +17,7 @@ import 'Services/auth_manager.dart';
 class Apiaries extends StatefulWidget {
   final String token;
 
-  const Apiaries({Key? key, required this.token}) : super(key: key);
+  const Apiaries({super.key, required this.token});
 
   @override
   State<Apiaries> createState() => _ApiariesState();
@@ -57,7 +57,7 @@ class _ApiariesState extends State<Apiaries> {
           isLoading = false;
           _errorMessage = 'Please login again';
         });
-        
+
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted) {
             Navigator.pushReplacement(
@@ -114,9 +114,10 @@ class _ApiariesState extends State<Apiaries> {
           if (mounted) {
             setState(() {
               isLoading = false;
-              _errorMessage = 'No internet connection and no saved data available';
+              _errorMessage =
+                  'No internet connection and no saved data available';
             });
-            
+
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: const Text(
@@ -156,9 +157,10 @@ class _ApiariesState extends State<Apiaries> {
 
         if (mounted) {
           setState(() {
-            farms = data.map((farm) {
-              return Farm.fromJson(farm);
-            }).toList();
+            farms =
+                data.map((farm) {
+                  return Farm.fromJson(farm);
+                }).toList();
             isLoading = false;
           });
         }
@@ -174,9 +176,9 @@ class _ApiariesState extends State<Apiaries> {
           isLoading = false;
           _errorMessage = 'Session expired. Please login again.';
         });
-        
+
         await AuthManager.logout(context: context);
-        
+
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted) {
             Navigator.pushAndRemoveUntil(
@@ -188,7 +190,7 @@ class _ApiariesState extends State<Apiaries> {
         });
       } else {
         print('Failed to load farms: ${response?.statusCode}');
-        
+
         // Try loading from cache as fallback
         final cachedFarms = await CacheService.loadFarms();
         if (cachedFarms != null && cachedFarms.isNotEmpty) {
@@ -205,7 +207,9 @@ class _ApiariesState extends State<Apiaries> {
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('⚠️ Server error (${response?.statusCode}) - Showing saved data'),
+              content: Text(
+                '⚠️ Server error (${response?.statusCode}) - Showing saved data',
+              ),
               backgroundColor: Colors.orange[700],
             ),
           );
@@ -218,7 +222,7 @@ class _ApiariesState extends State<Apiaries> {
       }
     } catch (error) {
       print('Error loading farms: $error');
-      
+
       // Try loading from cache as fallback
       final cachedFarms = await CacheService.loadFarms();
       if (cachedFarms != null && cachedFarms.isNotEmpty) {
@@ -291,7 +295,9 @@ class _ApiariesState extends State<Apiaries> {
 
         _calculateStatsFromHives(farmId, hives);
       } else {
-        print('Failed to fetch hives for stats. Status: ${response?.statusCode}');
+        print(
+          'Failed to fetch hives for stats. Status: ${response?.statusCode}',
+        );
 
         // Try loading from cache as fallback
         final cachedHives = await CacheService.loadHives(farmId);
@@ -325,23 +331,30 @@ class _ApiariesState extends State<Apiaries> {
       // Parse colonization status
       if (hive['state'] != null) {
         final state = hive['state'];
-        
+
         if (state['colonization_status'] != null) {
           final colonization = state['colonization_status'];
-          isColonized = colonization['Colonized'] == true || colonization['Colonized'] == 1;
+          isColonized =
+              colonization['Colonized'] == true ||
+              colonization['Colonized'] == 1;
         }
-        
+
         if (state['connection_status'] != null) {
           final connection = state['connection_status'];
-          isConnected = connection['Connected'] == true || connection['Connected'] == 1;
+          isConnected =
+              connection['Connected'] == true || connection['Connected'] == 1;
         }
-        
-        if (state['weight'] != null && state['weight']['honey_percentage'] != null) {
+
+        if (state['weight'] != null &&
+            state['weight']['honey_percentage'] != null) {
           honeyLevel = _parseDouble(state['weight']['honey_percentage']);
         }
-        
-        if (state['temperature'] != null && state['temperature']['interior_temperature'] != null) {
-          temperature = _parseDouble(state['temperature']['interior_temperature']);
+
+        if (state['temperature'] != null &&
+            state['temperature']['interior_temperature'] != null) {
+          temperature = _parseDouble(
+            state['temperature']['interior_temperature'],
+          );
         }
       }
 
@@ -391,11 +404,13 @@ class _ApiariesState extends State<Apiaries> {
         'Authorization': sendToken,
         'Content-Type': 'application/json',
       };
-      var response = await http.put(
-        Uri.parse('$_baseUrl/api/v1/farms/$farmId'),
-        headers: headers,
-        body: jsonEncode(updatedData),
-      ).timeout(const Duration(seconds: 30));
+      var response = await http
+          .put(
+            Uri.parse('$_baseUrl/api/v1/farms/$farmId'),
+            headers: headers,
+            body: jsonEncode(updatedData),
+          )
+          .timeout(const Duration(seconds: 30));
 
       return response.statusCode == 200;
     } catch (error) {
@@ -482,11 +497,11 @@ class _ApiariesState extends State<Apiaries> {
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
                                 colors: [
-                                  Colors.orange.withOpacity(0.8),
-                                  Colors.orange.withOpacity(0.6),
-                                  Colors.orange.withOpacity(0.4),
-                                  Colors.orange.withOpacity(0.2),
-                                  Colors.orange.withOpacity(0.1),
+                                  Colors.orange.withValues(alpha: 0.8),
+                                  Colors.orange.withValues(alpha: 0.6),
+                                  Colors.orange.withValues(alpha: 0.4),
+                                  Colors.orange.withValues(alpha: 0.2),
+                                  Colors.orange.withValues(alpha: 0.1),
                                   Colors.transparent,
                                 ],
                               ),
@@ -615,31 +630,32 @@ class _ApiariesState extends State<Apiaries> {
                     if (farms.isNotEmpty)
                       isTabularView
                           ? Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: _buildApiariesTable(),
-                            )
+                            padding: const EdgeInsets.all(16.0),
+                            child: _buildApiariesTable(),
+                          )
                           : ListView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: farms.length,
-                              itemBuilder: (context, index) {
-                                final farm = farms[index];
-                                return FutureBuilder<String?>(
-                                  future: TokenStorage.getToken(),
-                                  builder: (context, snapshot) {
-                                    if (snapshot.hasData && snapshot.data != null) {
-                                      return buildFarmCard(
-                                        farm,
-                                        context,
-                                        snapshot.data!,
-                                        onDeleted: getApiaries,
-                                      );
-                                    }
-                                    return const SizedBox.shrink();
-                                  },
-                                );
-                              },
-                            ),
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: farms.length,
+                            itemBuilder: (context, index) {
+                              final farm = farms[index];
+                              return FutureBuilder<String?>(
+                                future: TokenStorage.getToken(),
+                                builder: (context, snapshot) {
+                                  if (snapshot.hasData &&
+                                      snapshot.data != null) {
+                                    return buildFarmCard(
+                                      farm,
+                                      context,
+                                      snapshot.data!,
+                                      onDeleted: getApiaries,
+                                    );
+                                  }
+                                  return const SizedBox.shrink();
+                                },
+                              );
+                            },
+                          ),
                   ],
                 ),
               ),
@@ -652,11 +668,12 @@ class _ApiariesState extends State<Apiaries> {
           final result = await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => AddApiaryForm(
-                onApiaryAdded: () async {
-                  await getApiaries();
-                },
-              ),
+              builder:
+                  (context) => AddApiaryForm(
+                    onApiaryAdded: () async {
+                      await getApiaries();
+                    },
+                  ),
             ),
           );
 
@@ -665,8 +682,8 @@ class _ApiariesState extends State<Apiaries> {
           }
         },
         backgroundColor: Colors.amber[800],
-        child: const Icon(Icons.add),
         tooltip: 'Add New Apiary',
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -702,7 +719,7 @@ class _ApiariesState extends State<Apiaries> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -713,13 +730,13 @@ class _ApiariesState extends State<Apiaries> {
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: DataTable(
-            headingRowColor: MaterialStateProperty.all(Colors.orange[700]),
+            headingRowColor: WidgetStateProperty.all(Colors.orange[700]),
             dataRowHeight: 80,
             headingRowHeight: 60,
-            dataRowColor: MaterialStateProperty.resolveWith<Color>((
-              Set<MaterialState> states,
+            dataRowColor: WidgetStateProperty.resolveWith<Color>((
+              Set<WidgetState> states,
             ) {
-              if (states.contains(MaterialState.hovered)) {
+              if (states.contains(WidgetState.hovered)) {
                 return Colors.orange[50]!;
               }
               return Colors.white;
@@ -737,167 +754,170 @@ class _ApiariesState extends State<Apiaries> {
               DataColumn(label: Text('Farm Name')),
               DataColumn(label: Text('Actions')),
             ],
-            rows: farms.map((farm) {
-              return DataRow(
-                cells: [
-                  DataCell(
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          farm.name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                          ),
-                        ),
-                        Text(
-                          '${farm.district} - ${farm.address}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  DataCell(
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // View/Manage button
-                        SizedBox(
-                          width: 70,
-                          height: 30,
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange[700],
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6),
+            rows:
+                farms.map((farm) {
+                  return DataRow(
+                    cells: [
+                      DataCell(
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              farm.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
                               ),
                             ),
-                            icon: const Icon(
-                              Icons.visibility,
-                              size: 14,
-                              color: Colors.white,
-                            ),
-                            label: const Text(
-                              'View',
+                            Text(
+                              '${farm.district} - ${farm.address}',
                               style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.white,
+                                fontSize: 12,
+                                color: Colors.grey[600],
                               ),
                             ),
-                            onPressed: () async {
-                              final token = await TokenStorage.getToken();
-                              if (token != null && mounted) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => Hives(
-                                      farmId: farm.id,
-                                      token: token,
-                                      apiaryLocation: farm.address,
-                                      farmName: farm.name,
-                                      onHiveDeleted: () async {
-                                        await getApiaryStats(farm.id);
-                                      },
-                                    ),
+                          ],
+                        ),
+                      ),
+                      DataCell(
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // View/Manage button
+                            SizedBox(
+                              width: 70,
+                              height: 30,
+                              child: ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.orange[700],
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
                                   ),
-                                );
-                              }
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        // Settings button
-                        SizedBox(
-                          width: 70,
-                          height: 30,
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue[700],
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                            ),
-                            icon: const Icon(
-                              Icons.settings,
-                              size: 14,
-                              color: Colors.white,
-                            ),
-                            label: const Text(
-                              'Edit',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.white,
-                              ),
-                            ),
-                            onPressed: () async {
-                              final result = await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => EditApiaryForm(
-                                    farmId: farm.id,
-                                    initialData: farm.toJson(),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(6),
                                   ),
                                 ),
-                              );
+                                icon: const Icon(
+                                  Icons.visibility,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
+                                label: const Text(
+                                  'View',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                onPressed: () async {
+                                  final token = await TokenStorage.getToken();
+                                  if (token != null && mounted) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (context) => Hives(
+                                              farmId: farm.id,
+                                              token: token,
+                                              apiaryLocation: farm.address,
+                                              farmName: farm.name,
+                                              onHiveDeleted: () async {
+                                                await getApiaryStats(farm.id);
+                                              },
+                                            ),
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            // Settings button
+                            SizedBox(
+                              width: 70,
+                              height: 30,
+                              child: ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue[700],
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                ),
+                                icon: const Icon(
+                                  Icons.settings,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
+                                label: const Text(
+                                  'Edit',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                onPressed: () async {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) => EditApiaryForm(
+                                            farmId: farm.id,
+                                            initialData: farm.toJson(),
+                                          ),
+                                    ),
+                                  );
 
-                              if (result == true) {
-                                await getApiaries();
-                              }
-                            },
-                          ),
+                                  if (result == true) {
+                                    await getApiaries();
+                                  }
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            // Delete button
+                            SizedBox(
+                              width: 70,
+                              height: 30,
+                              child: ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red[700],
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                ),
+                                icon: const Icon(
+                                  Icons.delete,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
+                                label: const Text(
+                                  'Delete',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                onPressed: () {
+                                  _showDeleteConfirmation(farm);
+                                },
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 4),
-                        // Delete button
-                        SizedBox(
-                          width: 70,
-                          height: 30,
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red[700],
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                            ),
-                            icon: const Icon(
-                              Icons.delete,
-                              size: 14,
-                              color: Colors.white,
-                            ),
-                            label: const Text(
-                              'Delete',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.white,
-                              ),
-                            ),
-                            onPressed: () {
-                              _showDeleteConfirmation(farm);
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              );
-            }).toList(),
+                      ),
+                    ],
+                  );
+                }).toList(),
           ),
         ),
       ),

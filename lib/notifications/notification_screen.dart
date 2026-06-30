@@ -8,7 +8,7 @@ import 'package:HPGM/analytics/navigation_helper.dart';
 class NotificationsScreen extends StatefulWidget {
   final String? hiveId;
 
-  const NotificationsScreen({Key? key, this.hiveId}) : super(key: key);
+  const NotificationsScreen({super.key, this.hiveId});
 
   @override
   _NotificationsScreenState createState() => _NotificationsScreenState();
@@ -16,7 +16,6 @@ class NotificationsScreen extends StatefulWidget {
 
 class _NotificationsScreenState extends State<NotificationsScreen>
     with SingleTickerProviderStateMixin {
-  
   List<NotificationItem> _notifications = [];
   bool _isLoading = true;
   String _errorMessage = '';
@@ -29,7 +28,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _loadNotifications();
-    
+
     // Auto-refresh every 5 minutes
     _refreshTimer = Timer.periodic(Duration(minutes: 5), (timer) {
       _loadNotifications();
@@ -51,7 +50,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
       });
 
       final notifications = await _generateNotificationsFromAdvisorySystem();
-      
+
       if (mounted) {
         setState(() {
           _notifications = notifications;
@@ -68,10 +67,11 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     }
   }
 
-  Future<List<NotificationItem>> _generateNotificationsFromAdvisorySystem() async {
+  Future<List<NotificationItem>>
+  _generateNotificationsFromAdvisorySystem() async {
     final List<NotificationItem> notifications = [];
     final advisoryService = EnhancedForagingAdvisoryService();
-    
+
     try {
       // Get foraging analysis for the current date
       final analysisData = await advisoryService.getDailyForagingAnalysis(
@@ -82,47 +82,56 @@ class _NotificationsScreenState extends State<NotificationsScreen>
       if (analysisData != null) {
         // Convert recommendations to notifications
         for (final recommendation in analysisData.recommendations) {
-          notifications.add(NotificationItem(
-            id: recommendation.id,
-            title: recommendation.title,
-            message: recommendation.description,
-            type: _getNotificationTypeFromPriority(recommendation.priority),
-            severity: _getSeverityFromPriority(recommendation.priority),
-            timestamp: DateTime.now(),
-            source: 'Advisory System',
-            hiveId: analysisData.hiveId,
-            isRead: false,
-            actionRequired: recommendation.priority == 'Critical' || recommendation.priority == 'High',
-            category: 'Foraging',
-            additionalData: {
-              'timeRelevance': recommendation.timeRelevance,
-              'foragingImpact': recommendation.foragingImpact,
-              'actionItems': recommendation.actionItems,
-              'scientificBasis': recommendation.scientificBasis,
-            },
-          ));
+          notifications.add(
+            NotificationItem(
+              id: recommendation.id,
+              title: recommendation.title,
+              message: recommendation.description,
+              type: _getNotificationTypeFromPriority(recommendation.priority),
+              severity: _getSeverityFromPriority(recommendation.priority),
+              timestamp: DateTime.now(),
+              source: 'Advisory System',
+              hiveId: analysisData.hiveId,
+              isRead: false,
+              actionRequired:
+                  recommendation.priority == 'Critical' ||
+                  recommendation.priority == 'High',
+              category: 'Foraging',
+              additionalData: {
+                'timeRelevance': recommendation.timeRelevance,
+                'foragingImpact': recommendation.foragingImpact,
+                'actionItems': recommendation.actionItems,
+                'scientificBasis': recommendation.scientificBasis,
+              },
+            ),
+          );
         }
 
         // Generate parameter-based alerts
         notifications.addAll(await _generateParameterAlerts(analysisData));
-        
+
         // Generate pattern-based alerts
         notifications.addAll(_generatePatternAlerts(analysisData));
       }
 
       // Add some sample system notifications
       notifications.addAll(_generateSystemNotifications());
-
     } catch (e) {
       print('Error generating notifications: $e');
     }
 
     // Sort by timestamp (newest first) and severity
     notifications.sort((a, b) {
-      final severityOrder = {'Critical': 0, 'High': 1, 'Medium': 2, 'Low': 3, 'Info': 4};
+      final severityOrder = {
+        'Critical': 0,
+        'High': 1,
+        'Medium': 2,
+        'Low': 3,
+        'Info': 4,
+      };
       final aSeverity = severityOrder[a.severity] ?? 4;
       final bSeverity = severityOrder[b.severity] ?? 4;
-      
+
       if (aSeverity != bSeverity) {
         return aSeverity.compareTo(bSeverity);
       }
@@ -132,147 +141,193 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     return notifications;
   }
 
-  Future<List<NotificationItem>> _generateParameterAlerts(DailyForagingAnalysis analysisData) async {
+  Future<List<NotificationItem>> _generateParameterAlerts(
+    DailyForagingAnalysis analysisData,
+  ) async {
     final List<NotificationItem> alerts = [];
     final now = DateTime.now();
 
     // Temperature alerts
     if (analysisData.temperatureData.isNotEmpty) {
       final currentTemp = analysisData.temperatureData.first.value;
-      
+
       if (currentTemp > 35.0) {
-        alerts.add(NotificationItem(
-          id: 'temp_critical_${now.millisecondsSinceEpoch}',
-          title: 'Critical Temperature Alert',
-          message: 'Temperature is ${currentTemp.toStringAsFixed(1)}°C - immediate action required to prevent heat stress',
-          type: NotificationType.alert,
-          severity: 'Critical',
-          timestamp: now,
-          source: 'Temperature Sensor',
-          hiveId: analysisData.hiveId,
-          isRead: false,
-          actionRequired: true,
-          category: 'Environmental',
-          additionalData: {'currentValue': currentTemp, 'threshold': 35.0, 'unit': '°C'},
-        ));
+        alerts.add(
+          NotificationItem(
+            id: 'temp_critical_${now.millisecondsSinceEpoch}',
+            title: 'Critical Temperature Alert',
+            message:
+                'Temperature is ${currentTemp.toStringAsFixed(1)}°C - immediate action required to prevent heat stress',
+            type: NotificationType.alert,
+            severity: 'Critical',
+            timestamp: now,
+            source: 'Temperature Sensor',
+            hiveId: analysisData.hiveId,
+            isRead: false,
+            actionRequired: true,
+            category: 'Environmental',
+            additionalData: {
+              'currentValue': currentTemp,
+              'threshold': 35.0,
+              'unit': '°C',
+            },
+          ),
+        );
       } else if (currentTemp > 32.0) {
-        alerts.add(NotificationItem(
-          id: 'temp_warning_${now.millisecondsSinceEpoch}',
-          title: 'High Temperature Warning',
-          message: 'Temperature is ${currentTemp.toStringAsFixed(1)}°C - approaching heat stress levels',
-          type: NotificationType.warning,
-          severity: 'High',
-          timestamp: now,
-          source: 'Temperature Sensor',
-          hiveId: analysisData.hiveId,
-          isRead: false,
-          actionRequired: true,
-          category: 'Environmental',
-          additionalData: {'currentValue': currentTemp, 'threshold': 32.0, 'unit': '°C'},
-        ));
+        alerts.add(
+          NotificationItem(
+            id: 'temp_warning_${now.millisecondsSinceEpoch}',
+            title: 'High Temperature Warning',
+            message:
+                'Temperature is ${currentTemp.toStringAsFixed(1)}°C - approaching heat stress levels',
+            type: NotificationType.warning,
+            severity: 'High',
+            timestamp: now,
+            source: 'Temperature Sensor',
+            hiveId: analysisData.hiveId,
+            isRead: false,
+            actionRequired: true,
+            category: 'Environmental',
+            additionalData: {
+              'currentValue': currentTemp,
+              'threshold': 32.0,
+              'unit': '°C',
+            },
+          ),
+        );
       } else if (currentTemp < 10.0) {
-        alerts.add(NotificationItem(
-          id: 'temp_cold_${now.millisecondsSinceEpoch}',
-          title: 'Low Temperature Alert',
-          message: 'Temperature is ${currentTemp.toStringAsFixed(1)}°C - foraging activity severely limited',
-          type: NotificationType.warning,
-          severity: 'High',
-          timestamp: now,
-          source: 'Temperature Sensor',
-          hiveId: analysisData.hiveId,
-          isRead: false,
-          actionRequired: true,
-          category: 'Environmental',
-          additionalData: {'currentValue': currentTemp, 'threshold': 10.0, 'unit': '°C'},
-        ));
+        alerts.add(
+          NotificationItem(
+            id: 'temp_cold_${now.millisecondsSinceEpoch}',
+            title: 'Low Temperature Alert',
+            message:
+                'Temperature is ${currentTemp.toStringAsFixed(1)}°C - foraging activity severely limited',
+            type: NotificationType.warning,
+            severity: 'High',
+            timestamp: now,
+            source: 'Temperature Sensor',
+            hiveId: analysisData.hiveId,
+            isRead: false,
+            actionRequired: true,
+            category: 'Environmental',
+            additionalData: {
+              'currentValue': currentTemp,
+              'threshold': 10.0,
+              'unit': '°C',
+            },
+          ),
+        );
       }
     }
 
     // Weight alerts
     if (analysisData.weightAnalysis.dailyChange <= -0.1) {
-      alerts.add(NotificationItem(
-        id: 'weight_loss_${now.millisecondsSinceEpoch}',
-        title: 'Colony Weight Loss Alert',
-        message: 'Daily weight loss of ${analysisData.weightAnalysis.dailyChange.toStringAsFixed(2)}kg detected',
-        type: NotificationType.alert,
-        severity: 'Critical',
-        timestamp: now,
-        source: 'Weight Sensor',
-        hiveId: analysisData.hiveId,
-        isRead: false,
-        actionRequired: true,
-        category: 'Colony Health',
-        additionalData: {
-          'dailyChange': analysisData.weightAnalysis.dailyChange,
-          'interpretation': analysisData.weightAnalysis.interpretation,
-        },
-      ));
+      alerts.add(
+        NotificationItem(
+          id: 'weight_loss_${now.millisecondsSinceEpoch}',
+          title: 'Colony Weight Loss Alert',
+          message:
+              'Daily weight loss of ${analysisData.weightAnalysis.dailyChange.toStringAsFixed(2)}kg detected',
+          type: NotificationType.alert,
+          severity: 'Critical',
+          timestamp: now,
+          source: 'Weight Sensor',
+          hiveId: analysisData.hiveId,
+          isRead: false,
+          actionRequired: true,
+          category: 'Colony Health',
+          additionalData: {
+            'dailyChange': analysisData.weightAnalysis.dailyChange,
+            'interpretation': analysisData.weightAnalysis.interpretation,
+          },
+        ),
+      );
     }
 
     // Activity alerts
-    final totalActivity = analysisData.beeCountData.fold(0, (sum, hour) => sum + hour.totalActivity);
+    final totalActivity = analysisData.beeCountData.fold(
+      0,
+      (sum, hour) => sum + hour.totalActivity,
+    );
     if (totalActivity < 100) {
-      alerts.add(NotificationItem(
-        id: 'low_activity_${now.millisecondsSinceEpoch}',
-        title: 'Low Foraging Activity',
-        message: 'Daily activity only ${totalActivity} bee movements - below normal levels',
-        type: NotificationType.warning,
-        severity: 'High',
-        timestamp: now,
-        source: 'Activity Monitor',
-        hiveId: analysisData.hiveId,
-        isRead: false,
-        actionRequired: true,
-        category: 'Colony Activity',
-        additionalData: {'totalActivity': totalActivity, 'threshold': 100},
-      ));
+      alerts.add(
+        NotificationItem(
+          id: 'low_activity_${now.millisecondsSinceEpoch}',
+          title: 'Low Foraging Activity',
+          message:
+              'Daily activity only $totalActivity bee movements - below normal levels',
+          type: NotificationType.warning,
+          severity: 'High',
+          timestamp: now,
+          source: 'Activity Monitor',
+          hiveId: analysisData.hiveId,
+          isRead: false,
+          actionRequired: true,
+          category: 'Colony Activity',
+          additionalData: {'totalActivity': totalActivity, 'threshold': 100},
+        ),
+      );
     }
 
     return alerts;
   }
 
-  List<NotificationItem> _generatePatternAlerts(DailyForagingAnalysis analysisData) {
+  List<NotificationItem> _generatePatternAlerts(
+    DailyForagingAnalysis analysisData,
+  ) {
     final List<NotificationItem> alerts = [];
     final now = DateTime.now();
 
     // Nectar flow alerts
     final nectarFlow = analysisData.foragingPatterns.nectarFlowAnalysis;
     if (nectarFlow.intensity == 'Very Low' || nectarFlow.intensity == 'None') {
-      alerts.add(NotificationItem(
-        id: 'nectar_flow_${now.millisecondsSinceEpoch}',
-        title: 'Poor Nectar Flow Detected',
-        message: nectarFlow.reasoning,
-        type: NotificationType.warning,
-        severity: 'Medium',
-        timestamp: now,
-        source: 'Pattern Analysis',
-        hiveId: analysisData.hiveId,
-        isRead: false,
-        actionRequired: true,
-        category: 'Foraging Patterns',
-        additionalData: {'intensity': nectarFlow.intensity, 'status': nectarFlow.status},
-      ));
+      alerts.add(
+        NotificationItem(
+          id: 'nectar_flow_${now.millisecondsSinceEpoch}',
+          title: 'Poor Nectar Flow Detected',
+          message: nectarFlow.reasoning,
+          type: NotificationType.warning,
+          severity: 'Medium',
+          timestamp: now,
+          source: 'Pattern Analysis',
+          hiveId: analysisData.hiveId,
+          isRead: false,
+          actionRequired: true,
+          category: 'Foraging Patterns',
+          additionalData: {
+            'intensity': nectarFlow.intensity,
+            'status': nectarFlow.status,
+          },
+        ),
+      );
     }
 
     // Foraging distance alerts
-    final distantForaging = analysisData.foragingPatterns.foragingDistanceIndicators.values
-        .where((indicator) => indicator.distanceAssessment.contains('Distant')).length;
-    
+    final distantForaging =
+        analysisData.foragingPatterns.foragingDistanceIndicators.values
+            .where(
+              (indicator) => indicator.distanceAssessment.contains('Distant'),
+            )
+            .length;
+
     if (distantForaging > 3) {
-      alerts.add(NotificationItem(
-        id: 'distant_foraging_${now.millisecondsSinceEpoch}',
-        title: 'Distant Foraging Pattern',
-        message: 'Bees are traveling long distances for forage during $distantForaging hours',
-        type: NotificationType.info,
-        severity: 'Medium',
-        timestamp: now,
-        source: 'Pattern Analysis',
-        hiveId: analysisData.hiveId,
-        isRead: false,
-        actionRequired: false,
-        category: 'Foraging Patterns',
-        additionalData: {'distantHours': distantForaging},
-      ));
+      alerts.add(
+        NotificationItem(
+          id: 'distant_foraging_${now.millisecondsSinceEpoch}',
+          title: 'Distant Foraging Pattern',
+          message:
+              'Bees are traveling long distances for forage during $distantForaging hours',
+          type: NotificationType.info,
+          severity: 'Medium',
+          timestamp: now,
+          source: 'Pattern Analysis',
+          hiveId: analysisData.hiveId,
+          isRead: false,
+          actionRequired: false,
+          category: 'Foraging Patterns',
+          additionalData: {'distantHours': distantForaging},
+        ),
+      );
     }
 
     return alerts;
@@ -348,10 +403,11 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     } else if (_selectedFilter == 'Action Required') {
       return _notifications.where((n) => n.actionRequired).toList();
     } else {
-      return _notifications.where((n) => n.severity == _selectedFilter).toList();
+      return _notifications
+          .where((n) => n.severity == _selectedFilter)
+          .toList();
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -373,20 +429,27 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                 _selectedFilter = filter;
               });
             },
-            itemBuilder: (context) => [
-              PopupMenuItem(value: 'All', child: Text('All Notifications')),
-              PopupMenuItem(value: 'Unread', child: Text('Unread Only')),
-              PopupMenuItem(value: 'Action Required', child: Text('Action Required')),
-              PopupMenuItem(value: 'Critical', child: Text('Critical Only')),
-              PopupMenuItem(value: 'High', child: Text('High Priority')),
-            ],
+            itemBuilder:
+                (context) => [
+                  PopupMenuItem(value: 'All', child: Text('All Notifications')),
+                  PopupMenuItem(value: 'Unread', child: Text('Unread Only')),
+                  PopupMenuItem(
+                    value: 'Action Required',
+                    child: Text('Action Required'),
+                  ),
+                  PopupMenuItem(
+                    value: 'Critical',
+                    child: Text('Critical Only'),
+                  ),
+                  PopupMenuItem(value: 'High', child: Text('High Priority')),
+                ],
           ),
         ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.white,
           labelColor: Colors.white,
-          unselectedLabelColor: Colors.white.withOpacity(0.7),
+          unselectedLabelColor: Colors.white.withValues(alpha: 0.7),
           tabs: [
             Tab(text: 'All', icon: Icon(Icons.notifications)),
             Tab(text: 'Alerts', icon: Icon(Icons.warning)),
@@ -425,10 +488,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
               style: TextStyle(color: Colors.red),
             ),
             SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadNotifications,
-              child: Text('Retry'),
-            ),
+            ElevatedButton(onPressed: _loadNotifications, child: Text('Retry')),
           ],
         ),
       );
@@ -449,77 +509,85 @@ class _NotificationsScreenState extends State<NotificationsScreen>
       children: [
         _buildNotificationsSummary(),
         Expanded(
-          child: _filteredNotifications.isEmpty
-              ? _buildEmptyState()
-              : RefreshIndicator(
-                  onRefresh: _loadNotifications,
-                  child: ListView.builder(
-                    padding: EdgeInsets.all(16),
-                    itemCount: _filteredNotifications.length,
-                    itemBuilder: (context, index) {
-                      final notification = _filteredNotifications[index];
-                      return _buildNotificationCard(notification);
-                    },
+          child:
+              _filteredNotifications.isEmpty
+                  ? _buildEmptyState()
+                  : RefreshIndicator(
+                    onRefresh: _loadNotifications,
+                    child: ListView.builder(
+                      padding: EdgeInsets.all(16),
+                      itemCount: _filteredNotifications.length,
+                      itemBuilder: (context, index) {
+                        final notification = _filteredNotifications[index];
+                        return _buildNotificationCard(notification);
+                      },
+                    ),
                   ),
-                ),
         ),
       ],
     );
   }
 
   Widget _buildAlertsTab() {
-    final alerts = _notifications.where((n) => 
-      n.type == NotificationType.alert || n.type == NotificationType.warning
-    ).toList();
+    final alerts =
+        _notifications
+            .where(
+              (n) =>
+                  n.type == NotificationType.alert ||
+                  n.type == NotificationType.warning,
+            )
+            .toList();
 
     return alerts.isEmpty
         ? _buildEmptyAlertsState()
         : RefreshIndicator(
-            onRefresh: _loadNotifications,
-            child: ListView.builder(
-              padding: EdgeInsets.all(16),
-              itemCount: alerts.length,
-              itemBuilder: (context, index) {
-                final notification = alerts[index];
-                return _buildNotificationCard(notification);
-              },
-            ),
-          );
+          onRefresh: _loadNotifications,
+          child: ListView.builder(
+            padding: EdgeInsets.all(16),
+            itemCount: alerts.length,
+            itemBuilder: (context, index) {
+              final notification = alerts[index];
+              return _buildNotificationCard(notification);
+            },
+          ),
+        );
   }
 
   Widget _buildSystemTab() {
-    final systemNotifications = _notifications.where((n) => 
-      n.source == 'System'
-    ).toList();
+    final systemNotifications =
+        _notifications.where((n) => n.source == 'System').toList();
 
     return systemNotifications.isEmpty
         ? _buildEmptySystemState()
         : RefreshIndicator(
-            onRefresh: _loadNotifications,
-            child: ListView.builder(
-              padding: EdgeInsets.all(16),
-              itemCount: systemNotifications.length,
-              itemBuilder: (context, index) {
-                final notification = systemNotifications[index];
-                return _buildNotificationCard(notification);
-              },
-            ),
-          );
+          onRefresh: _loadNotifications,
+          child: ListView.builder(
+            padding: EdgeInsets.all(16),
+            itemCount: systemNotifications.length,
+            itemBuilder: (context, index) {
+              final notification = systemNotifications[index];
+              return _buildNotificationCard(notification);
+            },
+          ),
+        );
   }
 
   Widget _buildNotificationsSummary() {
     final unreadCount = _notifications.where((n) => !n.isRead).length;
-    final criticalCount = _notifications.where((n) => n.severity == 'Critical').length;
-    final actionRequiredCount = _notifications.where((n) => n.actionRequired && !n.isRead).length;
+    final criticalCount =
+        _notifications.where((n) => n.severity == 'Critical').length;
+    final actionRequiredCount =
+        _notifications.where((n) => n.actionRequired && !n.isRead).length;
 
     return Container(
       margin: EdgeInsets.all(16),
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: criticalCount > 0 
-              ? [Colors.red.shade400, Colors.red.shade600]
-              : actionRequiredCount > 0
+          colors:
+              criticalCount > 0
+                  ? [Colors.red.shade400, Colors.red.shade600]
+                  : actionRequiredCount > 0
                   ? [Colors.orange.shade400, Colors.orange.shade600]
                   : [Colors.blue.shade400, Colors.blue.shade600],
           begin: Alignment.topLeft,
@@ -543,7 +611,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
             'Filter: $_selectedFilter',
             style: TextStyle(
               fontSize: 12,
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
             ),
           ),
           SizedBox(height: 16),
@@ -551,9 +619,17 @@ class _NotificationsScreenState extends State<NotificationsScreen>
             children: [
               _buildSummaryBadge('Unread', unreadCount, Colors.white),
               SizedBox(width: 8),
-              _buildSummaryBadge('Critical', criticalCount, Colors.red.shade700),
+              _buildSummaryBadge(
+                'Critical',
+                criticalCount,
+                Colors.red.shade700,
+              ),
               SizedBox(width: 8),
-              _buildSummaryBadge('Action Required', actionRequiredCount, Colors.orange.shade700),
+              _buildSummaryBadge(
+                'Action Required',
+                actionRequiredCount,
+                Colors.orange.shade700,
+              ),
             ],
           ),
         ],
@@ -592,9 +668,10 @@ class _NotificationsScreenState extends State<NotificationsScreen>
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            border: notification.isRead 
-                ? null 
-                : Border.all(color: color.withOpacity(0.3), width: 2),
+            border:
+                notification.isRead
+                    ? null
+                    : Border.all(color: color.withValues(alpha: 0.3), width: 2),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -602,7 +679,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
               Container(
                 padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(8),
                     topRight: Radius.circular(8),
@@ -627,7 +704,10 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                         ),
                         if (notification.actionRequired)
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.red,
                               borderRadius: BorderRadius.circular(8),
@@ -663,37 +743,62 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.access_time, size: 14, color: Colors.grey.shade600),
+                        Icon(
+                          Icons.access_time,
+                          size: 14,
+                          color: Colors.grey.shade600,
+                        ),
                         SizedBox(width: 4),
                         Text(
-                          DateFormat('MMM dd, yyyy HH:mm').format(notification.timestamp),
-                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                          DateFormat(
+                            'MMM dd, yyyy HH:mm',
+                          ).format(notification.timestamp),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
                         ),
                         SizedBox(width: 16),
-                        Icon(Icons.source, size: 14, color: Colors.grey.shade600),
+                        Icon(
+                          Icons.source,
+                          size: 14,
+                          color: Colors.grey.shade600,
+                        ),
                         SizedBox(width: 4),
                         Text(
                           notification.source,
-                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
                         ),
                         if (notification.hiveId != 'system') ...[
                           SizedBox(width: 16),
-                          Icon(Icons.hive, size: 14, color: Colors.grey.shade600),
+                          Icon(
+                            Icons.hive,
+                            size: 14,
+                            color: Colors.grey.shade600,
+                          ),
                           SizedBox(width: 4),
                           Text(
                             'Hive ${notification.hiveId}',
-                            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
                           ),
                         ],
                       ],
                     ),
-                    if (notification.actionRequired && !notification.isRead) ...[
+                    if (notification.actionRequired &&
+                        !notification.isRead) ...[
                       SizedBox(height: 12),
                       Row(
                         children: [
                           Expanded(
                             child: ElevatedButton.icon(
-                              onPressed: () => _handleNotificationAction(notification),
+                              onPressed:
+                                  () => _handleNotificationAction(notification),
                               icon: Icon(Icons.arrow_forward, size: 16),
                               label: Text('Take Action'),
                               style: ElevatedButton.styleFrom(
@@ -747,7 +852,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
           Icon(Icons.notifications_none, size: 64, color: Colors.grey.shade400),
           SizedBox(height: 16),
           Text(
-            _selectedFilter == 'All' 
+            _selectedFilter == 'All'
                 ? 'No notifications'
                 : 'No notifications match your filter',
             style: TextStyle(fontSize: 18, color: Colors.grey.shade600),
@@ -846,7 +951,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     if (!notification.isRead) {
       _markAsRead(notification);
     }
-    
+
     // Show detailed notification dialog
     showDialog(
       context: context,
@@ -858,8 +963,10 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     return AlertDialog(
       title: Row(
         children: [
-          Icon(_getNotificationIcon(notification), 
-               color: _getNotificationColor(notification)),
+          Icon(
+            _getNotificationIcon(notification),
+            color: _getNotificationColor(notification),
+          ),
           SizedBox(width: 8),
           Expanded(child: Text(notification.title)),
         ],
@@ -877,12 +984,12 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 8),
-              ...notification.additionalData.entries.map((entry) => 
-                Padding(
+              ...notification.additionalData.entries.map(
+                (entry) => Padding(
                   padding: EdgeInsets.only(bottom: 4),
                   child: Text('${entry.key}: ${entry.value}'),
-                )
-              ).toList(),
+                ),
+              ),
             ],
           ],
         ),
@@ -911,7 +1018,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
   }
 
   void _handleNotificationAction(NotificationItem notification) {
-    if (notification.category == 'Foraging' || 
+    if (notification.category == 'Foraging' ||
         notification.category == 'Environmental' ||
         notification.category == 'Colony Health') {
       // Navigate to recommendations screen for detailed actions
@@ -934,34 +1041,35 @@ class _NotificationsScreenState extends State<NotificationsScreen>
   void _showActionOptionsDialog(NotificationItem notification) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Action Options'),
-        content: Text('What would you like to do about this notification?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text('Cancel'),
+      builder:
+          (context) => AlertDialog(
+            title: Text('Action Options'),
+            content: Text('What would you like to do about this notification?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _markAsRead(notification);
+                },
+                child: Text('Mark as Read'),
+              ),
+              if (notification.hiveId != 'system')
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    NavigationHelper.navigateToRecommendations(
+                      context,
+                      hiveId: notification.hiveId,
+                    );
+                  },
+                  child: Text('View Recommendations'),
+                ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _markAsRead(notification);
-            },
-            child: Text('Mark as Read'),
-          ),
-          if (notification.hiveId != 'system')
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                NavigationHelper.navigateToRecommendations(
-                  context,
-                  hiveId: notification.hiveId,
-                );
-              },
-              child: Text('View Recommendations'),
-            ),
-        ],
-      ),
     );
   }
 }
@@ -997,12 +1105,7 @@ class NotificationItem {
   });
 }
 
-enum NotificationType {
-  alert,
-  warning,
-  info,
-  success,
-}
+enum NotificationType { alert, warning, info, success }
 
 // Notification service for managing notifications across the app
 class NotificationService {
@@ -1011,23 +1114,25 @@ class NotificationService {
   NotificationService._internal();
 
   final List<NotificationItem> _notifications = [];
-  final StreamController<List<NotificationItem>> _notificationController = 
+  final StreamController<List<NotificationItem>> _notificationController =
       StreamController<List<NotificationItem>>.broadcast();
 
-  Stream<List<NotificationItem>> get notificationStream => _notificationController.stream;
+  Stream<List<NotificationItem>> get notificationStream =>
+      _notificationController.stream;
   List<NotificationItem> get notifications => List.unmodifiable(_notifications);
-  
+
   int get unreadCount => _notifications.where((n) => !n.isRead).length;
-  int get criticalCount => _notifications.where((n) => n.severity == 'Critical').length;
+  int get criticalCount =>
+      _notifications.where((n) => n.severity == 'Critical').length;
 
   void addNotification(NotificationItem notification) {
     _notifications.insert(0, notification); // Add to front (newest first)
-    
+
     // Keep only last 100 notifications
     if (_notifications.length > 100) {
       _notifications.removeRange(100, _notifications.length);
     }
-    
+
     _notificationController.add(_notifications);
   }
 
@@ -1058,7 +1163,10 @@ class NotificationService {
   }
 
   // Generate notification from advisory recommendation
-  void addAdvisoryRecommendation(DailyRecommendation recommendation, String hiveId) {
+  void addAdvisoryRecommendation(
+    DailyRecommendation recommendation,
+    String hiveId,
+  ) {
     final notification = NotificationItem(
       id: recommendation.id,
       title: recommendation.title,
@@ -1069,7 +1177,9 @@ class NotificationService {
       source: 'Advisory System',
       hiveId: hiveId,
       isRead: false,
-      actionRequired: recommendation.priority == 'Critical' || recommendation.priority == 'High',
+      actionRequired:
+          recommendation.priority == 'Critical' ||
+          recommendation.priority == 'High',
       category: 'Foraging',
       additionalData: {
         'timeRelevance': recommendation.timeRelevance,
@@ -1078,7 +1188,7 @@ class NotificationService {
         'scientificBasis': recommendation.scientificBasis,
       },
     );
-    
+
     addNotification(notification);
   }
 
@@ -1106,7 +1216,7 @@ class NotificationService {
       category: category,
       additionalData: additionalData ?? {},
     );
-    
+
     addNotification(notification);
   }
 
@@ -1148,11 +1258,11 @@ class NotificationBadge extends StatelessWidget {
   final Color? badgeColor;
 
   const NotificationBadge({
-    Key? key,
+    super.key,
     required this.child,
     required this.count,
     this.badgeColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1169,10 +1279,7 @@ class NotificationBadge extends StatelessWidget {
                 color: badgeColor ?? Colors.red,
                 borderRadius: BorderRadius.circular(10),
               ),
-              constraints: BoxConstraints(
-                minWidth: 16,
-                minHeight: 16,
-              ),
+              constraints: BoxConstraints(minWidth: 16, minHeight: 16),
               child: Text(
                 count > 99 ? '99+' : count.toString(),
                 style: TextStyle(

@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:HPGM/bee_counter/bee_counter_model.dart';
 import 'package:HPGM/bee_counter/bee_count_database.dart';
@@ -69,10 +68,11 @@ class ForagingAnalysisEngine {
 
       // Filter by date range if provided
       if (startDate != null && endDate != null) {
-        results = results.where((result) {
-          return result.timestamp.isAfter(startDate) &&
-              result.timestamp.isBefore(endDate.add(Duration(days: 1)));
-        }).toList();
+        results =
+            results.where((result) {
+              return result.timestamp.isAfter(startDate) &&
+                  result.timestamp.isBefore(endDate.add(Duration(days: 1)));
+            }).toList();
       }
 
       return results;
@@ -99,10 +99,11 @@ class ForagingAnalysisEngine {
     // Filter by date range if provided
     List<BeeCount> filteredResults = results;
     if (startDate != null && endDate != null) {
-      filteredResults = results.where((result) {
-        return result.timestamp.isAfter(startDate) &&
-            result.timestamp.isBefore(endDate.add(Duration(days: 1)));
-      }).toList();
+      filteredResults =
+          results.where((result) {
+            return result.timestamp.isAfter(startDate) &&
+                result.timestamp.isBefore(endDate.add(Duration(days: 1)));
+          }).toList();
     }
 
     if (filteredResults.isEmpty) {
@@ -139,9 +140,10 @@ class ForagingAnalysisEngine {
     );
 
     // Environmental correlation with weather data
-    Map<String, dynamic> environmentalFactors = includeWeatherData
-        ? await _analyzeEnvironmentalCorrelations(filteredResults)
-        : {'weatherData': {}, 'environmentalInsights': {}};
+    Map<String, dynamic> environmentalFactors =
+        includeWeatherData
+            ? await _analyzeEnvironmentalCorrelations(filteredResults)
+            : {'weatherData': {}, 'environmentalInsights': {}};
 
     // Calculate time-based return rates with improved algorithm
     Map<String, dynamic> timeBasedAnalysis = _calculateTimeBasedReturnRates(
@@ -314,29 +316,31 @@ class ForagingAnalysisEngine {
     }
 
     // Calculate daily averages
-    double avgDailyBeesIn = resultsByDay.isNotEmpty
-        ? resultsByDay.values
-                .map(
-                  (dayResults) => dayResults.fold(
-                    0,
-                    (sum, result) => sum + result.beesEntering,
-                  ),
-                )
-                .reduce((a, b) => a + b) /
-            resultsByDay.length
-        : 0;
+    double avgDailyBeesIn =
+        resultsByDay.isNotEmpty
+            ? resultsByDay.values
+                    .map(
+                      (dayResults) => dayResults.fold(
+                        0,
+                        (sum, result) => sum + result.beesEntering,
+                      ),
+                    )
+                    .reduce((a, b) => a + b) /
+                resultsByDay.length
+            : 0;
 
-    double avgDailyBeesOut = resultsByDay.isNotEmpty
-        ? resultsByDay.values
-                .map(
-                  (dayResults) => dayResults.fold(
-                    0,
-                    (sum, result) => sum + result.beesExiting,
-                  ),
-                )
-                .reduce((a, b) => a + b) /
-            resultsByDay.length
-        : 0;
+    double avgDailyBeesOut =
+        resultsByDay.isNotEmpty
+            ? resultsByDay.values
+                    .map(
+                      (dayResults) => dayResults.fold(
+                        0,
+                        (sum, result) => sum + result.beesExiting,
+                      ),
+                    )
+                    .reduce((a, b) => a + b) /
+                resultsByDay.length
+            : 0;
 
     // Calculate return rate
     double returnRate =
@@ -451,9 +455,10 @@ class ForagingAnalysisEngine {
       'activityByHour': activityByHourString,
       'hourlyFlux': hourlyFluxString,
       'trendSlope': trendSlope,
-      'trendDirection': trendSlope > 0
-          ? 'Increasing'
-          : (trendSlope < 0 ? 'Decreasing' : 'Stable'),
+      'trendDirection':
+          trendSlope > 0
+              ? 'Increasing'
+              : (trendSlope < 0 ? 'Decreasing' : 'Stable'),
       'estimatedForagingDuration': estimatedForagingDuration,
       'daysWithData': resultsByDay.length,
       'foragingIntensity': foragingIntensity,
@@ -588,8 +593,10 @@ class ForagingAnalysisEngine {
         // Fall back to traditional method if needed
         else {
           actualReturnRate = totalOut > 0 ? (totalIn / totalOut) * 100 : 0;
-          avgTripDuration =
-              _estimateAverageTripDuration(blockResults, dayResults);
+          avgTripDuration = _estimateAverageTripDuration(
+            blockResults,
+            dayResults,
+          );
         }
 
         // Calculate return rate difference (actual vs expected)
@@ -627,8 +634,10 @@ class ForagingAnalysisEngine {
         'timeBlocks': timeBlockAnalysis,
         'overallReturnRate': _calculateOverallReturnRate(timeBlockAnalysis),
         'overallTripDuration': _calculateOverallTripDuration(timeBlockAnalysis),
-        'weatherAdjustmentFactor':
-            _getWeatherAdjustmentFactor(day, environmentalFactors),
+        'weatherAdjustmentFactor': _getWeatherAdjustmentFactor(
+          day,
+          environmentalFactors,
+        ),
       };
     });
 
@@ -719,16 +728,20 @@ class ForagingAnalysisEngine {
     // Track returns for each cohort
     for (var cohortTime in cohortExits.keys) {
       // Look for returns within the maximum trip duration
-      DateTime cohortEndTime =
-          cohortTime.add(Duration(minutes: maxTripDurationMinutes));
+      DateTime cohortEndTime = cohortTime.add(
+        Duration(minutes: maxTripDurationMinutes),
+      );
 
       // Get all results after this cohort's exit time but before the end time
-      List<BeeCount> potentialReturns = dayResults
-          .where((result) =>
-              result.timestamp.isAfter(cohortTime) &&
-              result.timestamp.isBefore(cohortEndTime) &&
-              result.beesEntering > 0)
-          .toList();
+      List<BeeCount> potentialReturns =
+          dayResults
+              .where(
+                (result) =>
+                    result.timestamp.isAfter(cohortTime) &&
+                    result.timestamp.isBefore(cohortEndTime) &&
+                    result.beesEntering > 0,
+              )
+              .toList();
 
       // Calculate weighted returns and durations
       double totalWeightedDuration = 0;
@@ -741,14 +754,18 @@ class ForagingAnalysisEngine {
 
         // Apply a probability curve - bees are more likely to return after a certain time
         // This is a simplified model - in reality, this would be calibrated with actual data
-        double returnProbability =
-            _getReturnProbability(minutesSinceExit, blockName);
+        double returnProbability = _getReturnProbability(
+          minutesSinceExit,
+          blockName,
+        );
 
         // Calculate weighted returns for this cohort
         int weightedReturns =
             (returnResult.beesEntering * returnProbability).round();
-        weightedReturns =
-            math.min(weightedReturns, cohortExits[cohortTime]! - totalReturns);
+        weightedReturns = math.min(
+          weightedReturns,
+          cohortExits[cohortTime]! - totalReturns,
+        );
 
         if (weightedReturns <= 0) continue;
 
@@ -765,10 +782,14 @@ class ForagingAnalysisEngine {
     }
 
     // Calculate overall cohort statistics
-    int totalCohortExits =
-        cohortExits.values.fold(0, (sum, exits) => sum + exits);
-    int totalCohortReturns =
-        cohortReturns.values.fold(0, (sum, returns) => sum + returns);
+    int totalCohortExits = cohortExits.values.fold(
+      0,
+      (sum, exits) => sum + exits,
+    );
+    int totalCohortReturns = cohortReturns.values.fold(
+      0,
+      (sum, returns) => sum + returns,
+    );
 
     if (totalCohortExits == 0) {
       return {'hasData': false};
@@ -790,8 +811,10 @@ class ForagingAnalysisEngine {
       avgCohortTripDuration /= totalDurationWeights;
     } else {
       // Fallback if we couldn't calculate from cohorts
-      avgCohortTripDuration =
-          _estimateAverageTripDuration(blockResults, dayResults);
+      avgCohortTripDuration = _estimateAverageTripDuration(
+        blockResults,
+        dayResults,
+      );
     }
 
     return {
@@ -839,23 +862,29 @@ class ForagingAnalysisEngine {
     // Start with the first result in the block
     for (int i = 0; i < blockResults.length; i++) {
       DateTime windowStart = blockResults[i].timestamp;
-      DateTime windowEnd =
-          windowStart.add(Duration(minutes: windowSizeMinutes));
+      DateTime windowEnd = windowStart.add(
+        Duration(minutes: windowSizeMinutes),
+      );
 
       // Count exits in this specific result
       int exitingBees = blockResults[i].beesExiting;
       if (exitingBees <= 0) continue;
 
       // Find all results within the window timeframe
-      List<BeeCount> windowResults = dayResults
-          .where((result) =>
-              result.timestamp.isAfter(windowStart) &&
-              result.timestamp.isBefore(windowEnd))
-          .toList();
+      List<BeeCount> windowResults =
+          dayResults
+              .where(
+                (result) =>
+                    result.timestamp.isAfter(windowStart) &&
+                    result.timestamp.isBefore(windowEnd),
+              )
+              .toList();
 
       // Count total returning bees in the window
-      int returningBees =
-          windowResults.fold(0, (sum, result) => sum + result.beesEntering);
+      int returningBees = windowResults.fold(
+        0,
+        (sum, result) => sum + result.beesEntering,
+      );
 
       // Calculate average trip duration for this window
       double avgTripDuration = 0;
@@ -896,10 +925,14 @@ class ForagingAnalysisEngine {
       return {'hasData': false};
     }
 
-    int totalExits =
-        windows.fold<int>(0, (sum, window) => sum + window['exits'] as int);
-    int totalReturns =
-        windows.fold<int>(0, (sum, window) => sum + window['returns'] as int);
+    int totalExits = windows.fold<int>(
+      0,
+      (sum, window) => sum + window['exits'] as int,
+    );
+    int totalReturns = windows.fold<int>(
+      0,
+      (sum, window) => sum + window['returns'] as int,
+    );
 
     if (totalExits == 0) {
       return {'hasData': false};
@@ -918,9 +951,10 @@ class ForagingAnalysisEngine {
       }
     }
 
-    double avgTripDuration = totalDurationWeights > 0
-        ? weightedTripDuration / totalDurationWeights
-        : _estimateAverageTripDuration(blockResults, dayResults);
+    double avgTripDuration =
+        totalDurationWeights > 0
+            ? weightedTripDuration / totalDurationWeights
+            : _estimateAverageTripDuration(blockResults, dayResults);
 
     return {
       'hasData': true,
@@ -1065,8 +1099,10 @@ class ForagingAnalysisEngine {
     double seasonalFactor = _getSeasonalAdjustmentFactor(date);
 
     // Apply weather adjustment if available
-    double weatherFactor =
-        _getWeatherAdjustmentFactor(date, environmentalFactors);
+    double weatherFactor = _getWeatherAdjustmentFactor(
+      date,
+      environmentalFactors,
+    );
 
     // Calculate final adjusted rate
     double adjustedRate = baseRate * seasonalFactor * weatherFactor;
@@ -1174,8 +1210,10 @@ class ForagingAnalysisEngine {
     if (environmentalFactors.containsKey('weatherData') &&
         !environmentalFactors['weatherData'].isEmpty) {
       // If weather data indicates challenging conditions, be more lenient in assessment
-      weatherImpact =
-          _getWeatherAdjustmentFactor(DateTime.now(), environmentalFactors);
+      weatherImpact = _getWeatherAdjustmentFactor(
+        DateTime.now(),
+        environmentalFactors,
+      );
     }
 
     // Adjust the thresholds based on weather conditions
@@ -1370,17 +1408,19 @@ class ForagingAnalysisEngine {
 
     // Check if there's significant variation by day of week
     List<int> activityValues = dayOfWeekActivity.values.toList();
-    double mean = activityValues.isEmpty
-        ? 0
-        : activityValues.fold(0, (sum, value) => sum + value) /
-            activityValues.length;
+    double mean =
+        activityValues.isEmpty
+            ? 0
+            : activityValues.fold(0, (sum, value) => sum + value) /
+                activityValues.length;
 
-    double variance = activityValues.isEmpty
-        ? 0
-        : activityValues.fold(0.0, (sum, value) {
-              return sum + math.pow(value - mean, 2);
-            }) /
-            activityValues.length;
+    double variance =
+        activityValues.isEmpty
+            ? 0
+            : activityValues.fold(0.0, (sum, value) {
+                  return sum + math.pow(value - mean, 2);
+                }) /
+                activityValues.length;
 
     double stdDev = math.sqrt(variance);
 
@@ -1414,8 +1454,8 @@ class ForagingAnalysisEngine {
       }
 
       // Sort days
-      List<DateTime> sortedDays = resultsByDay.keys.toList()
-        ..sort((a, b) => a.compareTo(b));
+      List<DateTime> sortedDays =
+          resultsByDay.keys.toList()..sort((a, b) => a.compareTo(b));
 
       // Calculate day-to-day variation
       for (int i = 1; i < sortedDays.length; i++) {
@@ -1433,7 +1473,7 @@ class ForagingAnalysisEngine {
         if (previousDayActivity > 0) {
           double percentChange =
               (currentDayActivity - previousDayActivity).abs() /
-                  previousDayActivity;
+              previousDayActivity;
           if (percentChange > 0.4) {
             // 40% change threshold
             variableActivityDays++;
@@ -1450,9 +1490,9 @@ class ForagingAnalysisEngine {
     List<int> peakHours = [];
 
     // Sort hours by activity level
-    List<MapEntry<int, int>> sortedHourlyActivity = hourlyActivity.entries
-        .toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
+    List<MapEntry<int, int>> sortedHourlyActivity =
+        hourlyActivity.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
 
     // Get top 3 peak hours
     if (sortedHourlyActivity.length >= 3) {
@@ -1480,13 +1520,15 @@ class ForagingAnalysisEngine {
 
     return {
       'primaryForagingPeriod': primaryForagingPeriod,
-      'morningActivityPercentage': morningActivity > 0 || afternoonActivity > 0
-          ? (morningActivity / (morningActivity + afternoonActivity)) * 100
-          : 0,
-      'afternoonActivityPercentage': morningActivity > 0 ||
-              afternoonActivity > 0
-          ? (afternoonActivity / (morningActivity + afternoonActivity)) * 100
-          : 0,
+      'morningActivityPercentage':
+          morningActivity > 0 || afternoonActivity > 0
+              ? (morningActivity / (morningActivity + afternoonActivity)) * 100
+              : 0,
+      'afternoonActivityPercentage':
+          morningActivity > 0 || afternoonActivity > 0
+              ? (afternoonActivity / (morningActivity + afternoonActivity)) *
+                  100
+              : 0,
       'hasWeeklyPattern': hasWeeklyPattern,
       'dayOfWeekActivity': dayOfWeekActivity,
       'patternConsistency': patternStability, // Higher is more consistent
@@ -1656,17 +1698,19 @@ class ForagingAnalysisEngine {
     }
 
     List<int> activityValues = hourlyActivity.values.toList();
-    double mean = activityValues.isEmpty
-        ? 0
-        : activityValues.fold(0, (sum, value) => sum + value) /
-            activityValues.length;
+    double mean =
+        activityValues.isEmpty
+            ? 0
+            : activityValues.fold(0, (sum, value) => sum + value) /
+                activityValues.length;
 
-    double variance = activityValues.isEmpty
-        ? 0
-        : activityValues.fold(0.0, (sum, value) {
-              return sum + math.pow(value - mean, 2);
-            }) /
-            activityValues.length;
+    double variance =
+        activityValues.isEmpty
+            ? 0
+            : activityValues.fold(0.0, (sum, value) {
+                  return sum + math.pow(value - mean, 2);
+                }) /
+                activityValues.length;
 
     double stdDev = math.sqrt(variance);
     double cv = mean > 0 ? stdDev / mean : 0;
@@ -1675,7 +1719,8 @@ class ForagingAnalysisEngine {
     double consistencyScore = 100 * math.max(0, 1 - cv);
 
     // Calculate overall efficiency score (weighted average)
-    double efficiencyScore = (returnRateScore * 0.5) +
+    double efficiencyScore =
+        (returnRateScore * 0.5) +
         (durationScore * 0.3) +
         (consistencyScore * 0.2);
 
@@ -1693,9 +1738,10 @@ class ForagingAnalysisEngine {
     }
 
     // Calculate foraging balance (ratio of bees in vs out)
-    double foragingBalance = baseMetrics['totalBeesOut'] > 0
-        ? baseMetrics['totalBeesIn'] / baseMetrics['totalBeesOut']
-        : 0;
+    double foragingBalance =
+        baseMetrics['totalBeesOut'] > 0
+            ? baseMetrics['totalBeesIn'] / baseMetrics['totalBeesOut']
+            : 0;
 
     // Calculate peak efficiency hours
     Map<int, double> hourlyEfficiency = {};
@@ -1866,8 +1912,10 @@ class ForagingAnalysisEngine {
       for (var metric in foragingMetrics) {
         if (factorValues.length == metricValues[metric]!.length &&
             factorValues.length > 1) {
-          double correlation =
-              _calculateCorrelation(factorValues, metricValues[metric]!);
+          double correlation = _calculateCorrelation(
+            factorValues,
+            metricValues[metric]!,
+          );
 
           factorCorrelations[metric] = {
             'correlation': correlation,
@@ -1945,8 +1993,9 @@ class ForagingAnalysisEngine {
 
     double n = x.length.toDouble();
     double numerator = (n * sumXY) - (sumX * sumY);
-    double denominator = math
-        .sqrt(((n * sumX2) - (sumX * sumX)) * ((n * sumY2) - (sumY * sumY)));
+    double denominator = math.sqrt(
+      ((n * sumX2) - (sumX * sumX)) * ((n * sumY2) - (sumY * sumY)),
+    );
 
     if (denominator == 0) {
       return 0;
@@ -2036,7 +2085,8 @@ class ForagingAnalysisEngine {
       // Check most recent day
       if (dailyRates.isNotEmpty) {
         String mostRecentDay = dailyRates.keys.reduce(
-            (a, b) => DateTime.parse(a).isAfter(DateTime.parse(b)) ? a : b);
+          (a, b) => DateTime.parse(a).isAfter(DateTime.parse(b)) ? a : b,
+        );
 
         var dayData = dailyRates[mostRecentDay];
 
@@ -2117,9 +2167,10 @@ class ForagingAnalysisEngine {
     if (recommendations.length < 2) {
       // Check peak activity time
       int peakHour = metrics['peakActivityHour'];
-      String peakTimeStr = peakHour < 12
-          ? '$peakHour AM'
-          : (peakHour == 12 ? '12 PM' : '${peakHour - 12} PM');
+      String peakTimeStr =
+          peakHour < 12
+              ? '$peakHour AM'
+              : (peakHour == 12 ? '12 PM' : '${peakHour - 12} PM');
 
       recommendations.add({
         'type': 'info',
@@ -2144,8 +2195,9 @@ class ForagingAnalysisEngine {
     return {
       'recommendations': recommendations,
       'recommendationCount': recommendations.length,
-      'hasWarnings': recommendations
-          .any((r) => r['type'] == 'warning' || r['type'] == 'alert'),
+      'hasWarnings': recommendations.any(
+        (r) => r['type'] == 'warning' || r['type'] == 'alert',
+      ),
     };
   }
 

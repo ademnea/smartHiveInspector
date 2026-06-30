@@ -7,11 +7,7 @@ class PhotoViewPage extends StatelessWidget {
   final List<String> photos;
   final int index;
 
-  const PhotoViewPage({
-    Key? key,
-    required this.photos,
-    required this.index,
-  }) : super(key: key);
+  const PhotoViewPage({super.key, required this.photos, required this.index});
 
   @override
   Widget build(BuildContext context) {
@@ -23,19 +19,18 @@ class PhotoViewPage extends StatelessWidget {
       ),
       body: PhotoViewGallery.builder(
         itemCount: photos.length,
-        builder: (context, index) => PhotoViewGalleryPageOptions.customChild(
-          child: CachedNetworkImage(
-            imageUrl: photos[index],
-            placeholder: (context, url) => Container(
-              color: Colors.grey,
+        builder:
+            (context, index) => PhotoViewGalleryPageOptions.customChild(
+              child: CachedNetworkImage(
+                imageUrl: photos[index],
+                placeholder: (context, url) => Container(color: Colors.grey),
+                errorWidget:
+                    (context, url, error) =>
+                        Container(color: Colors.red.shade400),
+              ),
+              minScale: PhotoViewComputedScale.covered,
+              heroAttributes: PhotoViewHeroAttributes(tag: photos[index]),
             ),
-            errorWidget: (context, url, error) => Container(
-              color: Colors.red.shade400,
-            ),
-          ),
-          minScale: PhotoViewComputedScale.covered,
-          heroAttributes: PhotoViewHeroAttributes(tag: photos[index]),
-        ),
         pageController: PageController(initialPage: index),
         enableRotation: true,
       ),

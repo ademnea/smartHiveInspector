@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/sync_manager.dart';
 
 class SyncStatusWidget extends StatefulWidget {
-  const SyncStatusWidget({Key? key}) : super(key: key);
+  const SyncStatusWidget({super.key});
 
   @override
   State<SyncStatusWidget> createState() => _SyncStatusWidgetState();
@@ -197,7 +197,7 @@ class _SyncStatusWidgetState extends State<SyncStatusWidget> {
 
 /// A floating sync status indicator that can be added to any screen
 class FloatingSyncStatus extends StatelessWidget {
-  const FloatingSyncStatus({Key? key}) : super(key: key);
+  const FloatingSyncStatus({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -211,7 +211,7 @@ class FloatingSyncStatus extends StatelessWidget {
 
 /// A banner sync status that can be added at the top of screens
 class SyncStatusBanner extends StatefulWidget {
-  const SyncStatusBanner({Key? key}) : super(key: key);
+  const SyncStatusBanner({super.key});
 
   @override
   State<SyncStatusBanner> createState() => _SyncStatusBannerState();

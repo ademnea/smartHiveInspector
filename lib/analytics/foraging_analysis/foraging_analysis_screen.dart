@@ -10,7 +10,7 @@ import 'foraging_analysis_engine.dart';
 class ForagingAnalysisScreen extends StatefulWidget {
   final String? hiveId;
 
-  const ForagingAnalysisScreen({Key? key, this.hiveId}) : super(key: key);
+  const ForagingAnalysisScreen({super.key, this.hiveId});
 
   @override
   State<ForagingAnalysisScreen> createState() => _ForagingAnalysisScreenState();
@@ -158,14 +158,15 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
       );
 
       // Filter to include only records from the most recent day with data
-      results = results.where((result) {
-        DateTime recordDate = DateTime(
-          result.timestamp.year,
-          result.timestamp.month,
-          result.timestamp.day,
-        );
-        return recordDate.isAtSameMomentAs(mostRecentDate);
-      }).toList();
+      results =
+          results.where((result) {
+            DateTime recordDate = DateTime(
+              result.timestamp.year,
+              result.timestamp.month,
+              result.timestamp.day,
+            );
+            return recordDate.isAtSameMomentAs(mostRecentDate);
+          }).toList();
 
       return results;
     } catch (e) {
@@ -190,12 +191,13 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
       }
 
       // Filter by date range
-      results = results.where((result) {
-        return result.timestamp.isAfter(_dateRange.start) &&
-            result.timestamp.isBefore(
-              _dateRange.end.add(Duration(days: 1)),
-            );
-      }).toList();
+      results =
+          results.where((result) {
+            return result.timestamp.isAfter(_dateRange.start) &&
+                result.timestamp.isBefore(
+                  _dateRange.end.add(Duration(days: 1)),
+                );
+          }).toList();
 
       return results;
     } catch (e) {
@@ -263,52 +265,53 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
         ),
       ),
       backgroundColor: _backgroundColor,
-      body: _isLoading
-          ? Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(_primaryColor),
-              ),
-            )
-          : _hasError
+      body:
+          _isLoading
               ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 64,
-                          color: Colors.red[300],
-                        ),
-                        SizedBox(height: 16),
-                        Text(
-                          _errorMessage,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.red[700]),
-                        ),
-                        SizedBox(height: 24),
-                        ElevatedButton.icon(
-                          onPressed: _loadData,
-                          icon: Icon(Icons.refresh),
-                          label: Text('Try Again'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _primaryColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              : TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildOverviewTab(),
-                    _buildPatternsTab(),
-                    _buildTimeAnalysisTab(),
-                    _buildRecommendationsTab(),
-                  ],
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(_primaryColor),
                 ),
+              )
+              : _hasError
+              ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.red[300],
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        _errorMessage,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.red[700]),
+                      ),
+                      SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: _loadData,
+                        icon: Icon(Icons.refresh),
+                        label: Text('Try Again'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _primaryColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+              : TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildOverviewTab(),
+                  _buildPatternsTab(),
+                  _buildTimeAnalysisTab(),
+                  _buildRecommendationsTab(),
+                ],
+              ),
     );
   }
 
@@ -447,35 +450,36 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
         !_analysisResults['hasData']) {
       return _buildNoDataView();
     }
-  
+
     // Fix the type casting issue
     List<Map<String, dynamic>> recommendations = [];
-    
+
     // Check if recommendations exists and handle different possible types
     if (_analysisResults.containsKey('recommendations')) {
       var rawRecommendations = _analysisResults['recommendations'];
-      
+
       if (rawRecommendations is List) {
         // If it's already a list, convert each item to Map<String, dynamic>
         recommendations = List<Map<String, dynamic>>.from(
-          rawRecommendations.map((item) => 
-            item is Map<String, dynamic> ? item : <String, dynamic>{}
-          )
+          rawRecommendations.map(
+            (item) => item is Map<String, dynamic> ? item : <String, dynamic>{},
+          ),
         );
       } else if (rawRecommendations is Map) {
         // If it's a map, convert it to a list with a single item
         recommendations = [Map<String, dynamic>.from(rawRecommendations)];
       }
     }
-  
-    final environmentalFactors = _analysisResults.containsKey('environmentalFactors') 
-        ? _analysisResults['environmentalFactors'] 
-        : <String, dynamic>{};
-  
+
+    final environmentalFactors =
+        _analysisResults.containsKey('environmentalFactors')
+            ? _analysisResults['environmentalFactors']
+            : <String, dynamic>{};
+
     // Add this at the beginning of _buildRecommendationsTab()#
     print("Recommendations data: ${_analysisResults['recommendations']}");
     print("Environmental factors: ${_analysisResults['environmentalFactors']}");
-  
+
     return SingleChildScrollView(
       padding: EdgeInsets.all(16),
       child: Column(
@@ -483,21 +487,23 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
         children: [
           _buildSectionHeader('Recommendations'),
           SizedBox(height: 16),
-          recommendations.isNotEmpty 
+          recommendations.isNotEmpty
               ? _buildRecommendationsCard(recommendations)
               : Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Center(
-                      child: Text(
-                        'No recommendations available for this time period.',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                      ),
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Center(
+                    child: Text(
+                      'No recommendations available for this time period.',
+                      style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                     ),
                   ),
                 ),
+              ),
           SizedBox(height: 24),
           _buildSectionHeader('Environmental Insights'),
           SizedBox(height: 16),
@@ -518,9 +524,9 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
       width: double.infinity,
       padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       decoration: BoxDecoration(
-        color: _primaryColor.withOpacity(0.1),
+        color: _primaryColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _primaryColor.withOpacity(0.3)),
+        border: Border.all(color: _primaryColor.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -619,7 +625,9 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
             Container(
               height: 250,
               padding: EdgeInsets.only(
-                  top: 16, right: 16), // Added padding for chart
+                top: 16,
+                right: 16,
+              ), // Added padding for chart
               decoration: BoxDecoration(
                 color: Colors.grey[50], // Light background for chart area
                 borderRadius: BorderRadius.circular(8),
@@ -935,7 +943,9 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
             Container(
               height: 250,
               padding: EdgeInsets.only(
-                  top: 16, right: 16), // Added padding for chart
+                top: 16,
+                right: 16,
+              ), // Added padding for chart
               decoration: BoxDecoration(
                 color: Colors.grey[50], // Light background for chart area
                 borderRadius: BorderRadius.circular(8),
@@ -966,8 +976,9 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
                       sideTitles: SideTitles(
                         showTitles: true,
                         getTitlesWidget: (value, meta) {
-                          if (value >= days.length || value < 0)
+                          if (value >= days.length || value < 0) {
                             return SizedBox();
+                          }
 
                           return Padding(
                             padding: const EdgeInsets.only(top: 8.0),
@@ -1021,7 +1032,7 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
                       dotData: FlDotData(show: true),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: Colors.amber.withOpacity(0.2),
+                        color: Colors.amber.withValues(alpha: 0.2),
                       ),
                     ),
                     LineChartBarData(
@@ -1033,7 +1044,7 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
                       dotData: FlDotData(show: true),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: Colors.deepPurple.withOpacity(0.2),
+                        color: Colors.deepPurple.withValues(alpha: 0.2),
                       ),
                     ),
                   ],
@@ -1274,8 +1285,8 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
             ),
             TextButton(
               onPressed: _selectDateRange,
-              child: Text('Change'),
               style: TextButton.styleFrom(foregroundColor: _primaryColor),
+              child: Text('Change'),
             ),
           ],
         ),
@@ -1445,7 +1456,8 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
                           'Average time',
                           Icons.timer,
                           _getTripDurationColor(
-                              metrics['estimatedForagingDuration']),
+                            metrics['estimatedForagingDuration'],
+                          ),
                         ),
                       ),
                     ],
@@ -1555,54 +1567,55 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
   }
 
   Widget _buildEfficiencyCard(Map<String, dynamic> efficiency) {
-    if (efficiency == null) {
-       return SizedBox(); 
-     }
-   
-     // Check if the required keys exist
-     final efficiencyScore = efficiency.containsKey('efficiencyScore') ? efficiency['efficiencyScore'] : 0.0;
-     final benchmarkComparison = efficiency.containsKey('benchmarkComparison') ? efficiency['benchmarkComparison'] : {};
-   
-     // Check if benchmarkComparison contains the required keys
-     if (!benchmarkComparison.containsKey('efficiencyScore') ||
-         !benchmarkComparison.containsKey('returnRate') ||
-         !benchmarkComparison.containsKey('foragingDuration') ||
-         !benchmarkComparison.containsKey('entryExitImbalance')) {
-       return Card(
-         elevation: 4,
-         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-         child: Padding(
-           padding: EdgeInsets.all(20),
-           child: Column(
-             crossAxisAlignment: CrossAxisAlignment.start,
-             children: [
-               Text(
-                 'Foraging Efficiency',
-                 style: TextStyle(
-                   fontSize: 18, 
-                   fontWeight: FontWeight.bold,
-                   color: _textColor,
-                 ),
-               ),
-               SizedBox(height: 20),
-               Center(
-                 child: Padding(
-                   padding: const EdgeInsets.all(16.0),
-                   child: Text(
-                     'Insufficient data to calculate efficiency metrics',
-                     style: TextStyle(
-                       fontSize: 14,
-                       color: Colors.grey[600],
-                       fontStyle: FontStyle.italic,
-                     ),
-                   ),
-                 ),
-               ),
-             ],
-           ),
-         ),
-       );
-     }
+    final efficiencyScore =
+        efficiency.containsKey('efficiencyScore')
+            ? efficiency['efficiencyScore']
+            : 0.0;
+    final benchmarkComparison =
+        efficiency.containsKey('benchmarkComparison')
+            ? efficiency['benchmarkComparison']
+            : {};
+
+    // Check if benchmarkComparison contains the required keys
+    if (!benchmarkComparison.containsKey('efficiencyScore') ||
+        !benchmarkComparison.containsKey('returnRate') ||
+        !benchmarkComparison.containsKey('foragingDuration') ||
+        !benchmarkComparison.containsKey('entryExitImbalance')) {
+      return Card(
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Foraging Efficiency',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: _textColor,
+                ),
+              ),
+              SizedBox(height: 20),
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    'Insufficient data to calculate efficiency metrics',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     Color efficiencyColor;
     if (efficiencyScore >= 80) {
       efficiencyColor = Colors.green;
@@ -1711,8 +1724,7 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
                               .toStringAsFixed(0),
                           benchmarkComparison['foragingDuration']['benchmark']
                               .toStringAsFixed(0),
-                          benchmarkComparison['foragingDuration']
-                              ['performance'],
+                          benchmarkComparison['foragingDuration']['performance'],
                           'min',
                         ),
                         SizedBox(height: 12),
@@ -1722,8 +1734,7 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
                               .toStringAsFixed(1),
                           benchmarkComparison['entryExitImbalance']['benchmark']
                               .toStringAsFixed(1),
-                          benchmarkComparison['entryExitImbalance']
-                              ['performance'],
+                          benchmarkComparison['entryExitImbalance']['performance'],
                           '%',
                           lowerIsBetter: true,
                         ),
@@ -1817,7 +1828,7 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: performanceColor.withOpacity(0.2),
+                  color: performanceColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -1852,52 +1863,56 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
     }
 
     return Column(
-      children: limitingFactors.map((factor) {
-        Color severityColor = factor['severity'] == 'High'
-            ? Colors.red
-            : (factor['severity'] == 'Medium' ? Colors.orange : Colors.amber);
+      children:
+          limitingFactors.map((factor) {
+            Color severityColor =
+                factor['severity'] == 'High'
+                    ? Colors.red
+                    : (factor['severity'] == 'Medium'
+                        ? Colors.orange
+                        : Colors.amber);
 
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12.0), // Increased spacing
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                margin: EdgeInsets.only(top: 2),
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: severityColor,
-                ),
-              ),
-              SizedBox(width: 12), // Increased spacing
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${factor['factor']} (${factor['severity']} Impact)',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12.0), // Increased spacing
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    margin: EdgeInsets.only(top: 2),
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: severityColor,
                     ),
-                    SizedBox(height: 4),
-                    Text(
-                      factor['description'],
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey[700],
-                      ),
+                  ),
+                  SizedBox(width: 12), // Increased spacing
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${factor['factor']} (${factor['severity']} Impact)',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          factor['description'],
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        );
-      }).toList(),
+            );
+          }).toList(),
     );
   }
 
@@ -1971,18 +1986,21 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
                       children: [
                         weatherIconUrl.isNotEmpty
                             ? Image.network(
-                                weatherIconUrl,
-                                width: 64,
-                                height: 64,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Icon(
-                                  Icons.wb_sunny,
-                                  size: 48,
-                                  color: Colors.amber,
-                                ),
-                              )
-                            : Icon(Icons.wb_sunny,
-                                size: 48, color: Colors.amber),
+                              weatherIconUrl,
+                              width: 64,
+                              height: 64,
+                              errorBuilder:
+                                  (context, error, stackTrace) => Icon(
+                                    Icons.wb_sunny,
+                                    size: 48,
+                                    color: Colors.amber,
+                                  ),
+                            )
+                            : Icon(
+                              Icons.wb_sunny,
+                              size: 48,
+                              color: Colors.amber,
+                            ),
                         SizedBox(height: 8),
                         Text(
                           currentTemp,
@@ -1993,8 +2011,10 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
                         ),
                         Text(
                           currentCondition,
-                          style:
-                              TextStyle(fontSize: 14, color: Colors.grey[700]),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[700],
+                          ),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -2024,8 +2044,10 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
                         Text(
                           environmentalInsights[mostInfluentialFactor] ??
                               'No specific insights available.',
-                          style:
-                              TextStyle(fontSize: 14, color: Colors.grey[700]),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[700],
+                          ),
                         ),
                       ],
                     ),
@@ -2066,9 +2088,10 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
     String mostInfluentialFactor =
         _analysisResults['environmentalFactors']['mostInfluentialFactor'] ?? '';
 
-    List<MapEntry<String, String>> insights = environmentalInsights.entries
-        .where((entry) => entry.key != mostInfluentialFactor)
-        .toList();
+    List<MapEntry<String, String>> insights =
+        environmentalInsights.entries
+            .where((entry) => entry.key != mostInfluentialFactor)
+            .toList();
 
     if (insights.isEmpty) {
       return Padding(
@@ -2115,7 +2138,10 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
                         SizedBox(height: 4),
                         Text(
                           entry.value,
-                          style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey[700],
+                          ),
                         ),
                       ],
                     ),
@@ -2176,7 +2202,8 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
 
     // Filter to daylight hours (5 AM to 9 PM)
     sortedActivity =
-        sortedActivity.where((entry) => entry.key >= 5 && entry.key <= 21)
+        sortedActivity
+            .where((entry) => entry.key >= 5 && entry.key <= 21)
             .toList();
 
     // Prepare data for the chart
@@ -2237,7 +2264,9 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
             Container(
               height: 250,
               padding: EdgeInsets.only(
-                  top: 16, right: 16), // Added padding for chart
+                top: 16,
+                right: 16,
+              ), // Added padding for chart
               decoration: BoxDecoration(
                 color: Colors.grey[50], // Light background for chart area
                 borderRadius: BorderRadius.circular(8),
@@ -2251,9 +2280,10 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
                     touchTooltipData: BarTouchTooltipData(
                       getTooltipItem: (group, groupIndex, rod, rodIndex) {
                         int hour = sortedActivity[group.x.toInt()].key;
-                        String timeLabel = hour < 12
-                            ? '$hour AM'
-                            : (hour == 12 ? '12 PM' : '${hour - 12} PM');
+                        String timeLabel =
+                            hour < 12
+                                ? '$hour AM'
+                                : (hour == 12 ? '12 PM' : '${hour - 12} PM');
                         return BarTooltipItem(
                           '$timeLabel: ${rod.toY.toInt()} bees',
                           TextStyle(color: Colors.white),
@@ -2271,9 +2301,10 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
                           int hour = sortedActivity[value.toInt()].key;
                           // Only show every other hour to avoid crowding
                           if (hour % 3 != 0) return SizedBox();
-                          String timeLabel = hour < 12
-                              ? '$hour AM'
-                              : (hour == 12 ? '12 PM' : '${hour - 12} PM');
+                          String timeLabel =
+                              hour < 12
+                                  ? '$hour AM'
+                                  : (hour == 12 ? '12 PM' : '${hour - 12} PM');
                           return Padding(
                             padding: const EdgeInsets.only(top: 8.0),
                             child: Text(
@@ -2343,7 +2374,7 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
             ),
             SizedBox(height: 16),
             Text(
-              'This chart shows bee activity throughout the day. The peak hour (${metrics['peakActivityHour'] < 12 ? metrics['peakActivityHour'].toString() + ' AM' : (metrics['peakActivityHour'] == 12 ? '12 PM' : (metrics['peakActivityHour'] - 12).toString() + ' PM')}) is highlighted in amber.',
+              'This chart shows bee activity throughout the day. The peak hour (${metrics['peakActivityHour'] < 12 ? '${metrics['peakActivityHour']} AM' : (metrics['peakActivityHour'] == 12 ? '12 PM' : '${metrics['peakActivityHour'] - 12} PM')}) is highlighted in amber.',
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
           ],
@@ -2354,15 +2385,20 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
 
   Widget _buildForagingPatternsCard(Map<String, dynamic> patterns) {
     // Add null checks for all values
-    final primaryForagingPeriod = patterns['primaryForagingPeriod']?.toString() ?? 'Unknown';
-    final morningActivityPercentage = patterns['morningActivityPercentage'] ?? 0.0;
-    final afternoonActivityPercentage = patterns['afternoonActivityPercentage'] ?? 0.0;
+    final primaryForagingPeriod =
+        patterns['primaryForagingPeriod']?.toString() ?? 'Unknown';
+    final morningActivityPercentage =
+        patterns['morningActivityPercentage'] ?? 0.0;
+    final afternoonActivityPercentage =
+        patterns['afternoonActivityPercentage'] ?? 0.0;
     final patternConsistency = patterns['patternConsistency'] ?? 0.0;
-    final suspectedWeatherDependency = patterns['suspectedWeatherDependency'] ?? false;
+    final suspectedWeatherDependency =
+        patterns['suspectedWeatherDependency'] ?? false;
     final hasBimodalPattern = patterns['hasBimodalPattern'] ?? false;
-    final possibleSwarmingBehavior = patterns['possibleSwarmingBehavior'] ?? false;
+    final possibleSwarmingBehavior =
+        patterns['possibleSwarmingBehavior'] ?? false;
     final peakActivityHours = patterns['peakActivityHours'] ?? [];
-  
+
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -2434,11 +2470,14 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
                     hasBimodalPattern ? 'Present' : 'Not Present',
                     Icons.show_chart,
                     hasBimodalPattern ? Colors.blue : Colors.grey,
-                    subtitle: hasBimodalPattern
-                        ? 'Two distinct activity peaks'
-                        : 'Single activity peak pattern',
+                    subtitle:
+                        hasBimodalPattern
+                            ? 'Two distinct activity peaks'
+                            : 'Single activity peak pattern',
                   ),
-                  if (hasBimodalPattern && peakActivityHours is List && peakActivityHours.isNotEmpty)
+                  if (hasBimodalPattern &&
+                      peakActivityHours is List &&
+                      peakActivityHours.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(left: 32.0, top: 8.0),
                       child: Text(
@@ -2455,9 +2494,10 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
                     possibleSwarmingBehavior ? 'Possible' : 'Not Detected',
                     Icons.warning_amber,
                     possibleSwarmingBehavior ? Colors.red : Colors.green,
-                    subtitle: possibleSwarmingBehavior
-                        ? 'Unusual outbound activity detected'
-                        : 'Normal outbound/inbound ratio',
+                    subtitle:
+                        possibleSwarmingBehavior
+                            ? 'Unusual outbound activity detected'
+                            : 'Normal outbound/inbound ratio',
                   ),
                 ],
               ),
@@ -2470,14 +2510,14 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
 
   Widget _buildPatternItem(
     String label,
-    String? value,  // Change to accept nullable String
+    String? value, // Change to accept nullable String
     IconData icon,
     Color color, {
     String? subtitle,
   }) {
     // Provide a default value if null
     final displayValue = value ?? 'N/A';
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
@@ -2503,7 +2543,7 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
           Container(
             padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
+              color: color.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Text(
@@ -2556,7 +2596,7 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
               color: color,
               fontWeight: FontWeight.bold,
             ),
-                   ),
+          ),
         ],
       ),
     );
@@ -2688,7 +2728,7 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
     Map<String, int> totalActivityByDay = {};
     int maxActivity = 0;
 
-    daysOfWeek.forEach((day) {
+    for (var day in daysOfWeek) {
       if (dayOfWeekDistribution.containsKey(day)) {
         int in_ = dayOfWeekDistribution[day]['in'] ?? 0;
         int out_ = dayOfWeekDistribution[day]['out'] ?? 0;
@@ -2700,7 +2740,7 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
       } else {
         totalActivityByDay[day] = 0;
       }
-    });
+    }
 
     // Prepare data for the chart
     List<BarChartGroupData> barGroups = [];
@@ -2744,7 +2784,9 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
             Container(
               height: 250,
               padding: EdgeInsets.only(
-                  top: 16, right: 16), // Added padding for chart
+                top: 16,
+                right: 16,
+              ), // Added padding for chart
               decoration: BoxDecoration(
                 color: Colors.grey[50], // Light background for chart area
                 borderRadius: BorderRadius.circular(8),
@@ -2911,7 +2953,9 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
             Container(
               height: 250,
               padding: EdgeInsets.only(
-                  top: 16, right: 16), // Added padding for chart
+                top: 16,
+                right: 16,
+              ), // Added padding for chart
               decoration: BoxDecoration(
                 color: Colors.grey[50], // Light background for chart area
                 borderRadius: BorderRadius.circular(8),
@@ -2946,9 +2990,10 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
                           int hour = sortedFlux[value.toInt()].key;
                           // Only show every other hour to avoid crowding
                           if (hour % 3 != 0) return SizedBox();
-                          String timeLabel = hour < 12
-                              ? '$hour AM'
-                              : (hour == 12 ? '12 PM' : '${hour - 12} PM');
+                          String timeLabel =
+                              hour < 12
+                                  ? '$hour AM'
+                                  : (hour == 12 ? '12 PM' : '${hour - 12} PM');
                           return Padding(
                             padding: const EdgeInsets.only(top: 8.0),
                             child: Text(
@@ -2999,7 +3044,7 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
                       dotData: FlDotData(show: true),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: _accentColor.withOpacity(0.2),
+                        color: _accentColor.withValues(alpha: 0.2),
                       ),
                     ),
                   ],
@@ -3021,7 +3066,7 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
                     child: Container(
                       padding: EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.2),
+                        color: Colors.green.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Column(
@@ -3050,7 +3095,7 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
                     child: Container(
                       padding: EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.2),
+                        color: Colors.red.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Column(
@@ -3099,7 +3144,7 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
         ),
       );
     }
-  
+
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -3119,12 +3164,17 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
             SizedBox(height: 20),
             ...recommendations.map((recommendation) {
               // Add null checks for all string values
-              final priority = recommendation['priority']?.toString() ?? 'Medium';
-              final category = recommendation['category']?.toString() ?? 'General';
-              final title = recommendation['recommendation']?.toString() ?? 'No title';
-              final details = recommendation['details']?.toString() ?? 'No details available';
+              final priority =
+                  recommendation['priority']?.toString() ?? 'Medium';
+              final category =
+                  recommendation['category']?.toString() ?? 'General';
+              final title =
+                  recommendation['recommendation']?.toString() ?? 'No title';
+              final details =
+                  recommendation['details']?.toString() ??
+                  'No details available';
               final actionItems = recommendation['actionItems'] ?? <dynamic>[];
-              
+
               Color priorityColor;
               switch (priority) {
                 case 'High':
@@ -3136,14 +3186,16 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
                 default:
                   priorityColor = Colors.green;
               }
-  
+
               return Container(
                 margin: EdgeInsets.only(bottom: 20),
                 padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.grey[50],
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: priorityColor.withOpacity(0.3)),
+                  border: Border.all(
+                    color: priorityColor.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -3156,7 +3208,7 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: priorityColor.withOpacity(0.2),
+                            color: priorityColor.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -3175,7 +3227,7 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.blue.withOpacity(0.2),
+                            color: Colors.blue.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -3232,11 +3284,11 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
                             ],
                           ),
                         );
-                      }).toList(),
+                      }),
                   ],
                 ),
               );
-            }).toList(),
+            }),
           ],
         ),
       ),
@@ -3276,7 +3328,8 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
 
               return Container(
                 margin: EdgeInsets.only(
-                    bottom: 20), // Increased spacing between conditions
+                  bottom: 20,
+                ), // Increased spacing between conditions
                 padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.grey[50],
@@ -3329,83 +3382,89 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
   }
 
   Widget _buildEnvironmentalInsightsCard(
-  Map<String, dynamic> environmentalFactors,
-) {
-  if (!environmentalFactors.containsKey('environmentalInsights') ||
-      environmentalFactors['environmentalInsights'].isEmpty) {
-    return SizedBox();
-  }
+    Map<String, dynamic> environmentalFactors,
+  ) {
+    if (!environmentalFactors.containsKey('environmentalInsights') ||
+        environmentalFactors['environmentalInsights'].isEmpty) {
+      return SizedBox();
+    }
 
     final environmentalInsights = environmentalFactors['environmentalInsights'];
 
-  return Card(
-    elevation: 4, // Increased elevation
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    child: Padding(
-      padding: EdgeInsets.all(20), // Increased padding
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Environmental Insights',
-            style: TextStyle(
-              fontSize: 18, 
-              fontWeight: FontWeight.bold,
-              color: _textColor,
+    return Card(
+      elevation: 4, // Increased elevation
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: EdgeInsets.all(20), // Increased padding
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Environmental Insights',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: _textColor,
+              ),
             ),
-          ),
-          SizedBox(height: 20), // Increased spacing
-          Container(
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              children: environmentalInsights.entries.map((entry) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12.0), // Increased spacing
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        margin: EdgeInsets.only(top: 2),
-                        child: Icon(
-                          _getWeatherIcon(entry.key),
-                          size: 20,
-                          color: Colors.blue[700],
-                        ),
-                      ),
-                      SizedBox(width: 12), // Increased spacing
-                      Expanded(
-                        child: Column(
+            SizedBox(height: 20), // Increased spacing
+            Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                children:
+                    environmentalInsights.entries.map((entry) {
+                      return Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: 12.0,
+                        ), // Increased spacing
+                        child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              _formatWeatherFactor(entry.key),
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
+                            Container(
+                              margin: EdgeInsets.only(top: 2),
+                              child: Icon(
+                                _getWeatherIcon(entry.key),
+                                size: 20,
+                                color: Colors.blue[700],
                               ),
                             ),
-                            SizedBox(height: 4),
-                            Text(
-                              entry.value,
-                              style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                            SizedBox(width: 12), // Increased spacing
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _formatWeatherFactor(entry.key),
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    entry.value,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
+                      );
+                    }).toList(),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
+    );
   }
 
   Widget _buildOptimalRangeIndicator(Map<String, dynamic> conditions) {
@@ -3520,7 +3579,7 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
     double mean = overallRates.reduce((a, b) => a + b) / overallRates.length;
     double variance =
         overallRates.fold(0.0, (sum, rate) => sum + math.pow(rate - mean, 2)) /
-            overallRates.length;
+        overallRates.length;
     double stdDev = math.sqrt(variance);
     double cv = mean > 0 ? stdDev / mean : 0;
 
@@ -3618,7 +3677,7 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
     double mean = values.reduce((a, b) => a + b) / values.length;
     double variance =
         values.fold(0.0, (sum, value) => sum + math.pow(value - mean, 2)) /
-            values.length;
+        values.length;
     double stdDev = math.sqrt(variance);
 
     return mean > 0 ? stdDev / mean : 0;
@@ -3768,7 +3827,7 @@ class _ForagingAnalysisScreenState extends State<ForagingAnalysisScreen>
         Container(
           padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
-            color: ratingColor.withOpacity(0.2),
+            color: ratingColor.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(

@@ -2,13 +2,13 @@ import 'dart:async';
 import 'package:HPGM/analytics/foraging_advisory_screen.dart';
 import 'package:HPGM/analytics/foraging_advisory_service.dart';
 import 'package:HPGM/bee_counter/bee_monitoring_screen.dart';
-import 'package:HPGM/bee_counter/bee_dashboard_screen.dart';
 import 'package:HPGM/notifications/notification_screen.dart';
 import 'package:HPGM/analytics/navigation_helper.dart';
 import 'package:HPGM/navbar.dart';
 import 'package:HPGM/profile.dart';
 import 'package:HPGM/services/token_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:HPGM/bee_counter/hive_selection_screen.dart';
 
 // Notification Service (if not already defined elsewhere)
 class NotificationService {
@@ -17,23 +17,27 @@ class NotificationService {
   NotificationService._internal();
 
   final List<NotificationItem> _notifications = [];
-  final StreamController<List<NotificationItem>> _notificationController = 
+  final StreamController<List<NotificationItem>> _notificationController =
       StreamController<List<NotificationItem>>.broadcast();
 
   int get unreadCount => _notifications.where((n) => !n.isRead).length;
   int get criticalCount => _notifications.where((n) => n.isCritical).length;
 
-  Stream<List<NotificationItem>> get notificationStream => 
+  Stream<List<NotificationItem>> get notificationStream =>
       _notificationController.stream;
 
   void addAdvisoryRecommendation(String recommendation, String hiveId) {
-    _notifications.add(NotificationItem(
-      title: 'Advisory Alert',
-      body: recommendation,
-      isRead: false,
-      isCritical: recommendation.contains('urgent') || recommendation.contains('critical'),
-      timestamp: DateTime.now(),
-    ));
+    _notifications.add(
+      NotificationItem(
+        title: 'Advisory Alert',
+        body: recommendation,
+        isRead: false,
+        isCritical:
+            recommendation.contains('urgent') ||
+            recommendation.contains('critical'),
+        timestamp: DateTime.now(),
+      ),
+    );
     _notificationController.add(_notifications);
   }
 
@@ -316,8 +320,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 context,
                                 MaterialPageRoute(
                                   builder:
-                                      (context) =>
-                                          const BeeMonitoringScreen(hiveId: '1'),
+                                      (context) => const BeeMonitoringScreen(
+                                        hiveId: '1',
+                                      ),
                                 ),
                               );
                             },
@@ -356,9 +361,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 context,
                                 MaterialPageRoute(
                                   builder:
-                                      (context) => const EnhancedForagingDashboard(
-                                        hiveId: '1',
-                                      ),
+                                      (context) =>
+                                          const EnhancedForagingDashboard(
+                                            hiveId: '1',
+                                          ),
                                 ),
                               );
                             },
@@ -382,13 +388,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const NotificationsScreen(),
+                                  builder:
+                                      (context) => const NotificationsScreen(),
                                 ),
                               );
                             },
                           ),
                         ),
                         const SizedBox(width: 12),
+                        // Hive Data Card
                         // Hive Data Card
                         Expanded(
                           child: buildFeatureCard(
@@ -400,7 +408,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 context,
                                 MaterialPageRoute(
                                   builder:
-                                      (context) => const BeeDashboardScreen(hiveId: '1'),
+                                      (context) => const HiveSelectionScreen(),
                                 ),
                               );
                             },
@@ -439,7 +447,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // Navigate to Notifications screen
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const NotificationsScreen()),
+                MaterialPageRoute(
+                  builder: (context) => const NotificationsScreen(),
+                ),
               );
               break;
             case 3:

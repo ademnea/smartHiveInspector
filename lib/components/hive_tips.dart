@@ -4,19 +4,12 @@ class HiveTips extends StatelessWidget {
   final String title;
   final String content;
 
-  const HiveTips({
-    Key? key,
-    required this.title,
-    required this.content,
-  }) : super(key: key);
+  const HiveTips({super.key, required this.title, required this.content});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(
-        top: 10,
-        bottom: 10,
-      ),
+      padding: const EdgeInsets.only(top: 10, bottom: 10),
       child: Container(
         width: MediaQuery.of(context).size.width * 0.9,
         decoration: BoxDecoration(

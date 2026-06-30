@@ -4,7 +4,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 class ImageSlider extends StatelessWidget {
   final List<String> imageUrls;
 
-  const ImageSlider({Key? key, required this.imageUrls}) : super(key: key);
+  const ImageSlider({super.key, required this.imageUrls});
 
   @override
   Widget build(BuildContext context) {
@@ -14,9 +14,10 @@ class ImageSlider extends StatelessWidget {
         height: 200,
         autoPlay: true,
       ),
-      items: imageUrls.map((url) {
-        return Image.network(url, width: 500, fit: BoxFit.cover);
-      }).toList(),
+      items:
+          imageUrls.map((url) {
+            return Image.network(url, width: 500, fit: BoxFit.cover);
+          }).toList(),
     );
   }
 }

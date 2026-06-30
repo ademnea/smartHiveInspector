@@ -1,6 +1,3 @@
-import 'package:flutter/foundation.dart';
-import 'dart:math' as math;
-
 /// Represents efficiency metrics for bee foraging during a specific time period
 class ForagingEfficiencyMetric {
   /// The date of the foraging activity
@@ -31,9 +28,9 @@ class ForagingEfficiencyMetric {
   /// Higher values indicate better foraging conditions
   final double efficiencyScore;
 
-  final  peakTimePeriod;
+  final peakTimePeriod;
 
-  final  returnRate;
+  final returnRate;
 
   /// Creates a new foraging efficiency metric
   ForagingEfficiencyMetric({
@@ -77,8 +74,8 @@ class ForagingEfficiencyMetric {
       humidity: json['humidity'],
       windSpeed: json['windSpeed'],
       efficiencyScore: json['efficiencyScore'],
-      peakTimePeriod:json['peakTimePeriod'],
-      returnRate:json['returnRate']
+      peakTimePeriod: json['peakTimePeriod'],
+      returnRate: json['returnRate'],
     );
   }
 
@@ -104,8 +101,8 @@ class ForagingEfficiencyMetric {
       humidity: humidity ?? this.humidity,
       windSpeed: windSpeed ?? this.windSpeed,
       efficiencyScore: efficiencyScore ?? this.efficiencyScore,
-      peakTimePeriod:peakTimePeriod ,
-      returnRate:returnRate
+      peakTimePeriod: peakTimePeriod,
+      returnRate: returnRate,
     );
   }
 

@@ -7,7 +7,7 @@ import 'package:HPGM/widgets/connectivity_wrapper.dart';
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -57,15 +57,16 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       // Call the login method from AuthService
       final result = await AuthService.logmein(context, email, password);
-      
+
       if (!mounted) return;
-      
+
       // AuthService.logmein handles navigation internally
       // If we get here, login failed
       setState(() => _isLoading = false);
-      
     } catch (e) {
-      _showError('Network error: Cannot connect to server. Please check your connection.');
+      _showError(
+        'Network error: Cannot connect to server. Please check your connection.',
+      );
       if (mounted) setState(() => _isLoading = false);
     }
   }
@@ -77,16 +78,12 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             const Icon(Icons.error_outline, color: Colors.white, size: 20),
             const SizedBox(width: 10),
-            Expanded(
-              child: Text(msg, style: const TextStyle(fontSize: 14)),
-            ),
+            Expanded(child: Text(msg, style: const TextStyle(fontSize: 14))),
           ],
         ),
         backgroundColor: Colors.red.shade700,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         margin: const EdgeInsets.all(12),
         duration: const Duration(seconds: 3),
       ),
@@ -103,7 +100,10 @@ class _LoginScreenState extends State<LoginScreen> {
           child: SingleChildScrollView(
             child: Center(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 30,
+                  vertical: 40,
+                ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -194,30 +194,41 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _handleLogin,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(255, 206, 109, 40),
-                          disabledBackgroundColor: const Color.fromARGB(150, 206, 109, 40),
+                          backgroundColor: const Color.fromARGB(
+                            255,
+                            206,
+                            109,
+                            40,
+                          ),
+                          disabledBackgroundColor: const Color.fromARGB(
+                            150,
+                            206,
+                            109,
+                            40,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                           elevation: 2,
                         ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                height: 24,
-                                width: 24,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2.5,
+                        child:
+                            _isLoading
+                                ? const SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2.5,
+                                  ),
+                                )
+                                : const Text(
+                                  'LOGIN',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
                                 ),
-                              )
-                            : const Text(
-                                'LOGIN',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
                       ),
                     ),
                     const SizedBox(height: 30),
@@ -231,12 +242,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: TextStyle(fontSize: 14),
                         ),
                         TextButton(
-                          onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const RegisterPage(),
-                            ),
-                          ),
+                          onPressed:
+                              () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const RegisterPage(),
+                                ),
+                              ),
                           child: const Text(
                             'Register',
                             style: TextStyle(

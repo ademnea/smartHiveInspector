@@ -1,11 +1,10 @@
-
 import 'package:flutter/material.dart';
 import 'package:HPGM/analytics/foraging_advisory_service.dart';
 
 class PlantRecommendationDetailScreen extends StatelessWidget {
   final PlantRecommendation plant;
 
-  const PlantRecommendationDetailScreen({Key? key, required this.plant}) : super(key: key);
+  const PlantRecommendationDetailScreen({super.key, required this.plant});
 
   @override
   Widget build(BuildContext context) {
@@ -141,13 +140,18 @@ class PlantRecommendationDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildValueCard(String title, String value, IconData icon, Color color) {
+  Widget _buildValueCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -155,10 +159,7 @@ class PlantRecommendationDetailScreen extends StatelessWidget {
           SizedBox(height: 8),
           Text(
             title,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
           ),
           SizedBox(height: 4),
           Text(
@@ -175,9 +176,11 @@ class PlantRecommendationDetailScreen extends StatelessWidget {
   }
 
   Color _getValueColor(String value) {
-    if (value.toLowerCase().contains('excellent') || value.toLowerCase().contains('outstanding')) {
+    if (value.toLowerCase().contains('excellent') ||
+        value.toLowerCase().contains('outstanding')) {
       return Colors.green.shade600;
-    } else if (value.toLowerCase().contains('good') || value.toLowerCase().contains('high')) {
+    } else if (value.toLowerCase().contains('good') ||
+        value.toLowerCase().contains('high')) {
       return Colors.orange.shade600;
     }
     return Colors.grey.shade600;
@@ -260,7 +263,7 @@ class PlantRecommendationDetailScreen extends StatelessWidget {
 
   Widget _buildCareTips() {
     final careTips = _getCareTips(plant.name);
-    
+
     return Card(
       elevation: 2,
       child: Padding(
@@ -270,7 +273,11 @@ class PlantRecommendationDetailScreen extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.tips_and_updates, color: Colors.orange.shade600, size: 24),
+                Icon(
+                  Icons.tips_and_updates,
+                  color: Colors.orange.shade600,
+                  size: 24,
+                ),
                 SizedBox(width: 8),
                 Text(
                   'Care & Maintenance Tips',
@@ -283,7 +290,7 @@ class PlantRecommendationDetailScreen extends StatelessWidget {
               ],
             ),
             SizedBox(height: 16),
-            ...careTips.map((tip) => _buildCareTip(tip)).toList(),
+            ...careTips.map((tip) => _buildCareTip(tip)),
           ],
         ),
       ),
@@ -358,6 +365,3 @@ class PlantRecommendationDetailScreen extends StatelessWidget {
     }
   }
 }
-
-
-

@@ -50,10 +50,14 @@ class HomeData {
       farms: countJson['total_farms'] ?? 0,
       hives: countJson['total_hives'] ?? 0,
       apiaryName: productiveJson['most_productive_farm']?['name'] ?? 'Unknown',
-      averageHoneyPercentage: (productiveJson['average_honey_percentage'] ?? 0).toDouble(),
+      averageHoneyPercentage:
+          (productiveJson['average_honey_percentage'] ?? 0).toDouble(),
       averageWeight: (productiveJson['average_weight'] ?? 0).toDouble(),
-      daysToEndSeason: (seasonJson['time_until_harvest']?['days'] ?? 0).toDouble(),
-      percentage_time_left: (seasonJson['time_until_harvest']?['percentage_time_left'] ?? 0).toDouble(),
+      daysToEndSeason:
+          (seasonJson['time_until_harvest']?['days'] ?? 0).toDouble(),
+      percentage_time_left:
+          (seasonJson['time_until_harvest']?['percentage_time_left'] ?? 0)
+              .toDouble(),
     );
   }
 }
@@ -91,7 +95,7 @@ class _HomeState extends State<Home> {
           isLoading = false;
           _errorMessage = 'Please login again';
         });
-        
+
         // Navigate to login after 2 seconds
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted) {
@@ -114,33 +118,37 @@ class _HomeState extends State<Home> {
 
       // Concurrent requests
       var responses = await Future.wait([
-        http.get(
-          Uri.parse('$_baseUrl/api/v1/farms/count'),
-          headers: headers,
-        ).timeout(const Duration(seconds: 30)),
-        http.get(
-          Uri.parse('$_baseUrl/api/v1/farms/most-productive'),
-          headers: headers,
-        ).timeout(const Duration(seconds: 30)),
-        http.get(
-          Uri.parse('$_baseUrl/api/v1/farms/time-until-harvest'),
-          headers: headers,
-        ).timeout(const Duration(seconds: 30)),
-        http.get(
-          Uri.parse('$_baseUrl/api/v1/farms/supplementary-feeding'),
-          headers: headers,
-        ).timeout(const Duration(seconds: 30)),
+        http
+            .get(Uri.parse('$_baseUrl/api/v1/farms/count'), headers: headers)
+            .timeout(const Duration(seconds: 30)),
+        http
+            .get(
+              Uri.parse('$_baseUrl/api/v1/farms/most-productive'),
+              headers: headers,
+            )
+            .timeout(const Duration(seconds: 30)),
+        http
+            .get(
+              Uri.parse('$_baseUrl/api/v1/farms/time-until-harvest'),
+              headers: headers,
+            )
+            .timeout(const Duration(seconds: 30)),
+        http
+            .get(
+              Uri.parse('$_baseUrl/api/v1/farms/supplementary-feeding'),
+              headers: headers,
+            )
+            .timeout(const Duration(seconds: 30)),
       ]);
 
       if (responses[0].statusCode == 200 &&
           responses[1].statusCode == 200 &&
           responses[2].statusCode == 200 &&
           responses[3].statusCode == 200) {
-        
         Map<String, dynamic> countData = jsonDecode(responses[0].body);
         Map<String, dynamic> productiveData = jsonDecode(responses[1].body);
         Map<String, dynamic> seasonData = jsonDecode(responses[2].body);
-        
+
         // Fix supplementData parsing
         Map<String, dynamic> supplementData = {};
         try {
@@ -167,9 +175,9 @@ class _HomeState extends State<Home> {
           isLoading = false;
           _errorMessage = 'Session expired. Please login again.';
         });
-        
+
         await AuthService.logout();
-        
+
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted) {
             Navigator.pushAndRemoveUntil(
@@ -201,7 +209,7 @@ class _HomeState extends State<Home> {
     Future.delayed(const Duration(seconds: 5), () {
       _checkNotifications();
     });
-    
+
     _timer = Timer.periodic(const Duration(minutes: 60), (timer) {
       _checkNotifications();
     });
@@ -209,7 +217,7 @@ class _HomeState extends State<Home> {
 
   Future<void> _checkNotifications() async {
     if (homeData == null) return;
-    
+
     try {
       double daystoseason = homeData?.daysToEndSeason ?? 0.0;
 
@@ -217,20 +225,22 @@ class _HomeState extends State<Home> {
         NotificationService().showNotification(
           id: 1,
           title: 'Honey harvest season',
-          body: 'The Honey harvest season is here, check your hives and harvest the honey.',
+          body:
+              'The Honey harvest season is here, check your hives and harvest the honey.',
         );
       }
 
       // Temperature check - using apiary name
       String apiaryName = homeData?.apiaryName ?? 'Your apiary';
-      
+
       // You would need actual temperature data here
       // This is a placeholder check
       if (daystoseason <= 5 && !widget.notify) {
         NotificationService().showNotification(
           id: 2,
           title: "Supplementary Feeding",
-          body: '$apiaryName may require supplementary feeding soon. Please check the hives.',
+          body:
+              '$apiaryName may require supplementary feeding soon. Please check the hives.',
         );
       }
     } catch (error) {
@@ -322,11 +332,11 @@ class _HomeState extends State<Home> {
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
-                                Colors.orange.withOpacity(0.8),
-                                Colors.orange.withOpacity(0.6),
-                                Colors.orange.withOpacity(0.4),
-                                Colors.orange.withOpacity(0.2),
-                                Colors.orange.withOpacity(0.1),
+                                Colors.orange.withValues(alpha: 0.8),
+                                Colors.orange.withValues(alpha: 0.6),
+                                Colors.orange.withValues(alpha: 0.4),
+                                Colors.orange.withValues(alpha: 0.2),
+                                Colors.orange.withValues(alpha: 0.1),
                                 Colors.transparent,
                               ],
                             ),
@@ -348,7 +358,12 @@ class _HomeState extends State<Home> {
                               IconButton(
                                 icon: Icon(
                                   Icons.dashboard,
-                                  color: const Color.fromARGB(255, 206, 109, 40),
+                                  color: const Color.fromARGB(
+                                    255,
+                                    206,
+                                    109,
+                                    40,
+                                  ),
                                   size: 30,
                                 ),
                                 onPressed: _navigateToDashboard,
@@ -439,8 +454,9 @@ class _HomeState extends State<Home> {
                       width: 300,
                       child: LiquidLinearProgressIndicator(
                         value: (homeData?.averageHoneyPercentage != null
-                            ? homeData!.averageHoneyPercentage / 100
-                            : 0.0).clamp(0.0, 1.0),
+                                ? homeData!.averageHoneyPercentage / 100
+                                : 0.0)
+                            .clamp(0.0, 1.0),
                         valueColor: const AlwaysStoppedAnimation(Colors.amber),
                         backgroundColor: Colors.amber[100]!,
                         borderColor: Colors.brown,
@@ -451,10 +467,11 @@ class _HomeState extends State<Home> {
                           onPressed: () {
                             showModalBottomSheet(
                               context: context,
-                              builder: (context) => buildHoneySheet(
-                                "Average Honey Levels for ${homeData?.apiaryName} apiary",
-                                homeData?.averageHoneyPercentage ?? 0,
-                              ),
+                              builder:
+                                  (context) => buildHoneySheet(
+                                    "Average Honey Levels for ${homeData?.apiaryName} apiary",
+                                    homeData?.averageHoneyPercentage ?? 0,
+                                  ),
                             );
                           },
                           child: Text(
@@ -543,7 +560,8 @@ class _HomeState extends State<Home> {
                       animationDuration: 1000,
                       radius: 130,
                       lineWidth: 30,
-                      percent: ((homeData?.percentage_time_left ?? 0) / 100).clamp(0.0, 1.0),
+                      percent: ((homeData?.percentage_time_left ?? 0) / 100)
+                          .clamp(0.0, 1.0),
                       progressColor: Colors.amber,
                       backgroundColor: Colors.amber[100] ?? Colors.amber,
                       circularStrokeCap: CircularStrokeCap.round,

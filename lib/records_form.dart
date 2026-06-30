@@ -150,7 +150,10 @@ class _RecordsFormState extends State<RecordsForm> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.orange[100]!.withOpacity(0.2), Colors.brown[50]!],
+            colors: [
+              Colors.orange[100]!.withValues(alpha: 0.2),
+              Colors.brown[50]!,
+            ],
           ),
         ),
         child: Form(
@@ -187,7 +190,7 @@ class _RecordsFormState extends State<RecordsForm> {
                             Text(
                               widget.apiaryLocation,
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.8),
+                                color: Colors.white.withValues(alpha: 0.8),
                                 fontFamily: "Sans",
                               ),
                             ),
@@ -464,9 +467,9 @@ class _RecordsFormState extends State<RecordsForm> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       decoration: BoxDecoration(
-        color: Colors.orange[700]?.withOpacity(0.1),
+        color: Colors.orange[700]?.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.orange[700]!.withOpacity(0.3)),
+        border: Border.all(color: Colors.orange[700]!.withValues(alpha: 0.3)),
       ),
       child: Text(
         title,
@@ -548,7 +551,7 @@ class _RecordsFormState extends State<RecordsForm> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: DropdownButtonFormField<String>(
-        value:
+        initialValue:
             controller.text.isNotEmpty
                 ? controller.text
                 : null, // Set initial value if present

@@ -22,60 +22,60 @@ class _NotificationsState extends State<Notifications> {
                 child: Column(
                   children: [
                     SizedBox(
-                        height: 120,
-                        width: 2000,
-                        child: Stack(
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Colors.orange.withOpacity(0.8),
-                                    Colors.orange.withOpacity(0.6),
-                                    Colors.orange.withOpacity(0.4),
-                                    Colors.orange.withOpacity(0.2),
-                                    Colors.orange.withOpacity(0.1),
-                                    Colors.transparent,
-                                  ],
-                                ),
-                              ),
-                            ),
-
-                            //image starts here
-                            Padding(
-                              padding: const EdgeInsets.only(top: 50.0),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    child: const Icon(
-                                      Icons.chevron_left_rounded,
-                                      color: Color.fromARGB(255, 206, 109, 40),
-                                      size: 45,
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                    width: 90,
-                                  ),
-                                  const Text(
-                                    'Notifications',
-                                    style: TextStyle(
-                                        fontFamily: "Sans",
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20),
-                                  ),
-                                  const Spacer(),
-                                  const Icon(
-                                    Icons.person,
-                                    color: Color.fromARGB(255, 206, 109, 40),
-                                    size: 45,
-                                  ),
+                      height: 120,
+                      width: 2000,
+                      child: Stack(
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.orange.withValues(alpha: 0.8),
+                                  Colors.orange.withValues(alpha: 0.6),
+                                  Colors.orange.withValues(alpha: 0.4),
+                                  Colors.orange.withValues(alpha: 0.2),
+                                  Colors.orange.withValues(alpha: 0.1),
+                                  Colors.transparent,
                                 ],
                               ),
                             ),
-                          ],
-                        )),
+                          ),
+
+                          //image starts here
+                          Padding(
+                            padding: const EdgeInsets.only(top: 50.0),
+                            child: Row(
+                              children: [
+                                Container(
+                                  child: const Icon(
+                                    Icons.chevron_left_rounded,
+                                    color: Color.fromARGB(255, 206, 109, 40),
+                                    size: 45,
+                                  ),
+                                ),
+                                const SizedBox(width: 90),
+                                const Text(
+                                  'Notifications',
+                                  style: TextStyle(
+                                    fontFamily: "Sans",
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  ),
+                                ),
+                                const Spacer(),
+                                const Icon(
+                                  Icons.person,
+                                  color: Color.fromARGB(255, 206, 109, 40),
+                                  size: 45,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
 
                     //first card
                     const Center(
@@ -101,9 +101,10 @@ class _NotificationsState extends State<Notifications> {
                             child: Text(
                               "Daily Hive Management Tips",
                               style: TextStyle(
-                                  fontFamily: "Sans",
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold),
+                                fontFamily: "Sans",
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
 
@@ -129,21 +130,17 @@ class _NotificationsState extends State<Notifications> {
                       ),
                     ),
 
-                    Container(
-                      height: 20,
-                    ),
+                    Container(height: 20),
                     // Add other cards here
                   ],
                 ),
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.only(),
-            ),
+            const Padding(padding: EdgeInsets.only()),
           ],
         ),
       ),
-//bottom navigation bar.
+      //bottom navigation bar.
     );
   }
 }

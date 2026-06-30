@@ -1,10 +1,7 @@
 import 'dart:async';
-import 'dart:math';
-import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:HPGM/notifications/notification_model.dart';
 import 'package:HPGM/hive_model.dart';
-import 'package:HPGM/notifications/weather_data_service.dart';
 import 'package:HPGM/notifications/weather_model.dart';
 
 class NotificationService {
@@ -279,16 +276,17 @@ class NotificationService {
     // Check if a similar notification already exists
     final existingNotification = _notifications.firstWhere(
       (n) => n.type == type && n.severity == severity && !n.isRead,
-      orElse: () => HiveNotification(
-        id: '',
-        title: '',
-      
-        message: '',
-        timestamp: DateTime.now(),
-        type: type,
-        severity: severity,
-        hiveId: hiveId,
-      ),
+      orElse:
+          () => HiveNotification(
+            id: '',
+            title: '',
+
+            message: '',
+            timestamp: DateTime.now(),
+            type: type,
+            severity: severity,
+            hiveId: hiveId,
+          ),
     );
 
     if (existingNotification.id.isEmpty) {

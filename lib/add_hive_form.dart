@@ -69,7 +69,7 @@ class _AddHiveFormState extends State<AddHiveForm> {
                 borderRadius: BorderRadius.circular(15),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.brown.withOpacity(0.1),
+                    color: Colors.brown.withValues(alpha: 0.1),
                     spreadRadius: 2,
                     blurRadius: 5,
                     offset: const Offset(0, 3),
@@ -128,7 +128,7 @@ class _AddHiveFormState extends State<AddHiveForm> {
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.brown.withOpacity(0.1),
+            color: Colors.brown.withValues(alpha: 0.1),
             spreadRadius: 2,
             blurRadius: 5,
             offset: const Offset(0, 3),
@@ -152,7 +152,10 @@ class _AddHiveFormState extends State<AddHiveForm> {
             controller: _longitudeController,
             decoration: InputDecoration(
               labelText: 'Longitude',
-              labelStyle: TextStyle(color: Colors.brown[600], fontFamily: "Sans"),
+              labelStyle: TextStyle(
+                color: Colors.brown[600],
+                fontFamily: "Sans",
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide(color: Colors.brown[300]!),
@@ -186,7 +189,10 @@ class _AddHiveFormState extends State<AddHiveForm> {
             controller: _latitudeController,
             decoration: InputDecoration(
               labelText: 'Latitude',
-              labelStyle: TextStyle(color: Colors.brown[600], fontFamily: "Sans"),
+              labelStyle: TextStyle(
+                color: Colors.brown[600],
+                fontFamily: "Sans",
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide(color: Colors.brown[300]!),
@@ -228,7 +234,7 @@ class _AddHiveFormState extends State<AddHiveForm> {
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.brown.withOpacity(0.1),
+            color: Colors.brown.withValues(alpha: 0.1),
             spreadRadius: 2,
             blurRadius: 5,
             offset: const Offset(0, 3),
@@ -249,27 +255,39 @@ class _AddHiveFormState extends State<AddHiveForm> {
           ),
           const SizedBox(height: 15),
           SwitchListTile(
-            title: const Text('Connected', style: TextStyle(fontFamily: "Sans")),
-            subtitle: const Text('Is the hive connected to monitoring systems?', style: TextStyle(fontFamily: "Sans")),
+            title: const Text(
+              'Connected',
+              style: TextStyle(fontFamily: "Sans"),
+            ),
+            subtitle: const Text(
+              'Is the hive connected to monitoring systems?',
+              style: TextStyle(fontFamily: "Sans"),
+            ),
             value: _isConnected,
             onChanged: (bool value) {
               setState(() {
                 _isConnected = value;
               });
             },
-            activeColor: Colors.brown[600],
+            activeThumbColor: Colors.brown[600],
           ),
           const Divider(),
           SwitchListTile(
-            title: const Text('Colonized', style: TextStyle(fontFamily: "Sans")),
-            subtitle: const Text('Does the hive have an active bee colony?', style: TextStyle(fontFamily: "Sans")),
+            title: const Text(
+              'Colonized',
+              style: TextStyle(fontFamily: "Sans"),
+            ),
+            subtitle: const Text(
+              'Does the hive have an active bee colony?',
+              style: TextStyle(fontFamily: "Sans"),
+            ),
             value: _isColonized,
             onChanged: (bool value) {
               setState(() {
                 _isColonized = value;
               });
             },
-            activeColor: Colors.brown[600],
+            activeThumbColor: Colors.brown[600],
           ),
         ],
       ),
@@ -403,7 +421,8 @@ class _AddHiveFormState extends State<AddHiveForm> {
         );
 
         if (response == null) {
-          final stillOnline = await ConnectivityService().hasInternetConnection();
+          final stillOnline =
+              await ConnectivityService().hasInternetConnection();
 
           if (!stillOnline) {
             await OfflineQueueService.queueCreateHive(hiveData);

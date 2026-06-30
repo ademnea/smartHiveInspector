@@ -11,7 +11,7 @@ import 'services/cache_service.dart';
 class Weight extends StatefulWidget {
   final int hiveId;
 
-  const Weight({Key? key, required this.hiveId}) : super(key: key);
+  const Weight({super.key, required this.hiveId});
 
   @override
   State<Weight> createState() => _WeightState();
@@ -274,18 +274,17 @@ class _WeightState extends State<Weight> {
 
   Future<void> _exportData() async {
     final formatter = DateFormat('yyyy-MM-dd HH:mm');
-    final rows =
-        List<List<String>>.generate(dates.length, (index) {
-          final weight = index < weights.length ? weights[index] : null;
-          final honeyPercentage =
-              index < honeyPercentages.length ? honeyPercentages[index] : null;
+    final rows = List<List<String>>.generate(dates.length, (index) {
+      final weight = index < weights.length ? weights[index] : null;
+      final honeyPercentage =
+          index < honeyPercentages.length ? honeyPercentages[index] : null;
 
-          return [
-            formatter.format(dates[index]),
-            weight?.toStringAsFixed(2) ?? '',
-            honeyPercentage?.toStringAsFixed(2) ?? '',
-          ];
-        });
+      return [
+        formatter.format(dates[index]),
+        weight?.toStringAsFixed(2) ?? '',
+        honeyPercentage?.toStringAsFixed(2) ?? '',
+      ];
+    });
 
     await CsvExportService.shareCsv(
       context: context,

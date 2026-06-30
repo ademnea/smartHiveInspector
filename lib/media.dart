@@ -98,8 +98,7 @@ class _MediaState extends State<Media> {
       }
 
       String sendToken = "Bearer $token";
-      String formattedStartDate =
-          DateFormat('yyyy-MM-dd').format(startDate);
+      String formattedStartDate = DateFormat('yyyy-MM-dd').format(startDate);
       String formattedEndDate = DateFormat('yyyy-MM-dd').format(endDate);
 
       var headers = {'Accept': 'application/json', 'Authorization': sendToken};
@@ -164,11 +163,11 @@ class _MediaState extends State<Media> {
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
-                                Colors.orange.withOpacity(0.8),
-                                Colors.orange.withOpacity(0.6),
-                                Colors.orange.withOpacity(0.4),
-                                Colors.orange.withOpacity(0.2),
-                                Colors.orange.withOpacity(0.1),
+                                Colors.orange.withValues(alpha: 0.8),
+                                Colors.orange.withValues(alpha: 0.6),
+                                Colors.orange.withValues(alpha: 0.4),
+                                Colors.orange.withValues(alpha: 0.2),
+                                Colors.orange.withValues(alpha: 0.1),
                                 Colors.transparent,
                               ],
                             ),
@@ -218,7 +217,7 @@ class _MediaState extends State<Media> {
                       color: Colors.brown[300], // Set the background color here
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.grey.withOpacity(0.5),
+                          color: Colors.grey.withValues(alpha: 0.5),
                           spreadRadius: 2,
                           blurRadius: 5,
                           offset: const Offset(0, 3),

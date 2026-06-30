@@ -15,7 +15,7 @@ class Graphs extends StatefulWidget {
   final double maxY;
 
   const Graphs({
-    Key? key,
+    super.key,
     required this.xValues,
     required this.xAxisLabel,
     required this.yAxisLabel,
@@ -26,7 +26,7 @@ class Graphs extends StatefulWidget {
     required this.title,
     required this.minY,
     required this.maxY,
-  }) : super(key: key);
+  });
 
   @override
   State<Graphs> createState() => _GraphsState();
@@ -38,47 +38,43 @@ class _GraphsState extends State<Graphs> {
     if (widget.xValues.isEmpty ||
         widget.yValues1.isEmpty ||
         widget.yValues2.isEmpty) {
-      return const Center(
-        child: Text('Oops! No data available.'),
-      );
+      return const Center(child: Text('Oops! No data available.'));
     }
 
-    final spots1 = List.generate(
-      widget.xValues.length,
-      (index) {
-        if (widget.yValues1[index] == 0) {
-          return null; // Skip plotting zero values
-        }
-        return FlSpot(
-          widget.xValues[index].millisecondsSinceEpoch.toDouble(),
-          widget.yValues1[index],
-        );
-      },
-    ).whereType<FlSpot>().toList();
+    final spots1 =
+        List.generate(widget.xValues.length, (index) {
+          if (widget.yValues1[index] == 0) {
+            return null; // Skip plotting zero values
+          }
+          return FlSpot(
+            widget.xValues[index].millisecondsSinceEpoch.toDouble(),
+            widget.yValues1[index],
+          );
+        }).whereType<FlSpot>().toList();
 
-    final spots2 = List.generate(
-      widget.xValues.length,
-      (index) {
-        if (widget.yValues2[index] == 0) {
-          return null; // Skip plotting zero values
-        }
-        return FlSpot(
-          widget.xValues[index].millisecondsSinceEpoch.toDouble(),
-          widget.yValues2[index],
-        );
-      },
-    ).whereType<FlSpot>().toList();
+    final spots2 =
+        List.generate(widget.xValues.length, (index) {
+          if (widget.yValues2[index] == 0) {
+            return null; // Skip plotting zero values
+          }
+          return FlSpot(
+            widget.xValues[index].millisecondsSinceEpoch.toDouble(),
+            widget.yValues2[index],
+          );
+        }).whereType<FlSpot>().toList();
 
     return SafeArea(
       child: LineChart(
         LineChartData(
           minX: widget.xValues
               .map<double>(
-                  (dateTime) => dateTime.millisecondsSinceEpoch.toDouble())
+                (dateTime) => dateTime.millisecondsSinceEpoch.toDouble(),
+              )
               .reduce((value, element) => value < element ? value : element),
           maxX: widget.xValues
               .map<double>(
-                  (dateTime) => dateTime.millisecondsSinceEpoch.toDouble())
+                (dateTime) => dateTime.millisecondsSinceEpoch.toDouble(),
+              )
               .reduce((value, element) => value > element ? value : element),
           minY: widget.minY,
           maxY: widget.maxY,
@@ -99,9 +95,7 @@ class _GraphsState extends State<Graphs> {
               color: Colors.blue,
               barWidth: 1,
               isStrokeCapRound: false,
-              belowBarData: BarAreaData(
-                show: false,
-              ),
+              belowBarData: BarAreaData(show: false),
               dotData: const FlDotData(show: true),
               preventCurveOverShooting: true,
               show: true,
@@ -113,9 +107,7 @@ class _GraphsState extends State<Graphs> {
               color: Colors.white,
               barWidth: 1,
               isStrokeCapRound: false,
-              belowBarData: BarAreaData(
-                show: false,
-              ),
+              belowBarData: BarAreaData(show: false),
               dotData: const FlDotData(show: true),
               preventCurveOverShooting: true,
               show: true,
@@ -132,8 +124,9 @@ class _GraphsState extends State<Graphs> {
               sideTitles: SideTitles(
                 showTitles: true,
                 getTitlesWidget: (value, meta) {
-                  String formattedDate = DateFormat('yyyy-MM-dd HH:mm').format(
-                      DateTime.fromMillisecondsSinceEpoch(value.toInt()));
+                  String formattedDate = DateFormat(
+                    'yyyy-MM-dd HH:mm',
+                  ).format(DateTime.fromMillisecondsSinceEpoch(value.toInt()));
                   return RotatedBox(
                     quarterTurns: 1,
                     child: Text(formattedDate),

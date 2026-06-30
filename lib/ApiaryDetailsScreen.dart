@@ -13,7 +13,10 @@ class ApiaryDetailPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           farm.name,
-          style: const TextStyle(fontFamily: "Sans", fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            fontFamily: "Sans",
+            fontWeight: FontWeight.bold,
+          ),
         ),
         backgroundColor: Colors.orange[700],
         foregroundColor: Colors.white,
@@ -29,7 +32,7 @@ class ApiaryDetailPage extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 6,
                   offset: const Offset(0, 3),
                 ),
@@ -44,11 +47,20 @@ class ApiaryDetailPage extends StatelessWidget {
                 const SizedBox(height: 20),
                 _buildDetailRow('Address', farm.address),
                 const SizedBox(height: 20),
-                _buildDetailRow('Temperature', '${farm.average_temperature?.toStringAsFixed(1) ?? 'N/A'} °C'),
+                _buildDetailRow(
+                  'Temperature',
+                  '${farm.average_temperature?.toStringAsFixed(1) ?? 'N/A'} °C',
+                ),
                 const SizedBox(height: 20),
-                _buildDetailRow('Weight', '${farm.average_weight?.toStringAsFixed(1) ?? 'N/A'} kg'),
+                _buildDetailRow(
+                  'Weight',
+                  '${farm.average_weight?.toStringAsFixed(1) ?? 'N/A'} kg',
+                ),
                 const SizedBox(height: 20),
-                _buildDetailRow('Honey Level', '${farm.honeypercent?.toStringAsFixed(1) ?? 'N/A'} %'),
+                _buildDetailRow(
+                  'Honey Level',
+                  '${farm.honeypercent?.toStringAsFixed(1) ?? 'N/A'} %',
+                ),
               ],
             ),
           ),

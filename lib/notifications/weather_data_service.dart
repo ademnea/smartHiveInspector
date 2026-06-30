@@ -1,5 +1,3 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:HPGM/notifications/weather_model.dart';
 
 class WeatherDataService {

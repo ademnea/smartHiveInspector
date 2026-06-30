@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:HPGM/login.dart';
-import 'package:HPGM/Services/auth_services.dart';
 import 'package:HPGM/navbar.dart';
 import 'package:HPGM/services/token_storage.dart';
 
@@ -19,16 +18,16 @@ class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
 
   // ── Controllers ───────────────────────────────────────────
-  final _nameController     = TextEditingController();
-  final _emailController    = TextEditingController();
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmController  = TextEditingController();
+  final _confirmController = TextEditingController();
 
   // ── UI state ──────────────────────────────────────────────
-  bool _isLoading       = false;
+  bool _isLoading = false;
   bool _obscurePassword = true;
-  bool _obscureConfirm  = true;
-  String _selectedRole  = 'beekeeper';
+  bool _obscureConfirm = true;
+  String _selectedRole = 'beekeeper';
 
   // ── API Configuration ─────────────────────────────────────
   // ⚠️ CHANGE THIS TO YOUR ACTUAL SERVER IP
@@ -50,33 +49,37 @@ class _RegisterPageState extends State<RegisterPage> {
     setState(() => _isLoading = true);
 
     try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/api/v1/register'),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: json.encode({
-          'name': _nameController.text.trim(),
-          'email': _emailController.text.trim().toLowerCase(),
-          'password': _passwordController.text,
-          'password_confirmation': _confirmController.text,
-          'role': _selectedRole,
-        }),
-      ).timeout(const Duration(seconds: 30));
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/api/v1/register'),
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: json.encode({
+              'name': _nameController.text.trim(),
+              'email': _emailController.text.trim().toLowerCase(),
+              'password': _passwordController.text,
+              'password_confirmation': _confirmController.text,
+              'role': _selectedRole,
+            }),
+          )
+          .timeout(const Duration(seconds: 30));
 
       final data = json.decode(response.body);
 
-      debugPrint('Register response [${response.statusCode}]: ${response.body}');
+      debugPrint(
+        'Register response [${response.statusCode}]: ${response.body}',
+      );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         // Registration successful - auto login
         final token = data['token'];
-        
+
         if (token != null && token.isNotEmpty) {
           // Save token using TokenStorage
           await TokenStorage.saveToken(token);
-          
+
           Fluttertoast.showToast(
             msg: '✅ Account created successfully!',
             toastLength: Toast.LENGTH_SHORT,
@@ -88,9 +91,7 @@ class _RegisterPageState extends State<RegisterPage> {
           if (mounted) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(
-                builder: (_) => NavBar(token: token),
-              ),
+              MaterialPageRoute(builder: (_) => NavBar(token: token)),
             );
           }
         } else {
@@ -165,7 +166,8 @@ class _RegisterPageState extends State<RegisterPage> {
   String? _validatePassword(String? v) {
     if (v == null || v.isEmpty) return 'Password is required';
     if (v.length < 8) return 'Password must be at least 8 characters';
-    if (!v.contains(RegExp(r'[A-Z]'))) return 'Add at least one uppercase letter';
+    if (!v.contains(RegExp(r'[A-Z]')))
+      return 'Add at least one uppercase letter';
     if (!v.contains(RegExp(r'[0-9]'))) return 'Add at least one number';
     return null;
   }
@@ -233,7 +235,10 @@ class _RegisterPageState extends State<RegisterPage> {
                   validator: _validatePassword,
                   suffix: _eyeIcon(
                     visible: _obscurePassword,
-                    onTap: () => setState(() => _obscurePassword = !_obscurePassword),
+                    onTap:
+                        () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -246,7 +251,9 @@ class _RegisterPageState extends State<RegisterPage> {
                   validator: _validateConfirm,
                   suffix: _eyeIcon(
                     visible: _obscureConfirm,
-                    onTap: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                    onTap:
+                        () =>
+                            setState(() => _obscureConfirm = !_obscureConfirm),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -261,29 +268,35 @@ class _RegisterPageState extends State<RegisterPage> {
                     onPressed: _isLoading ? null : _handleRegister,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color.fromARGB(255, 206, 109, 40),
-                      disabledBackgroundColor: const Color.fromARGB(150, 206, 109, 40),
+                      disabledBackgroundColor: const Color.fromARGB(
+                        150,
+                        206,
+                        109,
+                        40,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
                       elevation: 2,
                     ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            height: 24,
-                            width: 24,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2.5,
+                    child:
+                        _isLoading
+                            ? const SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2.5,
+                              ),
+                            )
+                            : const Text(
+                              'CREATE ACCOUNT',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
-                          )
-                        : const Text(
-                            'CREATE ACCOUNT',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -291,13 +304,18 @@ class _RegisterPageState extends State<RegisterPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('Already have an account?',
-                        style: TextStyle(fontSize: 14)),
+                    const Text(
+                      'Already have an account?',
+                      style: TextStyle(fontSize: 14),
+                    ),
                     TextButton(
-                      onPressed: () => Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      ),
+                      onPressed:
+                          () => Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const LoginScreen(),
+                            ),
+                          ),
                       child: const Text(
                         'Sign In',
                         style: TextStyle(
@@ -349,7 +367,9 @@ class _RegisterPageState extends State<RegisterPage> {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(
-              color: Color.fromARGB(255, 206, 109, 40), width: 2),
+            color: Color.fromARGB(255, 206, 109, 40),
+            width: 2,
+          ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -364,7 +384,10 @@ class _RegisterPageState extends State<RegisterPage> {
           child: Icon(icon, color: Colors.brown),
         ),
         suffixIcon: suffix,
-        contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 18,
+          horizontal: 16,
+        ),
       ),
     );
   }
@@ -396,21 +419,33 @@ class _RegisterPageState extends State<RegisterPage> {
           items: const [
             DropdownMenuItem(
               value: 'beekeeper',
-              child: Row(children: [
-                Icon(Icons.hive, color: Colors.brown, size: 20),
-                SizedBox(width: 10),
-                Text('Beekeeper',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-              ]),
+              child: Row(
+                children: [
+                  Icon(Icons.hive, color: Colors.brown, size: 20),
+                  SizedBox(width: 10),
+                  Text(
+                    'Beekeeper',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
             ),
             DropdownMenuItem(
               value: 'admin',
-              child: Row(children: [
-                Icon(Icons.admin_panel_settings, color: Colors.brown, size: 20),
-                SizedBox(width: 10),
-                Text('Admin',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-              ]),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.admin_panel_settings,
+                    color: Colors.brown,
+                    size: 20,
+                  ),
+                  SizedBox(width: 10),
+                  Text(
+                    'Admin',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
             ),
           ],
           onChanged: (v) {
