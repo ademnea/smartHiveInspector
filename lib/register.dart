@@ -166,8 +166,9 @@ class _RegisterPageState extends State<RegisterPage> {
   String? _validatePassword(String? v) {
     if (v == null || v.isEmpty) return 'Password is required';
     if (v.length < 8) return 'Password must be at least 8 characters';
-    if (!v.contains(RegExp(r'[A-Z]')))
+    if (!v.contains(RegExp(r'[A-Z]'))) {
       return 'Add at least one uppercase letter';
+    }
     if (!v.contains(RegExp(r'[0-9]'))) return 'Add at least one number';
     return null;
   }

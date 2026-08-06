@@ -32,8 +32,9 @@ class TokenStorage {
       await prefs.setString(_displayNameKey, displayName);
     }
     if (role != null) await prefs.setString(_roleKey, role);
-    if (profile != null)
+    if (profile != null) {
       await prefs.setString(_profileKey, jsonEncode(profile));
+    }
     if (refreshToken != null) {
       await prefs.setString(_refreshTokenKey, refreshToken);
     }

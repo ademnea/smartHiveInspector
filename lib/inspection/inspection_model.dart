@@ -9,8 +9,7 @@ class InspectionField {
   final String? showIfValue;
   final bool hasOtherOption; // shows a text box if "Other" is selected
   final String? helpText; // shown in the info popup
-  final String? helpImageAsset; // asset path for the info popup image
-
+  final List<String>? helpImageAssets; // multiple images for the popup
   InspectionField({
     required this.id,
     required this.question,
@@ -20,7 +19,7 @@ class InspectionField {
     this.showIfValue,
     this.hasOtherOption = false,
     this.helpText,
-    this.helpImageAsset,
+    this.helpImageAssets,
   });
 }
 
@@ -110,7 +109,7 @@ final List<InspectionPage> inspectionPages = [
         options: ['Smoker', 'Hive tool', 'Brush', 'Frame grip', 'Feeder'],
         helpText:
             'Smoker: calms bees with smoke. Hive tool: pries open boxes/frames. Frame grip: lifts frames without crushing bees. Feeder: holds sugar syrup for feeding.',
-        helpImageAsset: 'assets/help/inspection_tools.png',
+        helpImageAssets: ['assets/help/inspection_tools.jpg'],
       ),
       InspectionField(
         id: 'toolsClean',
@@ -149,8 +148,7 @@ final List<InspectionPage> inspectionPages = [
       ),
       InspectionField(
         id: 'entranceBlocked',
-        question:
-            'Is the hive entrance blocked by debris, wax, dead bees, or pests?',
+        question: 'Is the hive entrance blocked?',
         type: FieldType.yesNo,
       ),
       InspectionField(
@@ -209,8 +207,7 @@ final List<InspectionPage> inspectionPages = [
 
       InspectionField(
         id: 'hiveClean',
-        question:
-            'Is the inside of the hive clean (free from dirt, mold, excess wax, or dead bees)?',
+        question: 'Is the inside of the hive clean ?',
         type: FieldType.yesNo,
       ),
       InspectionField(
@@ -250,7 +247,7 @@ final List<InspectionPage> inspectionPages = [
         type: FieldType.yesNo,
         helpText:
             'The queen is the largest bee in the colony, with a long body and longer abdomen than worker bees.',
-        helpImageAsset: 'assets/help/queen_bee.png',
+        helpImageAssets: ['assets/help/queen_bee.jpg'],
       ),
       InspectionField(
         id: 'freshEggs',
@@ -258,7 +255,7 @@ final List<InspectionPage> inspectionPages = [
         type: FieldType.yesNo,
         helpText:
             'Fresh eggs look like tiny white grains of rice standing upright in the bottom of empty cells.',
-        helpImageAsset: 'assets/help/bee_eggs.png',
+        helpImageAssets: ['assets/help/bee_eggs.jpg'],
       ),
       InspectionField(
         id: 'queenCondition',
@@ -282,7 +279,7 @@ final List<InspectionPage> inspectionPages = [
         type: FieldType.yesNo,
         helpText:
             'Queen cells are large, peanut-shaped cells hanging off the frame, much bigger than regular cells.',
-        helpImageAsset: 'assets/help/queen_cells.png',
+        helpImageAssets: ['assets/help/queen_cells.jpg'],
       ),
       InspectionField(
         id: 'multipleEggsPerCell',
@@ -301,7 +298,7 @@ final List<InspectionPage> inspectionPages = [
         options: ['White', 'Yellow', 'Brown', 'Grey'],
         helpText:
             'Larvae are small white grub-like shapes curled in the bottom of open cells.',
-        helpImageAsset: 'assets/help/larvae.png',
+        helpImageAssets: ['assets/help/larvae_healthy.jpg'],
       ),
       InspectionField(
         id: 'broodCapCondition',
@@ -310,7 +307,10 @@ final List<InspectionPage> inspectionPages = [
         options: ['Flat', 'Sunken'],
         helpText:
             'Brood caps are the wax coverings sealing developing bees inside their cells. Healthy caps are flat; sunken or dented caps can signal disease.',
-        helpImageAsset: 'assets/help/brood_caps.png',
+        helpImageAssets: [
+          'assets/help/brood_caps_flat.jpg',
+          'assets/help/brood_caps_sunken.jpg',
+        ],
       ),
       InspectionField(
         id: 'damagedBrood',
@@ -329,7 +329,10 @@ final List<InspectionPage> inspectionPages = [
         ],
         helpText:
             'Brood pattern refers to how closely packed capped brood cells are on a frame. A tight, solid pattern is a sign of a healthy, productive queen.',
-        helpImageAsset: 'assets/help/brood_pattern.png',
+        helpImageAssets: [
+          'assets/help/brood_pattern_tight.jpg',
+          'assets/help/brood_pattern_patchy.jpg',
+        ],
       ),
     ],
   ),
@@ -397,7 +400,7 @@ final List<InspectionPage> inspectionPages = [
         showIfValue: 'Yes',
         helpText:
             'Varroa mites are small reddish-brown oval pests attached to bees or visible in brood cells — a major threat to colony health.',
-        helpImageAsset: 'assets/help/varroa_mites.png',
+        helpImageAssets: ['assets/help/varroa_mites.jpg'],
       ),
       InspectionField(
         id: 'pestOtherText',

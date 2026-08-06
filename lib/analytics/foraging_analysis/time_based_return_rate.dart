@@ -1,7 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:intl/intl.dart';
-import 'package:HPGM/bee_counter/bee_counter_model.dart';
 
 class TimeBasedReturnRateDatabase {
   static final TimeBasedReturnRateDatabase instance =

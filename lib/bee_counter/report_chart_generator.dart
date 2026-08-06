@@ -146,8 +146,9 @@ class ReportChartGenerator {
 
       if (metric.temperature < minTemp) minTemp = metric.temperature;
       if (metric.temperature > maxTemp) maxTemp = metric.temperature;
-      if (metric.efficiencyScore > maxEfficiency)
+      if (metric.efficiencyScore > maxEfficiency) {
         maxEfficiency = metric.efficiencyScore;
+      }
     }
 
     // Add padding to ranges

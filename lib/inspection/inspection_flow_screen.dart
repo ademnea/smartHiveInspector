@@ -22,7 +22,25 @@ class _InspectionFlowScreenState extends State<InspectionFlowScreen> {
   int _currentPage = 0;
   final Map<String, dynamic> _answers = {};
   double? _currentTemperature;
-
+  // Labels shown under each help image, keyed by field id
+  static const Map<String, List<String>> _helpImageLabels = {
+    'inspectionTools': ['Smoker, hive tool, brush, frame grip and feeder'],
+    'queenPresent': [
+      'The queen (longer body, bigger abdomen) among worker bees',
+    ],
+    'freshEggs': ['Tiny white eggs standing upright in cell bottoms'],
+    'queenCellsPresent': ['Large peanut-shaped queen cells on the frame'],
+    'larvaeColour': ['Healthy white larvae curled in open cells'],
+    'broodCapCondition': [
+      'Flat healthy caps (left)',
+      'Sunken/diseased caps (right)',
+    ],
+    'broodPattern': [
+      'Tight solid brood pattern (healthy)',
+      'Patchy scattered brood pattern (problem)',
+    ],
+    'pestTypes': ['Varroa mite on a bee — reddish-brown oval dot'],
+  };
   @override
   void initState() {
     super.initState();
@@ -219,7 +237,7 @@ class _InspectionFlowScreenState extends State<InspectionFlowScreen> {
               ),
             ),
           const SizedBox(height: 16),
-          ...page.fields.map((field) => _buildField(field)).toList(),
+          ...page.fields.map((field) => _buildField(field)),
           if (page.title == 'General Information & Weather')
             Padding(
               padding: const EdgeInsets.only(top: 16.0),
@@ -257,39 +275,80 @@ class _InspectionFlowScreenState extends State<InspectionFlowScreen> {
   }
 
   void _showHelpDialog(InspectionField field) {
+    final images = field.helpImageAssets ?? [];
+    final labels = _helpImageLabels[field.id] ?? [];
+
     showDialog(
       context: context,
       builder:
-          (context) => AlertDialog(
-            title: Text(field.question),
-            content: SingleChildScrollView(
+          (context) => Dialog(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (field.helpImageAsset != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12.0),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.asset(
-                          field.helpImageAsset!,
-                          errorBuilder:
-                              (context, error, stackTrace) =>
-                                  const SizedBox.shrink(),
-                        ),
+                  Text(
+                    field.question,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 400),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: List.generate(images.length, (i) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12.0),
+                            child: Column(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.asset(
+                                    images[i],
+                                    height: 160,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            Container(
+                                              height: 80,
+                                              color: Colors.grey[200],
+                                              child: const Center(
+                                                child: Text('Image not found'),
+                                              ),
+                                            ),
+                                  ),
+                                ),
+                                if (i < labels.length)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 4.0),
+                                    child: Text(
+                                      labels[i],
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          );
+                        }),
                       ),
                     ),
-                  if (field.helpText != null) Text(field.helpText!),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Close'),
+                  ),
                 ],
               ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Got it'),
-              ),
-            ],
           ),
     );
   }
