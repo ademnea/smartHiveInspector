@@ -1,23 +1,48 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environments
+venv/
+.venv/
+
+# Streamlit
+.streamlit/
+
+# Generated data
+Frames/
+Clean_Frames/
+Videos/
+runs/
+results/
+merged_dataset/
+yolo_dataset/
+annotated_paired/
+autolabels_zip_check/
+cvat_export_batch1/
+cvat_export_corrected/
+cvat_import/
+cvat_import_autolabels/
+cvat_upload3_check/
+cvat_zip_check/
+model_files/
+templates/
+to_autolabel/
+unlabeled_frames/
+
+# ZIP files
+*.zip
+
 ### AL ###
-#Template for AL projects for Dynamics 365 Business Central
-#launch.json folder
+# Template for AL projects for Dynamics 365 Business Central
 .vscode/
-#Cache folder
 .alcache/
-#Symbols folder
 .alpackages/
-#Snapshots folder
 .snapshots/
-#Testing Output folder
 .output/
-#Extension App-file
 *.app
-#Rapid Application Development File
 rad.json
-#Translation Base-file
 *.g.xlf
-#License-files
 *.bclicense
 *.flf
-#Test results file
 TestResults.xml
