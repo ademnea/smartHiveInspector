@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environments
+venv/
+.venv/
+
+# Streamlit
+.streamlit/
+
+# Generated data
+Frames/
+Clean_Frames/
+Videos/
+runs/
+results/
+merged_dataset/
+yolo_dataset/
+annotated_paired/
+autolabels_zip_check/
+cvat_export_batch1/
+cvat_export_corrected/
+cvat_import/
+cvat_import_autolabels/
+cvat_upload3_check/
+cvat_zip_check/
+model_files/
+templates/
+to_autolabel/
+unlabeled_frames/
+
+# ZIP files
+*.zip

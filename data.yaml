@@ -1,0 +1,22 @@
+# BeeGuard custom dataset config
+# Point `path` at the root folder that contains images/ and labels/
+# Folder layout expected:
+#   D:/BeeGuard_Videos/yolo_dataset/
+#     images/train/*.jpg
+#     images/val/*.jpg
+#     labels/train/*.txt   (YOLO format, one .txt per image, same base filename)
+#     labels/val/*.txt
+
+path: D:/BeeGuard_Videos/yolo_dataset
+train: images/train
+val: images/val
+
+# Order matches obj.names exactly (CVAT label .txt files reference these by index,
+# so the order here MUST match cvat_upload3_check/obj.names)
+names:
+  0: Capped_brood
+  1: Drone_bee_Capped_brood
+  2: Healthy_brood_pattern
+  3: Eggs
+  4: Larvae
+  5: Queen_Bee
