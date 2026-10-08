@@ -5,4 +5,7 @@
     -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Debug builds only: allow plain http:// to the local backend
+         (http://10.0.2.2:8000). Release builds keep cleartext blocked. -->
+    <application android:usesCleartextTraffic="true"/>
 </manifest>

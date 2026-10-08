@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/sync_manager.dart';
+import '../Services/sync_manager.dart';
 
 class SyncStatusWidget extends StatefulWidget {
   const SyncStatusWidget({super.key});

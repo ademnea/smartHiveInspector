@@ -1,7 +1,10 @@
 import 'dart:convert';
 
+import 'package:HPGM/api/farmer_api.dart';
+import 'package:HPGM/config/api_config.dart';
 import 'package:HPGM/Services/auth_manager.dart';
 import 'package:HPGM/Services/token_storage.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -10,13 +13,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  final tomorrow = DateTime.now().add(const Duration(days: 1));
+
   setUp(() {
     AuthManager.resetHttpClientForTesting();
+    FarmerApi.resetHttpClientForTesting();
+    FarmerApi.onUnauthorized = null;
     SharedPreferences.setMockInitialValues({});
+    FlutterSecureStorage.setMockInitialValues({});
   });
 
   tearDown(() {
     AuthManager.resetHttpClientForTesting();
+    FarmerApi.resetHttpClientForTesting();
+    FarmerApi.onUnauthorized = null;
   });
 
   test('isAuthenticated returns false when no token is stored', () async {
@@ -24,25 +34,31 @@ void main() {
     expect(await AuthManager.ensureValidToken(), isFalse);
   });
 
+  test('ensureValidToken clears an expired token (no refresh endpoint)', () async {
+    await TokenStorage.saveLoginData(
+      token: 'old-token',
+      expiresAt: DateTime.now().subtract(const Duration(minutes: 1)),
+    );
+
+    expect(await AuthManager.ensureValidToken(), isFalse);
+    expect(await TokenStorage.getToken(), isNull);
+  });
+
   test('ensureValidToken returns true for a stored unexpired token', () async {
-    await TokenStorage.saveLoginData(token: 'valid-token');
+    await TokenStorage.saveLoginData(token: 'valid-token', expiresAt: tomorrow);
 
     expect(await AuthManager.ensureValidToken(), isTrue);
     expect(await AuthManager.isAuthenticated(), isTrue);
   });
 
   test('authenticated GET adds bearer token and returns response', () async {
-    await TokenStorage.saveLoginData(token: 'valid-token');
+    await TokenStorage.saveLoginData(token: 'valid-token', expiresAt: tomorrow);
 
     Uri? requestedUri;
     Map<String, String>? requestedHeaders;
     AuthManager.setHttpClientForTesting(
       MockClient((request) async {
         requestedUri = request.url;
-        
-        echo('Debug: Request URL = ${request.url}');
-
-
 
         requestedHeaders = request.headers;
         return http.Response('{"ok":true}', 200);
@@ -57,12 +73,13 @@ void main() {
     expect(response?.statusCode, 200);
     expect(requestedUri.toString(), 'http://example.com/api/profile');
     expect(requestedHeaders?['Authorization'], 'Bearer valid-token');
+    expect(requestedHeaders?['Accept'], 'application/json');
     expect(requestedHeaders?['Content-Type'], 'application/json');
     expect(requestedHeaders?['X-Test'], 'yes');
   });
 
   test('authenticated POST JSON-encodes map body', () async {
-    await TokenStorage.saveLoginData(token: 'valid-token');
+    await TokenStorage.saveLoginData(token: 'valid-token', expiresAt: tomorrow);
 
     String? requestBody;
     AuthManager.setHttpClientForTesting(
@@ -82,7 +99,7 @@ void main() {
   });
 
   test('authenticated PUT passes string body unchanged', () async {
-    await TokenStorage.saveLoginData(token: 'valid-token');
+    await TokenStorage.saveLoginData(token: 'valid-token', expiresAt: tomorrow);
 
     String? requestBody;
     AuthManager.setHttpClientForTesting(
@@ -102,7 +119,7 @@ void main() {
   });
 
   test('authenticated DELETE sends request with auth header', () async {
-    await TokenStorage.saveLoginData(token: 'valid-token');
+    await TokenStorage.saveLoginData(token: 'valid-token', expiresAt: tomorrow);
 
     String? method;
     AuthManager.setHttpClientForTesting(
@@ -120,7 +137,7 @@ void main() {
   });
 
   test('authenticatedRequest returns null for unsupported methods', () async {
-    await TokenStorage.saveLoginData(token: 'valid-token');
+    await TokenStorage.saveLoginData(token: 'valid-token', expiresAt: tomorrow);
 
     final response = await AuthManager.authenticatedRequest(
       method: 'PATCH',
@@ -145,8 +162,45 @@ void main() {
     expect(called, isFalse);
   });
 
+  test('a 401 from the farmer API clears the session and redirects', () async {
+    await TokenStorage.saveLoginData(token: 'valid-token', expiresAt: tomorrow);
+    var redirected = false;
+    FarmerApi.onUnauthorized = () => redirected = true;
+    AuthManager.setHttpClientForTesting(
+      MockClient((request) async => http.Response('{"message":"Unauthenticated."}', 401)),
+    );
+
+    final response = await AuthManager.get('${ApiConfig.baseUrl}/profile');
+
+    expect(response, isNull);
+    expect(redirected, isTrue);
+    expect(await TokenStorage.getToken(), isNull);
+  });
+
+  test('a 401 from another server does not end the session', () async {
+    await TokenStorage.saveLoginData(token: 'valid-token', expiresAt: tomorrow);
+    var redirected = false;
+    FarmerApi.onUnauthorized = () => redirected = true;
+    AuthManager.setHttpClientForTesting(
+      MockClient((request) async => http.Response('', 401)),
+    );
+
+    final response = await AuthManager.get('http://old-server.example/api/v1/farms');
+
+    expect(response?.statusCode, 401);
+    expect(redirected, isFalse);
+    expect(await TokenStorage.getToken(), 'valid-token');
+  });
+
   test('logout clears token and cached auth state', () async {
-    await TokenStorage.saveLoginData(token: 'valid-token', userId: '7');
+    await TokenStorage.saveLoginData(
+      token: 'valid-token',
+      expiresAt: tomorrow,
+      userId: '7',
+    );
+    FarmerApi.setHttpClientForTesting(
+      MockClient((request) async => http.Response('{"message":"Logged out"}', 200)),
+    );
 
     await AuthManager.logout();
 

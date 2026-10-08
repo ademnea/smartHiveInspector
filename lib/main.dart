@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:async';
 
+import 'package:HPGM/api/farmer_api.dart';
+import 'package:HPGM/login.dart';
 import 'package:HPGM/Services/apiary_queue_service.dart';
 import 'package:HPGM/Services/auth_manager.dart';
 import 'package:HPGM/Services/connectivity_service.dart';
@@ -9,11 +11,28 @@ import 'package:HPGM/splashscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-import 'services/sync_manager.dart';
-import 'services/token_storage.dart';
+import 'Services/sync_manager.dart';
+import 'Services/token_storage.dart';
+
+/// Lets services navigate without a BuildContext (e.g. on a 401).
+final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
+
+void _goToLogin() {
+  final navigator = appNavigatorKey.currentState;
+  if (navigator == null) return;
+  navigator.pushAndRemoveUntil(
+    MaterialPageRoute(builder: (_) => const LoginScreen()),
+    (route) => false,
+  );
+  ScaffoldMessenger.maybeOf(navigator.context)?.showSnackBar(
+    const SnackBar(content: Text('Your session has ended. Please log in again.')),
+  );
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  FarmerApi.onUnauthorized = _goToLogin;
 
   try {
     await NotificationService().initNotification();
@@ -190,9 +209,10 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
+      navigatorKey: appNavigatorKey,
       debugShowCheckedModeBanner: false,
-      home: Splashscreen(),
+      home: const Splashscreen(),
     );
   }
 }

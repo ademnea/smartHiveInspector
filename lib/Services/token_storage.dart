@@ -1,55 +1,65 @@
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+/// Stores the farmer session.
+///
+/// The bearer token and its expiry live in secure storage (Keystore /
+/// Keychain / libsecret). Non-secret display fields stay in
+/// SharedPreferences.
 class TokenStorage {
+  static const FlutterSecureStorage _secure = FlutterSecureStorage();
+
   static const String _tokenKey = 'auth_token';
+  static const String _expiresAtKey = 'token_expires_at';
+
   static const String _userIdKey = 'user_id';
   static const String _usernameKey = 'username';
   static const String _displayNameKey = 'display_name';
   static const String _roleKey = 'user_role';
   static const String _profileKey = 'user_profile';
-  static const String _loginTimeKey = 'login_time';
-  static const String _refreshTokenKey = 'refresh_token';
+
+  // Tokens written by older builds lived in SharedPreferences.
+  static const String _legacyTokenKey = 'auth_token';
+  static const String _legacyLoginTimeKey = 'login_time';
+  static const String _legacyRefreshTokenKey = 'refresh_token';
 
   // Save login credentials
   static Future<void> saveLoginData({
     required String token,
+    DateTime? expiresAt,
     String? userId,
     String? username,
     String? displayName,
     String? role,
     Map<String, dynamic>? profile,
-    String? refreshToken,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, token);
-    await prefs.setString(_loginTimeKey, DateTime.now().toIso8601String());
+    await _secure.write(key: _tokenKey, value: token);
+    if (expiresAt != null) {
+      await _secure.write(
+        key: _expiresAtKey,
+        value: expiresAt.toUtc().toIso8601String(),
+      );
+    } else {
+      await _secure.delete(key: _expiresAtKey);
+    }
 
-    if (userId != null) await prefs.setString(_userIdKey, userId);
-    if (username != null) await prefs.setString(_usernameKey, username);
-    if (displayName != null) {
-      await prefs.setString(_displayNameKey, displayName);
-    }
-    if (role != null) await prefs.setString(_roleKey, role);
-    if (profile != null) {
-      await prefs.setString(_profileKey, jsonEncode(profile));
-    }
-    if (refreshToken != null) {
-      await prefs.setString(_refreshTokenKey, refreshToken);
-    }
+    await updateStoredUserInfo(
+      userId: userId,
+      username: username,
+      displayName: displayName,
+      role: role,
+      profile: profile,
+    );
   }
 
   // Get saved token
-  static Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_tokenKey);
-  }
+  static Future<String?> getToken() => _secure.read(key: _tokenKey);
 
-  // Get saved refresh token
-  static Future<String?> getRefreshToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_refreshTokenKey);
+  static Future<DateTime?> getExpiresAt() async {
+    final raw = await _secure.read(key: _expiresAtKey);
+    return raw == null ? null : DateTime.tryParse(raw);
   }
 
   // Get saved user ID
@@ -58,7 +68,7 @@ class TokenStorage {
     return prefs.getString(_userIdKey);
   }
 
-  // Get saved username
+  // Get saved username (the farmer's email)
   static Future<String?> getUsername() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_usernameKey);
@@ -94,7 +104,7 @@ class TokenStorage {
     return null;
   }
 
-  // Update locally cached user info without touching auth timestamps
+  // Update locally cached user info without touching the token
   static Future<void> updateStoredUserInfo({
     String? userId,
     String? username,
@@ -120,110 +130,22 @@ class TokenStorage {
     }
   }
 
-  // Get login time
-  static Future<DateTime?> getLoginTime() async {
-    final prefs = await SharedPreferences.getInstance();
-    final timeString = prefs.getString(_loginTimeKey);
-    if (timeString != null) {
-      return DateTime.parse(timeString);
-    }
-    return null;
-  }
-
-  // Check if token is expired (assuming 24 hour expiry)
+  /// True when there is no expiry on record or it has passed. There is no
+  /// refresh endpoint, so an expired session means logging in again.
   static Future<bool> isTokenExpired() async {
-    final loginTime = await getLoginTime();
-    if (loginTime == null) return true;
-
-    final now = DateTime.now();
-    final difference = now.difference(loginTime);
-
-    // Consider token expired after 23 hours (1 hour buffer)
-    return difference.inHours >= 23;
+    final expiresAt = await getExpiresAt();
+    if (expiresAt == null) return true;
+    return !expiresAt.isAfter(DateTime.now());
   }
 
-  // Validate token with server
-  static Future<bool> validateTokenWithServer() async {
-    try {
-      final token = await getToken();
-      if (token == null || token.isEmpty) {
-        print('❌ No token found');
-        return false;
-      }
-
-      print('🔍 Validating token with server...');
-
-      // Try a simple API call to validate token using farms endpoint
-      final response = await http
-          .get(
-            Uri.parse(
-              'http://196.43.168.57/api/v1/farms',
-            ), // Use farms endpoint which exists
-            headers: {
-              'Authorization': 'Bearer $token',
-              'Content-Type': 'application/json',
-            },
-          )
-          .timeout(Duration(seconds: 10));
-
-      if (response.statusCode == 200) {
-        print('✅ Token is valid');
-        return true;
-      } else if (response.statusCode == 401) {
-        print('❌ Token is invalid/expired (401)');
-        return false;
-      } else {
-        print('⚠️ Unexpected response: ${response.statusCode}');
-        return false;
-      }
-    } catch (e) {
-      print('❌ Token validation failed: $e');
-      return false;
-    }
+  /// A token is stored and has not expired.
+  static Future<bool> hasValidSession() async {
+    final token = await getToken();
+    if (token == null || token.isEmpty) return false;
+    return !await isTokenExpired();
   }
 
-  // Attempt to refresh token
-  static Future<bool> refreshToken() async {
-    try {
-      final refreshToken = await getRefreshToken();
-      if (refreshToken == null || refreshToken.isEmpty) {
-        print('❌ No refresh token found');
-        return false;
-      }
-
-      print('🔄 Attempting to refresh token...');
-
-      final response = await http
-          .post(
-            Uri.parse('http://196.43.168.57/api/v1/auth/refresh'),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'refresh_token': refreshToken}),
-          )
-          .timeout(Duration(seconds: 10));
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final newToken = data['access_token'] ?? data['token'];
-        final newRefreshToken = data['refresh_token'];
-
-        if (newToken != null) {
-          // Save new tokens
-          await saveLoginData(token: newToken, refreshToken: newRefreshToken);
-
-          print('✅ Token refreshed successfully');
-          return true;
-        }
-      }
-
-      print('❌ Token refresh failed: ${response.statusCode}');
-      return false;
-    } catch (e) {
-      print('❌ Token refresh error: $e');
-      return false;
-    }
-  }
-
-  // Check if user is logged in
+  // Check if a token is stored (does not check expiry)
   static Future<bool> isLoggedIn() async {
     final token = await getToken();
     return token != null && token.isNotEmpty;
@@ -231,16 +153,18 @@ class TokenStorage {
 
   // Clear all login data (logout)
   static Future<void> clearLoginData() async {
+    await _secure.delete(key: _tokenKey);
+    await _secure.delete(key: _expiresAtKey);
+
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
     await prefs.remove(_userIdKey);
     await prefs.remove(_usernameKey);
     await prefs.remove(_displayNameKey);
     await prefs.remove(_roleKey);
     await prefs.remove(_profileKey);
-    await prefs.remove(_loginTimeKey);
-    await prefs.remove(_refreshTokenKey);
-    print('🚪 User logged out - all tokens cleared');
+    await prefs.remove(_legacyTokenKey);
+    await prefs.remove(_legacyLoginTimeKey);
+    await prefs.remove(_legacyRefreshTokenKey);
   }
 
   // Helper method for testing - reset first time flag
@@ -250,16 +174,5 @@ class TokenStorage {
     await clearLoginData();
   }
 
-  // ===== FIXES FOR AUTH_SERVICES =====
-
-  // ADD THIS METHOD - Save token (for backward compatibility with auth_services.dart)
-  static Future<void> saveToken(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, token);
-  }
-
-  // ADD THIS METHOD - Get user profile (for backward compatibility with auth_services.dart)
-  static Future<Map<String, dynamic>?> getUserProfile() async {
-    return await getStoredProfile();
-  }
+  static Future<Map<String, dynamic>?> getUserProfile() => getStoredProfile();
 }

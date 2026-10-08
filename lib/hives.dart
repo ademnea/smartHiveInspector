@@ -1,12 +1,13 @@
+import 'package:HPGM/api/farmer_api.dart';
+import 'package:HPGM/config/api_config.dart';
 import 'package:HPGM/add_hive_form.dart';
 import 'package:HPGM/edit_hive_form.dart';
 import 'package:HPGM/records_form.dart';
 import 'package:HPGM/Services/auth_manager.dart';
-import 'package:HPGM/services/token_storage.dart';
-import 'package:HPGM/services/cache_service.dart';
+import 'package:HPGM/Services/token_storage.dart';
+import 'package:HPGM/Services/cache_service.dart';
 import 'package:flutter/material.dart';
 import 'package:HPGM/hivedetails.dart';
-import 'package:http/http.dart' as http;
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'dart:convert';
 
@@ -32,6 +33,7 @@ class Hives extends StatefulWidget {
 
 class Hive {
   final int id;
+  final String name;
   final String longitude;
   final String latitude;
   final int farmId;
@@ -40,11 +42,20 @@ class Hive {
   final double? weight;
   final double? honeyLevel;
   final double? temperature;
-  final bool isConnected;
-  final bool isColonized;
+
+  /// Null when the API has no value yet (no device data).
+  final bool? connected;
+  final bool? colonized;
+
+  /// One of Active, Inactive, Under Inspection, Queenless, Absconded,
+  /// Decommissioned.
+  final String? currentStatus;
+  final String? queenStatus;
+  final String? hiveType;
 
   Hive({
     required this.id,
+    required this.name,
     required this.longitude,
     required this.latitude,
     required this.farmId,
@@ -53,25 +64,65 @@ class Hive {
     required this.weight,
     required this.temperature,
     required this.honeyLevel,
-    required this.isConnected,
-    required this.isColonized,
+    required this.connected,
+    required this.colonized,
+    this.currentStatus,
+    this.queenStatus,
+    this.hiveType,
   });
 
+  bool get isConnected => connected ?? false;
+  bool get isColonized => colonized ?? false;
+
+  // Reads a farmer API hive (flat fields, `connected`/`colonized` as 0/1 or
+  // null) and the old API's hive (values nested under `state`), which may
+  // still be in the offline cache.
   factory Hive.fromJson(Map<String, dynamic> json) {
+    final state = json['state'] as Map<String, dynamic>?;
+    final id = _toInt(json['id']) ?? 0;
+
     return Hive(
-      id: json['id'],
-      longitude: json['longitude'],
-      latitude: json['latitude'],
-      farmId: json['farm_id'],
-      createdAt: json['created_at'],
-      updatedAt: json['updated_at'],
-      weight: json['state']['weight']['record']?.toDouble(),
-      temperature:
-          json['state']['temperature']['interior_temperature']?.toDouble(),
-      honeyLevel: json['state']['weight']['honey_percentage']?.toDouble(),
-      isConnected: json['state']['connection_status']['Connected'] == 1,
-      isColonized: json['state']['colonization_status']['Colonized'] == 1,
+      id: id,
+      name: _firstText([json['display_name'], json['name'], json['hive_code']]) ??
+          'Hive $id',
+      longitude: json['longitude']?.toString() ?? '',
+      latitude: json['latitude']?.toString() ?? '',
+      farmId: _toInt(json['apiary_id'] ?? json['farm_id']) ?? 0,
+      createdAt: json['created_at']?.toString(),
+      updatedAt: json['updated_at']?.toString(),
+      weight: _toDouble(state?['weight']?['record']),
+      temperature: _toDouble(state?['temperature']?['interior_temperature']),
+      honeyLevel: _toDouble(state?['weight']?['honey_percentage']),
+      connected: _toBool(
+        json['connected'] ?? state?['connection_status']?['Connected'],
+      ),
+      colonized: _toBool(
+        json['colonized'] ?? state?['colonization_status']?['Colonized'],
+      ),
+      currentStatus: _firstText([json['current_status'], json['status']]),
+      queenStatus: _firstText([json['queen_status']]),
+      hiveType: _firstText([json['hive_type']]),
     );
+  }
+
+  static int? _toInt(dynamic v) =>
+      v is num ? v.toInt() : int.tryParse(v?.toString() ?? '');
+
+  static double? _toDouble(dynamic v) =>
+      v is num ? v.toDouble() : double.tryParse(v?.toString() ?? '');
+
+  static bool? _toBool(dynamic v) {
+    if (v == null) return null;
+    if (v is bool) return v;
+    return v == 1 || v == '1';
+  }
+
+  static String? _firstText(List<dynamic> values) {
+    for (final v in values) {
+      final text = v?.toString().trim() ?? '';
+      if (text.isNotEmpty) return text;
+    }
+    return null;
   }
 }
 
@@ -144,71 +195,19 @@ class _HivesState extends State<Hives> {
       // Device is online - proceed with API call
       print('🌐 Device is online, fetching hives from API...');
 
-      final token = await TokenStorage.getToken();
+      final data = await FarmerApi.instance.allHives(farmId);
 
-      if (token == null || token.isEmpty) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Authentication error. Please log in again.'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-        return;
-      }
+      // Save to cache for offline use
+      await CacheService.saveHives(farmId, data);
 
-      String sendToken = "Bearer $token";
-
-      var headers = {'Authorization': sendToken};
-
-      var url = 'http://196.43.168.57/api/v1/farms/$farmId/hives';
-      var response = await http.get(Uri.parse(url), headers: headers);
-
-      if (response.statusCode == 200) {
-        List<dynamic> data = jsonDecode(response.body);
-
-        // Save to cache for offline use
-        await CacheService.saveHives(farmId, data);
-
-        setState(() {
-          hives = data.map((hive) => Hive.fromJson(hive)).toList();
-        });
-
-        print('✓ Loaded ${hives.length} hives from API and cached');
-      } else {
-        print('Failed to load hive data: ${response.statusCode}');
-
-        // Try loading from cache as fallback
-        final cachedHives = await CacheService.loadHives(farmId);
-        if (cachedHives != null) {
-          setState(() {
-            hives = cachedHives.map((hive) => Hive.fromJson(hive)).toList();
-          });
-
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  '⚠️ Server error (${response.statusCode}) - Showing saved hives',
-                ),
-                backgroundColor: Colors.orange[700],
-              ),
-            );
-          }
-        } else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Failed to load hives: ${response.statusCode}'),
-                backgroundColor: Colors.red[700],
-              ),
-            );
-          }
-        }
-      }
+      if (!mounted) return;
+      setState(() {
+        hives = data.map(Hive.fromJson).toList();
+      });
     } catch (error) {
       print('Error fetching hives: $error');
+      // A 401 has already sent the user to login (FarmerApi.onUnauthorized).
+      if (error is ApiException && error.status == 401) return;
 
       // Try loading from cache as fallback
       final cachedHives = await CacheService.loadHives(farmId);
@@ -393,7 +392,7 @@ class _HivesState extends State<Hives> {
                     cells: [
                       DataCell(
                         Text(
-                          'Hive ${hive.id}',
+                          hive.name,
                           style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 16,
@@ -557,7 +556,7 @@ class _HivesState extends State<Hives> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text(
-            'Delete Hive ${hive.id}',
+            'Delete ${hive.name}',
             style: const TextStyle(fontFamily: "Sans"),
           ),
           content: const Text(
@@ -590,7 +589,7 @@ class _HivesState extends State<Hives> {
   Future<void> _deleteHive(int hiveId) async {
     try {
       final response = await AuthManager.delete(
-        'http://196.43.168.57/api/v1/hives/$hiveId',
+        '${ApiConfig.legacyHost}/api/v1/hives/$hiveId',
         context: context,
       );
 
@@ -646,6 +645,14 @@ class _HivesState extends State<Hives> {
     return 'Failed to delete hive: HTTP ${response.statusCode}';
   }
 
+  // Green for yes, red for no, grey when the API has no value.
+  Color _flagColor(bool? flag) =>
+      flag == null
+          ? Colors.white70
+          : flag
+          ? Colors.green
+          : Colors.red;
+
   Widget buildHiveCard(Hive hive) {
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -664,7 +671,7 @@ class _HivesState extends State<Hives> {
                 const SizedBox(width: 11),
                 Expanded(
                   child: Text(
-                    'Name: Hive ${hive.id}',
+                    hive.name,
                     style: const TextStyle(
                       fontSize: 30,
                       fontWeight: FontWeight.bold,
@@ -675,7 +682,7 @@ class _HivesState extends State<Hives> {
                 ),
                 Icon(
                   hive.isConnected ? Icons.link : Icons.link_off,
-                  color: hive.isConnected ? Colors.green : Colors.red,
+                  color: _flagColor(hive.connected),
                   size: 24,
                 ),
               ],
@@ -683,10 +690,36 @@ class _HivesState extends State<Hives> {
             const SizedBox(height: 12),
 
             _buildInfoRow(
-              icon: Icons.link,
+              icon: Icons.info_outline,
               label: 'Status',
-              value: hive.isConnected ? 'ON' : 'OFF',
-              valueColor: hive.isConnected ? Colors.green : Colors.red,
+              value: hive.currentStatus ?? 'Unknown',
+              valueColor:
+                  hive.currentStatus == null
+                      ? Colors.white70
+                      : hive.currentStatus!.toLowerCase() == 'active'
+                      ? Colors.green
+                      : Colors.orange,
+            ),
+
+            const SizedBox(height: 12),
+            _buildInfoRow(
+              icon: Icons.link,
+              label: 'Device',
+              value:
+                  hive.connected == null
+                      ? 'No data'
+                      : hive.isConnected
+                      ? 'ON'
+                      : 'OFF',
+              valueColor: _flagColor(hive.connected),
+            ),
+
+            const SizedBox(height: 12),
+            _buildInfoRow(
+              icon: Icons.emoji_nature,
+              label: 'Queen',
+              value: hive.queenStatus ?? 'Unknown',
+              valueColor: Colors.white,
             ),
 
             const SizedBox(height: 12),
@@ -703,8 +736,13 @@ class _HivesState extends State<Hives> {
             _buildInfoRow(
               icon: Icons.grass,
               label: 'Colonization Status',
-              value: hive.isColonized ? 'Colonized' : 'Not Colonized',
-              valueColor: hive.isColonized ? Colors.green : Colors.red,
+              value:
+                  hive.colonized == null
+                      ? 'Unknown'
+                      : hive.isColonized
+                      ? 'Colonized'
+                      : 'Not Colonized',
+              valueColor: _flagColor(hive.colonized),
             ),
             const SizedBox(height: 16),
 
@@ -765,7 +803,7 @@ class _HivesState extends State<Hives> {
                             builder:
                                 (context) => RecordsForm(
                                   apiaryLocation: widget.apiaryLocation,
-                                  hiveId: 'Hive ${hive.id}',
+                                  hiveId: hive.name,
                                   farmName: widget.farmName,
                                 ),
                           ),

@@ -1,3 +1,4 @@
+import 'package:HPGM/config/api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -5,7 +6,7 @@ import 'package:line_icons/line_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart'; // for date formatting
 import 'package:HPGM/photo_view_page.dart';
-import 'services/token_storage.dart';
+import 'Services/token_storage.dart';
 
 class Media extends StatefulWidget {
   final int hiveId;
@@ -104,7 +105,7 @@ class _MediaState extends State<Media> {
       var headers = {'Accept': 'application/json', 'Authorization': sendToken};
       var response = await http.get(
         Uri.parse(
-          'http://196.43.168.57/api/v1/hives/$hiveId/images/$formattedStartDate/$formattedEndDate?page=$page',
+          '${ApiConfig.legacyHost}/api/v1/hives/$hiveId/images/$formattedStartDate/$formattedEndDate?page=$page',
         ),
         headers: headers,
       );
@@ -121,7 +122,7 @@ class _MediaState extends State<Media> {
                   (item) => {
                     'date': item['date'],
                     'path':
-                        'http://196.43.168.57/${item['path'].replaceAll('public/', '')}', // Remove 'public/' from path
+                        '${ApiConfig.legacyHost}/${item['path'].replaceAll('public/', '')}', // Remove 'public/' from path
                   },
                 )
                 .toList(),

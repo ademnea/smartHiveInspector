@@ -1,3 +1,4 @@
+import 'package:HPGM/config/api_config.dart';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -43,8 +44,8 @@ class BeeVideoAnalyzer {
   static const String _videoCacheSubdir = 'analysis_videos';
   static const Duration _modelMaxAge = Duration(hours: 48);
   static const int _maxCachedVideos = 2;
-  static const String _modelDownloadUrl =
-      'http://196.43.168.57/models/bee_counter_model.tflite';
+  static String get _modelDownloadUrl =>
+      '${ApiConfig.legacyHost}/models/bee_counter_model.tflite';
 
   // Bee counting stats
   int beesIn = 0;

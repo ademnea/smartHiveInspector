@@ -1,3 +1,4 @@
+import 'package:HPGM/config/api_config.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -227,7 +228,7 @@ Future<void> _showDeleteConfirmation(
   if (shouldDelete != true) return;
 
   final response = await AuthManager.delete(
-    'http://196.43.168.57/api/v1/farms/${farm.id}',
+    '${ApiConfig.legacyHost}/api/v1/farms/${farm.id}',
     context: context,
   );
 

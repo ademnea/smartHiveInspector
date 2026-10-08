@@ -1,3 +1,4 @@
+import 'package:HPGM/config/api_config.dart';
 import 'dart:convert';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -273,7 +274,7 @@ class OfflineQueueService {
     QueuedOperation operation,
   ) async {
     final response = await AuthManager.post(
-      'http://196.43.168.57/api/v1/farms',
+      '${ApiConfig.legacyHost}/api/v1/farms',
       body: operation.data,
     );
 
@@ -302,7 +303,7 @@ class OfflineQueueService {
     updateData.remove('id');
 
     final response = await AuthManager.put(
-      'http://196.43.168.57/api/v1/farms/$farmId',
+      '${ApiConfig.legacyHost}/api/v1/farms/$farmId',
       body: updateData,
     );
 
@@ -333,7 +334,7 @@ class OfflineQueueService {
     final farmId = operation.data['id'];
 
     final response = await AuthManager.delete(
-      'http://196.43.168.57/api/v1/farms/$farmId',
+      '${ApiConfig.legacyHost}/api/v1/farms/$farmId',
     );
 
     if (response != null &&
@@ -357,7 +358,7 @@ class OfflineQueueService {
     QueuedOperation operation,
   ) async {
     final response = await AuthManager.post(
-      'http://196.43.168.57/api/v1/hives',
+      '${ApiConfig.legacyHost}/api/v1/hives',
       body: operation.data,
     );
 
@@ -389,7 +390,7 @@ class OfflineQueueService {
     updateData.remove('id');
 
     final response = await AuthManager.put(
-      'http://196.43.168.57/api/v1/hives/$hiveId',
+      '${ApiConfig.legacyHost}/api/v1/hives/$hiveId',
       body: updateData,
     );
 
@@ -423,7 +424,7 @@ class OfflineQueueService {
     final hiveId = operation.data['id'];
 
     final response = await AuthManager.delete(
-      'http://196.43.168.57/api/v1/hives/$hiveId',
+      '${ApiConfig.legacyHost}/api/v1/hives/$hiveId',
     );
 
     if (response != null &&
@@ -450,7 +451,7 @@ class OfflineQueueService {
     QueuedOperation operation,
   ) async {
     final response = await AuthManager.post(
-      'http://196.43.168.57/api/v1/records',
+      '${ApiConfig.legacyHost}/api/v1/records',
       body: operation.data,
     );
 
@@ -473,7 +474,7 @@ class OfflineQueueService {
     updateData.remove('id');
 
     final response = await AuthManager.put(
-      'http://196.43.168.57/api/v1/records/$recordId',
+      '${ApiConfig.legacyHost}/api/v1/records/$recordId',
       body: updateData,
     );
 
@@ -495,7 +496,7 @@ class OfflineQueueService {
     final recordId = operation.data['id'];
 
     final response = await AuthManager.delete(
-      'http://196.43.168.57/api/v1/records/$recordId',
+      '${ApiConfig.legacyHost}/api/v1/records/$recordId',
     );
 
     if (response != null &&

@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:HPGM/api/farmer_api.dart';
 import 'package:HPGM/Services/notifi_service.dart';
 import 'package:HPGM/components/pop_up.dart';
 import 'package:HPGM/navbar.dart';
 import 'package:HPGM/login.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:liquid_progress_indicator_v2/liquid_progress_indicator.dart';
-import 'services/token_storage.dart';
-import 'services/auth_services.dart';
+import 'Services/token_storage.dart';
 
 class Home extends StatefulWidget {
   final String token;
@@ -30,6 +28,10 @@ class HomeData {
   final double daysToEndSeason;
   final double percentage_time_left;
 
+  /// False when built from the farmer API, which has no honey-level or
+  /// harvest-season endpoints yet.
+  final bool hasHarvestData;
+
   HomeData({
     required this.farms,
     required this.hives,
@@ -38,7 +40,30 @@ class HomeData {
     required this.averageWeight,
     required this.daysToEndSeason,
     required this.percentage_time_left,
+    this.hasHarvestData = true,
   });
+
+  /// Summary from GET /apiaries (each item carries hives_count).
+  factory HomeData.fromApiaries(List<Map<String, dynamic>> apiaries) {
+    int hivesIn(Map<String, dynamic> a) =>
+        (a['hives_count'] as num?)?.toInt() ?? 0;
+
+    final busiest =
+        apiaries.isEmpty
+            ? null
+            : apiaries.reduce((a, b) => hivesIn(b) > hivesIn(a) ? b : a);
+
+    return HomeData(
+      farms: apiaries.length,
+      hives: apiaries.fold(0, (sum, a) => sum + hivesIn(a)),
+      apiaryName: busiest?['name']?.toString() ?? '--',
+      averageHoneyPercentage: 0,
+      averageWeight: 0,
+      daysToEndSeason: 0,
+      percentage_time_left: 0,
+      hasHarvestData: false,
+    );
+  }
 
   factory HomeData.fromJson(
     Map<String, dynamic> countJson,
@@ -66,9 +91,6 @@ class _HomeState extends State<Home> {
   HomeData? homeData;
   bool isLoading = true;
   String _errorMessage = '';
-
-  // API Configuration - CHANGE THIS TO YOUR ACTUAL SERVER IP
-  static const String _baseUrl = 'http://196.43.168.57';
 
   @override
   void initState() {
@@ -108,93 +130,22 @@ class _HomeState extends State<Home> {
         return;
       }
 
-      String sendToken = "Bearer $token";
-
-      var headers = {
-        'Accept': 'application/json',
-        'Authorization': sendToken,
-        'Content-Type': 'application/json',
-      };
-
-      // Concurrent requests
-      var responses = await Future.wait([
-        http
-            .get(Uri.parse('$_baseUrl/api/v1/farms/count'), headers: headers)
-            .timeout(const Duration(seconds: 30)),
-        http
-            .get(
-              Uri.parse('$_baseUrl/api/v1/farms/most-productive'),
-              headers: headers,
-            )
-            .timeout(const Duration(seconds: 30)),
-        http
-            .get(
-              Uri.parse('$_baseUrl/api/v1/farms/time-until-harvest'),
-              headers: headers,
-            )
-            .timeout(const Duration(seconds: 30)),
-        http
-            .get(
-              Uri.parse('$_baseUrl/api/v1/farms/supplementary-feeding'),
-              headers: headers,
-            )
-            .timeout(const Duration(seconds: 30)),
-      ]);
-
-      if (responses[0].statusCode == 200 &&
-          responses[1].statusCode == 200 &&
-          responses[2].statusCode == 200 &&
-          responses[3].statusCode == 200) {
-        Map<String, dynamic> countData = jsonDecode(responses[0].body);
-        Map<String, dynamic> productiveData = jsonDecode(responses[1].body);
-        Map<String, dynamic> seasonData = jsonDecode(responses[2].body);
-
-        // Fix supplementData parsing
-        Map<String, dynamic> supplementData = {};
-        try {
-          final supplementList = jsonDecode(responses[3].body);
-          if (supplementList is List && supplementList.isNotEmpty) {
-            supplementData = supplementList[0] as Map<String, dynamic>? ?? {};
-          }
-        } catch (e) {
-          print('Supplement data parse error: $e');
-        }
-
-        setState(() {
-          homeData = HomeData.fromJson(
-            countData,
-            productiveData,
-            seasonData,
-            supplementData,
-          );
-          isLoading = false;
-        });
-      } else if (responses[0].statusCode == 401) {
-        // Token expired
-        setState(() {
-          isLoading = false;
-          _errorMessage = 'Session expired. Please login again.';
-        });
-
-        await AuthService.logout();
-
-        Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => const LoginScreen()),
-              (route) => false,
-            );
-          }
-        });
-      } else {
-        setState(() {
-          isLoading = false;
-          _errorMessage = 'Failed to load dashboard data. Please try again.';
-        });
-      }
+      final apiaries = await FarmerApi.instance.allApiaries();
+      if (!mounted) return;
+      setState(() {
+        homeData = HomeData.fromApiaries(apiaries);
+        isLoading = false;
+      });
+    } on ApiException catch (error) {
+      // A 401 has already sent the user to login (FarmerApi.onUnauthorized).
+      if (!mounted || error.status == 401) return;
+      setState(() {
+        isLoading = false;
+        _errorMessage = error.message;
+      });
     } catch (error) {
       print('Home data error: $error');
+      if (!mounted) return;
       setState(() {
         isLoading = false;
         _errorMessage = 'Network error: Cannot connect to server';
@@ -216,7 +167,7 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> _checkNotifications() async {
-    if (homeData == null) return;
+    if (homeData == null || !homeData!.hasHarvestData) return;
 
     try {
       double daystoseason = homeData?.daysToEndSeason ?? 0.0;
@@ -475,7 +426,9 @@ class _HomeState extends State<Home> {
                             );
                           },
                           child: Text(
-                            "${homeData?.apiaryName ?? '--'} apiary\n${(homeData?.averageHoneyPercentage.toStringAsFixed(2) ?? '--')}%\n${homeData?.averageWeight.toStringAsFixed(1) ?? '--'}Kg",
+                            homeData?.hasHarvestData == true
+                                ? "${homeData!.apiaryName} apiary\n${homeData!.averageHoneyPercentage.toStringAsFixed(2)}%\n${homeData!.averageWeight.toStringAsFixed(1)}Kg"
+                                : "${homeData?.apiaryName ?? '--'} apiary\n--%\n-- Kg",
                             style: const TextStyle(
                               fontSize: 15,
                               color: Colors.black,
@@ -566,8 +519,9 @@ class _HomeState extends State<Home> {
                       backgroundColor: Colors.amber[100] ?? Colors.amber,
                       circularStrokeCap: CircularStrokeCap.round,
                       center: Text(
-                        homeData?.daysToEndSeason != null &&
-                                homeData!.daysToEndSeason <= 10
+                        homeData == null || !homeData!.hasHarvestData
+                            ? "--\nharvest season"
+                            : homeData!.daysToEndSeason <= 10
                             ? "In Season"
                             : "${homeData?.daysToEndSeason.toStringAsFixed(0)} days \nto \nharvest season",
                         style: const TextStyle(

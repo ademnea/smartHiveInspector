@@ -70,4 +70,42 @@ void main() {
     expect(data.honeyLevel, 0.0);
     expect(data.autoProcessingEnabled, isTrue);
   });
+
+  test('Hive.fromJson reads a farmer API hive', () {
+    final hive = Hive.fromJson({
+      'id': 7,
+      'apiary_id': 7,
+      'hive_code': 'HIVE-UG-MCA-001',
+      'display_name': 'Mukono Colony 1',
+      'name': null,
+      'hive_type': 'Langstroth',
+      'queen_status': 'Present',
+      'status': 'active',
+      'current_status': 'Active',
+      'latitude': '0.34960000',
+      'longitude': '32.75540000',
+      'last_inspection_date': '2026-09-10T00:00:00.000000Z',
+      'connected': null,
+      'colonized': 1,
+    });
+
+    expect(hive.id, 7);
+    expect(hive.farmId, 7);
+    expect(hive.name, 'Mukono Colony 1');
+    expect(hive.latitude, '0.34960000');
+    expect(hive.currentStatus, 'Active');
+    expect(hive.queenStatus, 'Present');
+    expect(hive.connected, isNull);
+    expect(hive.isConnected, isFalse);
+    expect(hive.isColonized, isTrue);
+    expect(hive.state, isNull);
+  });
+
+  test('Hive name falls back to the hive code, then the id', () {
+    expect(
+      Hive.fromJson({'id': 3, 'apiary_id': 1, 'hive_code': 'H-3'}).name,
+      'H-3',
+    );
+    expect(Hive.fromJson({'id': 3, 'apiary_id': 1}).name, 'Hive 3');
+  });
 }

@@ -1,10 +1,7 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:http/http.dart' as http;
+import 'package:HPGM/api/farmer_api.dart';
 import 'package:HPGM/login.dart';
-import 'package:HPGM/navbar.dart';
-import 'package:HPGM/services/token_storage.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -20,6 +17,7 @@ class _RegisterPageState extends State<RegisterPage> {
   // ── Controllers ───────────────────────────────────────────
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
 
@@ -27,115 +25,85 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
-  String _selectedRole = 'beekeeper';
 
-  // ── API Configuration ─────────────────────────────────────
-  // ⚠️ CHANGE THIS TO YOUR ACTUAL SERVER IP
-  final String _baseUrl = 'http://196.43.168.57'; // Your server IP
+  // Validation messages from the server (422), keyed by API field name.
+  Map<String, String> _serverErrors = {};
 
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
     super.dispose();
   }
 
   // ── Register call ─────────────────────────────────────────
+  // Farmer accounts only. The API returns no token: an admin must approve
+  // the account before the farmer can log in.
   Future<void> _handleRegister() async {
+    setState(() => _serverErrors = {});
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
+    final name = _nameController.text.trim();
+    final parts = name.split(RegExp(r'\s+'));
+
     try {
-      final response = await http
-          .post(
-            Uri.parse('$_baseUrl/api/v1/register'),
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json',
-            },
-            body: json.encode({
-              'name': _nameController.text.trim(),
-              'email': _emailController.text.trim().toLowerCase(),
-              'password': _passwordController.text,
-              'password_confirmation': _confirmController.text,
-              'role': _selectedRole,
-            }),
-          )
-          .timeout(const Duration(seconds: 30));
-
-      final data = json.decode(response.body);
-
-      debugPrint(
-        'Register response [${response.statusCode}]: ${response.body}',
+      final message = await FarmerApi.instance.register(
+        name: name,
+        firstName: parts.first,
+        lastName: parts.length > 1 ? parts.sublist(1).join(' ') : null,
+        email: _emailController.text.trim().toLowerCase(),
+        telephone: _phoneController.text.trim(),
+        password: _passwordController.text,
+        passwordConfirmation: _confirmController.text,
       );
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        // Registration successful - auto login
-        final token = data['token'];
-
-        if (token != null && token.isNotEmpty) {
-          // Save token using TokenStorage
-          await TokenStorage.saveToken(token);
-
-          Fluttertoast.showToast(
-            msg: '✅ Account created successfully!',
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
-            backgroundColor: Colors.green,
-            textColor: Colors.white,
-          );
-
-          if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => NavBar(token: token)),
-            );
-          }
-        } else {
-          // No token returned, just go to login
-          Fluttertoast.showToast(
-            msg: '✅ Account created! Please login.',
-            toastLength: Toast.LENGTH_LONG,
-            gravity: ToastGravity.BOTTOM,
-            backgroundColor: Colors.green,
-            textColor: Colors.white,
-          );
-
-          if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const LoginScreen()),
-            );
-          }
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      await _showAwaitingApproval(message);
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        if (e.status == 422 && e.errors != null) {
+          _serverErrors = {
+            for (final field in e.errors!.keys)
+              if (e.fieldError(field) != null) field: e.fieldError(field)!,
+          };
         }
-      } else {
-        final msg = _extractError(data);
-        _showError(msg);
-        setState(() => _isLoading = false);
-      }
-    } on http.ClientException {
-      _showError('No internet connection. Please check your network.');
-      setState(() => _isLoading = false);
-    } catch (e) {
-      _showError('Something went wrong. Please try again.');
-      debugPrint('Register error: $e');
-      setState(() => _isLoading = false);
+      });
+      if (_serverErrors.isEmpty) _showError(e.message);
     }
   }
 
-  // ── Extract readable error from API response ──────────────
-  String _extractError(Map<String, dynamic> data) {
-    if (data['errors'] != null && data['errors'] is Map) {
-      final errors = data['errors'] as Map;
-      final first = errors.values.first;
-      if (first is List && first.isNotEmpty) return first.first.toString();
-    }
-    if (data['message'] != null) return data['message'].toString();
-    if (data['error'] != null) return data['error'].toString();
-    return 'Registration failed. Please try again.';
+  Future<void> _showAwaitingApproval(String? message) {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Registration submitted'),
+            content: Text(
+              message ??
+                  'Your account is awaiting approval by an administrator. '
+                      'You will get an email when it is approved, then you can log in.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+    );
   }
 
   void _showError(String msg) {
@@ -160,6 +128,14 @@ class _RegisterPageState extends State<RegisterPage> {
     if (v == null || v.trim().isEmpty) return 'Email is required';
     final ok = RegExp(r'^[\w\-.]+@([\w\-]+\.)+[\w\-]{2,4}$');
     if (!ok.hasMatch(v.trim())) return 'Enter a valid email address';
+    return null;
+  }
+
+  String? _validatePhone(String? v) {
+    if (v == null || v.trim().isEmpty) return 'Phone number is required';
+    if (!RegExp(r'^\+?[0-9 ]{9,15}$').hasMatch(v.trim())) {
+      return 'Enter a valid phone number';
+    }
     return null;
   }
 
@@ -216,6 +192,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   label: 'Full Name',
                   icon: Icons.person,
                   validator: _validateName,
+                  apiField: 'name',
                 ),
                 const SizedBox(height: 16),
 
@@ -225,6 +202,17 @@ class _RegisterPageState extends State<RegisterPage> {
                   icon: Icons.email,
                   keyboardType: TextInputType.emailAddress,
                   validator: _validateEmail,
+                  apiField: 'email',
+                ),
+                const SizedBox(height: 16),
+
+                _buildField(
+                  controller: _phoneController,
+                  label: 'Phone Number',
+                  icon: Icons.phone,
+                  keyboardType: TextInputType.phone,
+                  validator: _validatePhone,
+                  apiField: 'telephone',
                 ),
                 const SizedBox(height: 16),
 
@@ -234,6 +222,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   icon: Icons.lock,
                   obscureText: _obscurePassword,
                   validator: _validatePassword,
+                  apiField: 'password',
                   suffix: _eyeIcon(
                     visible: _obscurePassword,
                     onTap:
@@ -257,9 +246,6 @@ class _RegisterPageState extends State<RegisterPage> {
                             setState(() => _obscureConfirm = !_obscureConfirm),
                   ),
                 ),
-                const SizedBox(height: 16),
-
-                _buildRoleDropdown(),
                 const SizedBox(height: 28),
 
                 SizedBox(
@@ -346,12 +332,18 @@ class _RegisterPageState extends State<RegisterPage> {
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
     Widget? suffix,
+    String? apiField,
   }) {
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
       validator: validator,
+      forceErrorText: apiField == null ? null : _serverErrors[apiField],
+      onChanged:
+          apiField == null || !_serverErrors.containsKey(apiField)
+              ? null
+              : (_) => setState(() => _serverErrors.remove(apiField)),
       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
       decoration: InputDecoration(
         labelText: label,
@@ -401,59 +393,6 @@ class _RegisterPageState extends State<RegisterPage> {
         color: Colors.grey,
       ),
       onPressed: onTap,
-    );
-  }
-
-  // ── Role dropdown ─────────────────────────────────────────
-  Widget _buildRoleDropdown() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.brown.shade100,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: _selectedRole,
-          isExpanded: true,
-          icon: const Icon(Icons.arrow_drop_down, color: Colors.brown),
-          items: const [
-            DropdownMenuItem(
-              value: 'beekeeper',
-              child: Row(
-                children: [
-                  Icon(Icons.hive, color: Colors.brown, size: 20),
-                  SizedBox(width: 10),
-                  Text(
-                    'Beekeeper',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                  ),
-                ],
-              ),
-            ),
-            DropdownMenuItem(
-              value: 'admin',
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.admin_panel_settings,
-                    color: Colors.brown,
-                    size: 20,
-                  ),
-                  SizedBox(width: 10),
-                  Text(
-                    'Admin',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                  ),
-                ],
-              ),
-            ),
-          ],
-          onChanged: (v) {
-            if (v != null) setState(() => _selectedRole = v);
-          },
-        ),
-      ),
     );
   }
 }

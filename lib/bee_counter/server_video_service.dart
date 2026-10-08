@@ -1,3 +1,4 @@
+import 'package:HPGM/config/api_config.dart';
 import 'dart:convert';
 
 import 'package:HPGM/bee_counter/bee_count_database.dart';
@@ -5,7 +6,7 @@ import 'package:HPGM/bee_counter/bee_counter_model.dart';
 import 'package:http/http.dart' as http;
 
 class ServerVideoService {
-  final String baseUrl = 'http://196.43.168.57/api/v1';
+  String get baseUrl => '${ApiConfig.legacyHost}/api/v1';
   final http.Client _client = http.Client();
 
   final int _maxRetries = 5;

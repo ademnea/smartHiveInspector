@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:HPGM/getstarted.dart';
 import 'package:HPGM/login.dart';
 import 'package:HPGM/dashboard_screen.dart';
-import 'package:HPGM/services/token_storage.dart';
+import 'package:HPGM/Services/token_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -26,26 +26,20 @@ class _SplashscreenState extends State<Splashscreen> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool isFirstTime = prefs.getBool('isFirstTime') ?? true;
 
-    print('Debug: isFirstTime = $isFirstTime');
-
     if (isFirstTime) {
       await TokenStorage.clearLoginData();
       await prefs.setBool('isFirstTime', false);
-      print('Debug: Navigating to GetStarted (first time)');
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => GetStarted()),
       );
     } else {
-      final isLoggedIn = await TokenStorage.isLoggedIn();
+      final hasSession = await TokenStorage.hasValidSession();
       final token = await TokenStorage.getToken();
+      if (!mounted) return;
 
-      print(
-        'Debug: isLoggedIn = $isLoggedIn, token = ${token?.substring(0, 10) ?? 'null'}...',
-      );
-
-      if (isLoggedIn && token != null) {
-        print('Debug: Navigating to Dashboard (logged in)');
+      if (hasSession && token != null) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -53,7 +47,9 @@ class _SplashscreenState extends State<Splashscreen> {
           ),
         );
       } else {
-        print('Debug: Navigating to Login (not logged in)');
+        // Expired or missing: drop any stale token before asking to log in.
+        await TokenStorage.clearLoginData();
+        if (!mounted) return;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => LoginScreen()),

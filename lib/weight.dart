@@ -1,3 +1,4 @@
+import 'package:HPGM/config/api_config.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_echarts/flutter_echarts.dart';
@@ -5,8 +6,8 @@ import 'package:http/http.dart' as http;
 import 'package:line_icons/line_icons.dart';
 import 'package:intl/intl.dart';
 import 'package:HPGM/Services/csv_export_service.dart';
-import 'services/token_storage.dart';
-import 'services/cache_service.dart';
+import 'Services/token_storage.dart';
+import 'Services/cache_service.dart';
 
 class Weight extends StatefulWidget {
   final int hiveId;
@@ -61,7 +62,7 @@ class _WeightState extends State<Weight> {
       }
 
       final url =
-          'http://196.43.168.57/api/v1/hives/${widget.hiveId}/latest-weight';
+          '${ApiConfig.legacyHost}/api/v1/hives/${widget.hiveId}/latest-weight';
 
       final response = await http.get(
         Uri.parse(url),
@@ -184,7 +185,7 @@ class _WeightState extends State<Weight> {
       final formattedEndDate = DateFormat('yyyy-MM-dd').format(_endDate);
 
       final url =
-          'http://196.43.168.57/api/v1/hives/${widget.hiveId}/weight/$formattedStartDate/$formattedEndDate';
+          '${ApiConfig.legacyHost}/api/v1/hives/${widget.hiveId}/weight/$formattedStartDate/$formattedEndDate';
 
       final response = await http.get(
         Uri.parse(url),

@@ -1,7 +1,8 @@
+import 'package:HPGM/config/api_config.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:HPGM/services/token_storage.dart';
+import 'package:HPGM/Services/token_storage.dart';
 import 'package:HPGM/hive_model.dart';
 
 class HiveDataService {
@@ -9,7 +10,7 @@ class HiveDataService {
   factory HiveDataService() => _instance;
   HiveDataService._internal();
 
-  final String _baseUrl = 'http://196.43.168.57/api/v1';
+  String get _baseUrl => '${ApiConfig.legacyHost}/api/v1';
 
   Hive? _currentHive;
   Timer? _timer;

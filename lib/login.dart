@@ -1,4 +1,5 @@
-import 'package:HPGM/Services/auth_services.dart';
+import 'package:HPGM/api/farmer_api.dart';
+import 'package:HPGM/Services/token_storage.dart';
 import 'package:HPGM/components/custom_text_field.dart';
 import 'package:HPGM/forgot_password.dart';
 import 'package:HPGM/register.dart';
@@ -47,27 +48,36 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    if (password.length < 6) {
-      _showError('Password must be at least 6 characters');
-      return;
-    }
-
     setState(() => _isLoading = true);
 
     try {
-      // Call the login method from AuthService
-      final result = await AuthService.logmein(context, email, password);
-
+      await FarmerApi.instance.login(email, password);
       if (!mounted) return;
 
-      // AuthService.logmein handles navigation internally
-      // If we get here, login failed
-      setState(() => _isLoading = false);
-    } catch (e) {
-      _showError(
-        'Network error: Cannot connect to server. Please check your connection.',
+      final token = await TokenStorage.getToken() ?? '';
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => NavBar(token: token)),
       );
-      if (mounted) setState(() => _isLoading = false);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      switch (e.status) {
+        case 401:
+          // The API returns the same 401 for an unknown email and a wrong
+          // password, so we cannot say which one it was.
+          _showError('Invalid email or password.');
+        case 403:
+          // Pending approval, rejected, inactive, or not a farmer account.
+          _showError(e.message);
+        case 422:
+          _showError(e.fieldError('email') ?? e.fieldError('password') ?? e.message);
+        default:
+          // 429 (too many attempts), 5xx and network errors carry a
+          // readable message.
+          _showError(e.message);
+      }
     }
   }
 

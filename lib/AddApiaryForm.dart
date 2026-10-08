@@ -1,9 +1,10 @@
+import 'package:HPGM/config/api_config.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:HPGM/Services/auth_manager.dart';
 import 'package:HPGM/Services/connectivity_service.dart';
-import 'services/token_storage.dart';
+import 'Services/token_storage.dart';
 import 'package:HPGM/Services/apiary_queue_service.dart';
 
 class AddApiaryForm extends StatefulWidget {
@@ -324,7 +325,7 @@ class _AddApiaryFormState extends State<AddApiaryForm> {
     try {
       print('Sending data: $apiaryData');
       final response = await AuthManager.post(
-        'http://196.43.168.57/api/v1/farms',
+        '${ApiConfig.legacyHost}/api/v1/farms',
         body: apiaryData,
         context: context,
         headers: {'Accept': 'application/json'},

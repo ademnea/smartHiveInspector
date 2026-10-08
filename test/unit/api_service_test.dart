@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:HPGM/Services/api_service.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -10,9 +11,11 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
-    SharedPreferences.setMockInitialValues({
+    SharedPreferences.setMockInitialValues({});
+    FlutterSecureStorage.setMockInitialValues({
       'auth_token': 'test-token',
-      'login_time': DateTime.now().toIso8601String(),
+      'token_expires_at':
+          DateTime.now().add(const Duration(days: 1)).toIso8601String(),
     });
   });
 

@@ -1,5 +1,7 @@
+import 'package:HPGM/config/api_config.dart';
 import 'dart:convert';
 import 'package:HPGM/AddApiaryForm.dart';
+import 'package:HPGM/api/farmer_api.dart';
 import 'package:HPGM/hives.dart';
 import 'package:HPGM/login.dart';
 import 'editApiaryForm.dart';
@@ -11,7 +13,7 @@ import 'package:HPGM/apiary_overview_cards/build_overview_card.dart';
 import 'farm_model.dart';
 import 'farm_card.dart';
 import 'Services/token_storage.dart';
-import 'services/cache_service.dart';
+import 'Services/cache_service.dart';
 import 'Services/auth_manager.dart';
 
 class Apiaries extends StatefulWidget {
@@ -31,7 +33,7 @@ class _ApiariesState extends State<Apiaries> {
   String _errorMessage = '';
 
   // API Configuration
-  static const String _baseUrl = 'http://196.43.168.57';
+  static String get _baseUrl => ApiConfig.legacyHost;
 
   @override
   void initState() {
@@ -140,88 +142,25 @@ class _ApiariesState extends State<Apiaries> {
       // Device is online - proceed with API call
       print('🌐 Device is online, fetching from API...');
 
-      // Use AuthManager for authenticated API call
-      final response = await AuthManager.get(
-        '$_baseUrl/api/v1/farms',
-        context: context,
-      ).timeout(const Duration(seconds: 30));
+      final data = await FarmerApi.instance.allApiaries();
 
-      print('Response status: ${response?.statusCode}');
+      // Save to cache for offline use
+      await CacheService.saveFarms(data);
 
-      if (response != null && response.statusCode == 200) {
-        List<dynamic> data = jsonDecode(response.body);
-        print('Parsed ${data.length} farms');
-
-        // Save to cache for offline use
-        await CacheService.saveFarms(data);
-
-        if (mounted) {
-          setState(() {
-            farms =
-                data.map((farm) {
-                  return Farm.fromJson(farm);
-                }).toList();
-            isLoading = false;
-          });
-        }
-
-        print('Farms loaded: ${farms.length}');
-
-        for (var farm in farms) {
-          await getApiaryStats(farm.id);
-        }
-      } else if (response != null && response.statusCode == 401) {
-        // Token expired
+      if (mounted) {
         setState(() {
+          farms = data.map(Farm.fromJson).toList();
           isLoading = false;
-          _errorMessage = 'Session expired. Please login again.';
         });
+      }
 
-        await AuthManager.logout(context: context);
-
-        Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => const LoginScreen()),
-              (route) => false,
-            );
-          }
-        });
-      } else {
-        print('Failed to load farms: ${response?.statusCode}');
-
-        // Try loading from cache as fallback
-        final cachedFarms = await CacheService.loadFarms();
-        if (cachedFarms != null && cachedFarms.isNotEmpty) {
-          if (mounted) {
-            setState(() {
-              farms = cachedFarms.map((farm) => Farm.fromJson(farm)).toList();
-              isLoading = false;
-            });
-          }
-
-          for (var farm in farms) {
-            await getApiaryStats(farm.id);
-          }
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '⚠️ Server error (${response?.statusCode}) - Showing saved data',
-              ),
-              backgroundColor: Colors.orange[700],
-            ),
-          );
-        } else {
-          setState(() {
-            isLoading = false;
-            _errorMessage = 'Failed to load farms. Please try again.';
-          });
-        }
+      for (var farm in farms) {
+        await getApiaryStats(farm.id);
       }
     } catch (error) {
       print('Error loading farms: $error');
+      // A 401 has already sent the user to login (FarmerApi.onUnauthorized).
+      if (error is ApiException && error.status == 401) return;
 
       // Try loading from cache as fallback
       final cachedFarms = await CacheService.loadFarms();
@@ -277,34 +216,12 @@ class _ApiariesState extends State<Apiaries> {
         }
       }
 
-      // Get token
-      final token = await TokenStorage.getToken();
-      if (token == null || token.isEmpty) return;
+      final hives = await FarmerApi.instance.allHives(farmId);
 
-      // Use AuthManager for authenticated request
-      final response = await AuthManager.get(
-        '$_baseUrl/api/v1/farms/$farmId/hives',
-        context: context,
-      ).timeout(const Duration(seconds: 30));
+      // Save hives to cache for offline use
+      await CacheService.saveHives(farmId, hives);
 
-      if (response != null && response.statusCode == 200) {
-        List<dynamic> hives = jsonDecode(response.body);
-
-        // Save hives to cache for offline use
-        await CacheService.saveHives(farmId, hives);
-
-        _calculateStatsFromHives(farmId, hives);
-      } else {
-        print(
-          'Failed to fetch hives for stats. Status: ${response?.statusCode}',
-        );
-
-        // Try loading from cache as fallback
-        final cachedHives = await CacheService.loadHives(farmId);
-        if (cachedHives != null && cachedHives.isNotEmpty) {
-          _calculateStatsFromHives(farmId, cachedHives);
-        }
-      }
+      _calculateStatsFromHives(farmId, hives);
     } catch (error) {
       print('Error loading stats for farm $farmId: $error');
 
@@ -316,6 +233,8 @@ class _ApiariesState extends State<Apiaries> {
     }
   }
 
+  static bool _isSet(dynamic v) => v == true || v == 1 || v == '1';
+
   void _calculateStatsFromHives(int farmId, List<dynamic> hives) {
     int totalHives = hives.length;
     int colonizedHives = 0;
@@ -323,26 +242,24 @@ class _ApiariesState extends State<Apiaries> {
 
     for (var hive in hives) {
       // Safe parsing with fallback values
-      bool isColonized = false;
-      bool isConnected = false;
+      bool isColonized = _isSet(hive['colonized']);
+      // The farmer API sends `connected` as 0, 1 or null (no device data
+      // yet). Only an explicit 0 counts as disconnected.
+      bool isDisconnected =
+          hive['connected'] != null && !_isSet(hive['connected']);
       double? honeyLevel;
       double? temperature;
 
-      // Parse colonization status
+      // Old API shape (may still be in the offline cache)
       if (hive['state'] != null) {
         final state = hive['state'];
 
         if (state['colonization_status'] != null) {
-          final colonization = state['colonization_status'];
-          isColonized =
-              colonization['Colonized'] == true ||
-              colonization['Colonized'] == 1;
+          isColonized = _isSet(state['colonization_status']['Colonized']);
         }
 
         if (state['connection_status'] != null) {
-          final connection = state['connection_status'];
-          isConnected =
-              connection['Connected'] == true || connection['Connected'] == 1;
+          isDisconnected = !_isSet(state['connection_status']['Connected']);
         }
 
         if (state['weight'] != null &&
@@ -358,9 +275,24 @@ class _ApiariesState extends State<Apiaries> {
         }
       }
 
+      // Hive statuses that need the farmer's attention
+      final status = hive['current_status']?.toString();
+      final needsCare =
+          status == 'Queenless' ||
+          status == 'Absconded' ||
+          status == 'Under Inspection';
+
+      // No colonization data yet: treat an Active hive as active.
+      if (hive['colonized'] == null &&
+          hive['state'] == null &&
+          status == 'Active') {
+        isColonized = true;
+      }
+
       if (isColonized) colonizedHives++;
 
-      if (!isConnected ||
+      if (isDisconnected ||
+          needsCare ||
           (temperature != null && temperature > 32) ||
           (honeyLevel != null && honeyLevel > 80)) {
         needsAttentionHives++;

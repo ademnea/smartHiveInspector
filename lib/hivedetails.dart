@@ -1,9 +1,10 @@
+import 'package:HPGM/config/api_config.dart';
 import 'package:HPGM/components/honey_sheet.dart';
 import 'package:HPGM/components/imageslider.dart';
 import 'package:HPGM/components/temperature_sheet.dart';
 import 'package:HPGM/parameter_tab_view.dart';
 import 'package:HPGM/components/notificationbar.dart';
-import 'package:HPGM/services/token_storage.dart';
+import 'package:HPGM/Services/token_storage.dart';
 import 'package:liquid_progress_indicator_v2/liquid_progress_indicator.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
@@ -108,7 +109,7 @@ class _HiveDetailsState extends State<HiveDetails> {
       String sendToken = "Bearer $token";
       var headers = {'Accept': 'application/json', 'Authorization': sendToken};
       var response = await http.get(
-        Uri.parse('http://196.43.168.57/api/v1/hives/${widget.hiveId}'),
+        Uri.parse('${ApiConfig.legacyHost}/api/v1/hives/${widget.hiveId}'),
         headers: headers,
       );
       if (response.statusCode == 200) {
@@ -154,7 +155,7 @@ class _HiveDetailsState extends State<HiveDetails> {
 
       var response = await http.get(
         Uri.parse(
-          'http://196.43.168.57/api/v1/hives/$hiveId/images/$formattedStartDate/$formattedEndDate',
+          '${ApiConfig.legacyHost}/api/v1/hives/$hiveId/images/$formattedStartDate/$formattedEndDate',
         ),
         headers: headers,
       );
@@ -170,7 +171,7 @@ class _HiveDetailsState extends State<HiveDetails> {
               imagePaths
                   .map<String>(
                     (item) =>
-                        'http://196.43.168.57/${item['path'].replaceFirst("public/", "")}',
+                        '${ApiConfig.legacyHost}/${item['path'].replaceFirst("public/", "")}',
                   )
                   .toList();
         });

@@ -1,3 +1,4 @@
+import 'package:HPGM/config/api_config.dart';
 import 'package:HPGM/Services/connectivity_service.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
@@ -5,7 +6,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:HPGM/Services/auth_manager.dart';
-import 'services/token_storage.dart';
+import 'Services/token_storage.dart';
 import 'package:HPGM/Services/apiary_queue_service.dart';
 
 class EditApiaryForm extends StatefulWidget {
@@ -590,7 +591,7 @@ class _EditApiaryFormState extends State<EditApiaryForm> {
 
     try {
       final response = await AuthManager.put(
-        'http://196.43.168.57/api/v1/farms/${widget.farmId}',
+        '${ApiConfig.legacyHost}/api/v1/farms/${widget.farmId}',
         body: apiaryData,
         context: context,
         headers: {'Accept': 'application/json'},

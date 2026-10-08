@@ -1,8 +1,9 @@
+import 'package:HPGM/config/api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'Services/connectivity_service.dart';
-import 'services/token_storage.dart';
+import 'Services/token_storage.dart';
 
 class RecordsForm extends StatefulWidget {
   final String apiaryLocation;
@@ -790,7 +791,7 @@ class _RecordsFormState extends State<RecordsForm> {
       }
 
       final response = await http.post(
-        Uri.parse('http://196.43.168.57/api/v1/hives/inspections'),
+        Uri.parse('${ApiConfig.legacyHost}/api/v1/hives/inspections'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',

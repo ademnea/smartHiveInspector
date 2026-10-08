@@ -1,3 +1,4 @@
+import 'package:HPGM/config/api_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -5,7 +6,7 @@ import 'package:line_icons/line_icons.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 import 'package:intl/intl.dart';
-import 'services/token_storage.dart';
+import 'Services/token_storage.dart';
 
 class HiveVideos extends StatefulWidget {
   final int hiveId;
@@ -88,7 +89,7 @@ class _HiveVideosState extends State<HiveVideos> {
       var request = http.Request(
         'GET',
         Uri.parse(
-          'http://196.43.168.57/api/v1/hives/$hiveId/videos/$formattedStartDate/$formattedEndDate?page=$page',
+          '${ApiConfig.legacyHost}/api/v1/hives/$hiveId/videos/$formattedStartDate/$formattedEndDate?page=$page',
         ),
       );
       request.headers.addAll(headers);
@@ -105,7 +106,7 @@ class _HiveVideosState extends State<HiveVideos> {
             videoData.map((video) {
               return {
                 'path':
-                    'http://196.43.168.57/${video['path'].replaceFirst("public/", "")}',
+                    '${ApiConfig.legacyHost}/${video['path'].replaceFirst("public/", "")}',
                 'date': video['date'],
               };
             }).toList(),

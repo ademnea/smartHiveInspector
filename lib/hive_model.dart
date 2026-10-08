@@ -8,6 +8,17 @@ class Hive {
   final HiveState? state;
   final bool autoProcessingEnabled; // Added as requested
 
+  // Farmer API fields. `connected` and `colonized` are null until the hive
+  // has device data.
+  final String? displayName;
+  final String? hiveCode;
+  final String? hiveType;
+  final String? queenStatus;
+  final String? currentStatus;
+  final String? lastInspectionDate;
+  final bool? connected;
+  final bool? colonized;
+
   Hive({
     required this.id,
     required this.longitude,
@@ -17,21 +28,51 @@ class Hive {
     this.updatedAt,
     this.state,
     this.autoProcessingEnabled = true, // Default to true
+    this.displayName,
+    this.hiveCode,
+    this.hiveType,
+    this.queenStatus,
+    this.currentStatus,
+    this.lastInspectionDate,
+    this.connected,
+    this.colonized,
   });
 
+  // Reads a farmer API hive (`apiary_id`, flat fields) and the old API's
+  // hive (`farm_id`, values nested under `state`).
   factory Hive.fromJson(Map<String, dynamic> json) {
     return Hive(
-      id: json['id'] is String ? int.parse(json['id']) : json['id'],
-      longitude: json['longitude'] ?? '',
-      latitude: json['latitude'] ?? '',
-      farmId: json['farm_id'] is String
-          ? int.parse(json['farm_id'])
-          : json['farm_id'],
-      createdAt: json['created_at'],
-      updatedAt: json['updated_at'],
+      id: _toInt(json['id']) ?? 0,
+      longitude: json['longitude']?.toString() ?? '',
+      latitude: json['latitude']?.toString() ?? '',
+      farmId: _toInt(json['apiary_id'] ?? json['farm_id']) ?? 0,
+      createdAt: json['created_at']?.toString(),
+      updatedAt: json['updated_at']?.toString(),
       state: json['state'] != null ? HiveState.fromJson(json['state']) : null,
       autoProcessingEnabled: json['autoProcessingEnabled'] ?? true,
+      displayName: _text(json['display_name']) ?? _text(json['name']),
+      hiveCode: _text(json['hive_code']) ?? _text(json['hybrid_identifier']),
+      hiveType: _text(json['hive_type']),
+      queenStatus: _text(json['queen_status']),
+      currentStatus: _text(json['current_status']) ?? _text(json['status']),
+      lastInspectionDate: _text(json['last_inspection_date']),
+      connected: _toBool(json['connected']),
+      colonized: _toBool(json['colonized']),
     );
+  }
+
+  static int? _toInt(dynamic v) =>
+      v is num ? v.toInt() : int.tryParse(v?.toString() ?? '');
+
+  static bool? _toBool(dynamic v) {
+    if (v == null) return null;
+    if (v is bool) return v;
+    return v == 1 || v == '1';
+  }
+
+  static String? _text(dynamic v) {
+    final text = v?.toString().trim() ?? '';
+    return text.isEmpty ? null : text;
   }
 
   Map<String, dynamic> toJson() {
@@ -44,6 +85,14 @@ class Hive {
       'updated_at': updatedAt,
       'state': state?.toJson(),
       'autoProcessingEnabled': autoProcessingEnabled,
+      'display_name': displayName,
+      'hive_code': hiveCode,
+      'hive_type': hiveType,
+      'queen_status': queenStatus,
+      'current_status': currentStatus,
+      'last_inspection_date': lastInspectionDate,
+      'connected': connected,
+      'colonized': colonized,
     };
   }
 
@@ -60,9 +109,11 @@ class Hive {
       state?.temperature?.dateCollected ??
       state?.humidity?.dateCollected ??
       state?.carbonDioxide?.dateCollected;
-  bool get isConnected => state?.connectionStatus?.connected ?? false;
-  bool get isColonized => state?.colonizationStatus?.colonized ?? false;
-  String? get name => "Hive $id"; // You can add a name field if needed
+  bool get isConnected =>
+      connected ?? state?.connectionStatus?.connected ?? false;
+  bool get isColonized =>
+      colonized ?? state?.colonizationStatus?.colonized ?? false;
+  String? get name => displayName ?? hiveCode ?? "Hive $id";
 }
 
 class HiveState {

@@ -1,3 +1,4 @@
+import 'package:HPGM/config/api_config.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -328,7 +329,7 @@ class _EditHiveFormState extends State<EditHiveForm> {
           data: {
             'hive': updateData,
             'hiveId': widget.hiveId,
-            'endpoint': 'http://196.43.168.57/api/v1/hives/${widget.hiveId}',
+            'endpoint': '${ApiConfig.legacyHost}/api/v1/hives/${widget.hiveId}',
           },
           apiaryId: widget.hiveId,
         ),
@@ -354,7 +355,7 @@ class _EditHiveFormState extends State<EditHiveForm> {
 
     try {
       final response = await AuthManager.put(
-        'http://196.43.168.57/api/v1/hives/${widget.hiveId}',
+        '${ApiConfig.legacyHost}/api/v1/hives/${widget.hiveId}',
         body: updateData,
         context: context,
       );

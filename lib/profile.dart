@@ -1,3 +1,4 @@
+import 'package:HPGM/config/api_config.dart';
 import 'dart:convert';
 
 import 'package:HPGM/Services/auth_manager.dart';
@@ -103,13 +104,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<http.Response?> _fetchProfileResponse(String? storedUserId) async {
     final userIdValue = storedUserId?.trim();
     final endpoints = <String>[
-      'http://196.43.168.57/api/v1/profile',
+      '${ApiConfig.legacyHost}/api/v1/profile',
       if (userIdValue != null && userIdValue.isNotEmpty)
-        'http://196.43.168.57/api/v1/users/$userIdValue',
+        '${ApiConfig.legacyHost}/api/v1/users/$userIdValue',
       if (userIdValue != null && userIdValue.isNotEmpty)
-        'http://196.43.168.57/api/v1/user/$userIdValue',
-      'http://196.43.168.57/api/v1/me',
-      'http://196.43.168.57/api/v1/auth/me',
+        '${ApiConfig.legacyHost}/api/v1/user/$userIdValue',
+      '${ApiConfig.legacyHost}/api/v1/me',
+      '${ApiConfig.legacyHost}/api/v1/auth/me',
     ];
 
     http.Response? lastResponse;
@@ -715,11 +716,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     };
     final userIdValue = widget.userId.trim();
     final endpoints = <String>[
-      'http://196.43.168.57/api/v1/profile',
+      '${ApiConfig.legacyHost}/api/v1/profile',
       if (userIdValue.isNotEmpty)
-        'http://196.43.168.57/api/v1/users/$userIdValue',
+        '${ApiConfig.legacyHost}/api/v1/users/$userIdValue',
       if (userIdValue.isNotEmpty)
-        'http://196.43.168.57/api/v1/user/$userIdValue',
+        '${ApiConfig.legacyHost}/api/v1/user/$userIdValue',
     ];
 
     http.Response? response;

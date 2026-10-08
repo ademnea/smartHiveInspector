@@ -1,13 +1,14 @@
+import 'package:HPGM/config/api_config.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:HPGM/services/token_storage.dart';
+import 'package:HPGM/Services/token_storage.dart';
 import 'package:HPGM/farm_model.dart';
 import 'package:HPGM/hive_model.dart';
 
 /// Centralized API service for all HTTP requests
 class ApiService {
-  static const String baseUrl = 'http://196.43.168.57/api/v1';
+  static String get baseUrl => '${ApiConfig.legacyHost}/api/v1';
   static final ApiService _instance = ApiService._internal();
   static http.Client _client = http.Client();
   factory ApiService() => _instance;

@@ -1,3 +1,4 @@
+import 'package:HPGM/config/api_config.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_echarts/flutter_echarts.dart';
@@ -5,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:line_icons/line_icons.dart';
 import 'package:intl/intl.dart';
 import 'package:HPGM/Services/csv_export_service.dart';
-import 'services/token_storage.dart';
+import 'Services/token_storage.dart';
 
 class Humidity extends StatefulWidget {
   final int hiveId;
@@ -89,7 +90,7 @@ class _HumidityState extends State<Humidity> {
 
       final response = await http.get(
         Uri.parse(
-          'http://196.43.168.57/api/v1/hives/${widget.hiveId}/humidity/'
+          '${ApiConfig.legacyHost}/api/v1/hives/${widget.hiveId}/humidity/'
           '${DateFormat('yyyy-MM-dd').format(_startDate)}/'
           '${DateFormat('yyyy-MM-dd').format(_endDate)}',
         ),

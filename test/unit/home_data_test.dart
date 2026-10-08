@@ -30,4 +30,25 @@ void main() {
     expect(data.daysToEndSeason, 14.0);
     expect(data.percentage_time_left, 35.0);
   });
+
+  test('HomeData.fromApiaries sums hives and picks the busiest apiary', () {
+    final data = HomeData.fromApiaries([
+      {'id': 1, 'name': 'North', 'hives_count': 3},
+      {'id': 2, 'name': 'River', 'hives_count': 7},
+      {'id': 3, 'name': 'Hill'},
+    ]);
+
+    expect(data.farms, 3);
+    expect(data.hives, 10);
+    expect(data.apiaryName, 'River');
+    expect(data.hasHarvestData, isFalse);
+  });
+
+  test('HomeData.fromApiaries handles a farmer with no apiaries', () {
+    final data = HomeData.fromApiaries([]);
+
+    expect(data.farms, 0);
+    expect(data.hives, 0);
+    expect(data.apiaryName, '--');
+  });
 }

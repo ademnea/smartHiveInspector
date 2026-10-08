@@ -3,10 +3,12 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:HPGM/Services/token_storage.dart';
 import 'package:HPGM/login.dart';
-import 'package:HPGM/services/cache_service.dart';
+import 'package:HPGM/api/farmer_api.dart';
+import 'package:HPGM/config/api_config.dart';
+import 'package:HPGM/Services/auth_services.dart';
 
-/// Comprehensive authentication manager that handles token validation,
-/// refresh, and automatic login redirects
+/// Authenticated requests for screens not yet moved to [FarmerApi].
+/// Handles token expiry and redirects to login on 401.
 class AuthManager {
   static bool _isValidating = false;
   static http.Client _client = http.Client();
@@ -45,6 +47,7 @@ class AuthManager {
 
       // Prepare headers
       final requestHeaders = {
+        'Accept': 'application/json',
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
         ...?headers,
@@ -86,27 +89,13 @@ class AuthManager {
           throw UnsupportedError('HTTP method $method not supported');
       }
 
-      // Handle response
-      if (response.statusCode == 401) {
-        print('🔄 Got 401, attempting token refresh...');
-
-        // Try to refresh token
-        final refreshSuccess = await TokenStorage.refreshToken();
-        if (refreshSuccess) {
-          print('✅ Token refreshed, retrying request...');
-          // Retry the request with new token
-          return await authenticatedRequest(
-            method: method,
-            url: url,
-            headers: headers,
-            body: body,
-            context: context,
-          );
-        } else {
-          print('❌ Token refresh failed, redirecting to login');
-          await _handleAuthenticationFailure(context);
-          return null;
-        }
+      // No refresh endpoint: a 401 from the farmer API means the session is
+      // over. Screens not yet migrated still call the old server, which
+      // rejects the new token; that must not log the farmer out.
+      if (response.statusCode == 401 && url.startsWith(ApiConfig.baseUrl)) {
+        print('❌ Got 401, session expired');
+        await _handleAuthenticationFailure(context);
+        return null;
       }
 
       return response;
@@ -173,7 +162,7 @@ class AuthManager {
     );
   }
 
-  /// Ensure we have a valid token (validate and refresh if needed)
+  /// Ensure we have a stored, unexpired token
   static Future<bool> ensureValidToken({BuildContext? context}) async {
     if (_isValidating) {
       // Wait for current validation to complete
@@ -193,42 +182,12 @@ class AuthManager {
         return false;
       }
 
-      // Check if token is expired based on timestamp
+      // There is no refresh endpoint, so an expired token means log in again.
       if (await TokenStorage.isTokenExpired()) {
-        print('⏰ Token expired based on timestamp, attempting refresh...');
-
-        final refreshSuccess = await TokenStorage.refreshToken();
-        if (refreshSuccess) {
-          print('✅ Token refreshed successfully');
-          return true;
-        } else {
-          print('❌ Token refresh failed');
-          await _handleAuthenticationFailure(context);
-          return false;
-        }
+        print('⏰ Token expired');
+        await _handleAuthenticationFailure(context);
+        return false;
       }
-
-      // Skip server validation - rely on timestamp-based expiry
-      // and let actual API calls handle 401 responses naturally
-      /*
-      // Validate token with server (only when online)
-      if (await CacheService.isOnline()) {
-        final isValid = await TokenStorage.validateTokenWithServer();
-        if (!isValid) {
-          print('❌ Server validation failed, attempting refresh...');
-
-          final refreshSuccess = await TokenStorage.refreshToken();
-          if (refreshSuccess) {
-            print('✅ Token refreshed after validation failure');
-            return true;
-          } else {
-            print('❌ Token refresh failed after validation failure');
-            await _handleAuthenticationFailure(context);
-            return false;
-          }
-        }
-      }
-      */
 
       print('✅ Token is valid');
       return true;
@@ -247,11 +206,9 @@ class AuthManager {
         return;
       }
 
-      // Only validate with server if online
-      if (await CacheService.isOnline()) {
-        await ensureValidToken();
-      } else {
-        print('📱 Offline - skipping server token validation');
+      if (await TokenStorage.isTokenExpired()) {
+        print('⏰ Stored token expired, clearing session');
+        await TokenStorage.clearLoginData();
       }
     } catch (e) {
       print('❌ Startup token validation error: $e');
@@ -267,38 +224,39 @@ class AuthManager {
     // Clear all stored tokens
     await TokenStorage.clearLoginData();
 
-    // Show user notification if context is available
-    if (context != null && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '🔐 Session expired. Please log in again.',
-            style: TextStyle(fontFamily: "Sans"),
-          ),
-          backgroundColor: Colors.orange[700],
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          duration: Duration(seconds: 4),
-        ),
-      );
-
-      // Redirect to login screen
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => LoginScreen()),
-        (route) => false,
-      );
+    if (context == null || !context.mounted) {
+      FarmerApi.onUnauthorized?.call();
+      return;
     }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '🔐 Session expired. Please log in again.',
+          style: TextStyle(fontFamily: "Sans"),
+        ),
+        backgroundColor: Colors.orange[700],
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        duration: Duration(seconds: 4),
+      ),
+    );
+
+    // Redirect to login screen
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+      (route) => false,
+    );
   }
 
   /// Logout user and clear all data
   static Future<void> logout({BuildContext? context}) async {
     print('👋 User logging out...');
 
-    await TokenStorage.clearLoginData();
-    await CacheService.clearCache();
+    await AuthService.logout();
 
     if (context != null && context.mounted) {
       Navigator.pushAndRemoveUntil(

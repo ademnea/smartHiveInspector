@@ -6,7 +6,7 @@ import 'package:HPGM/notifications/notification_screen.dart';
 import 'package:HPGM/analytics/navigation_helper.dart';
 import 'package:HPGM/navbar.dart';
 import 'package:HPGM/profile.dart';
-import 'package:HPGM/services/token_storage.dart';
+import 'package:HPGM/Services/token_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:HPGM/bee_counter/hive_selection_screen.dart';
 

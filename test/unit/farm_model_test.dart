@@ -52,4 +52,44 @@ void main() {
     expect(json['longitude'], 36.789);
     expect(json.containsKey('longtitude'), isFalse);
   });
+
+  test('Farm.fromJson accepts a farmer API apiary with missing fields', () {
+    final farm = Farm.fromJson({'id': '4', 'name': 'North', 'hives_count': 6});
+
+    expect(farm.id, 4);
+    expect(farm.name, 'North');
+    expect(farm.hivesCount, 6);
+    expect(farm.district, '');
+    expect(farm.address, '');
+    expect(farm.latitude, isNull);
+  });
+
+  test('Farm.fromJson reads a real farmer API apiary', () {
+    final farm = Farm.fromJson({
+      'id': 7,
+      'name': 'Mukono Central Apiary',
+      'apiary_code': 'MCA',
+      'country': 'UG',
+      'region': 'Central Region',
+      'district': null,
+      'farmer_id': 10,
+      'description': null,
+      'managing_entity': 'Makerere University',
+      'status': 'Active',
+      'created_at': '2026-10-01T05:32:09.000000Z',
+      'updated_at': '2026-10-01T05:32:09.000000Z',
+      'deleted_at': null,
+      'hives_count': 6,
+    });
+
+    expect(farm.id, 7);
+    expect(farm.ownerId, 10);
+    expect(farm.apiaryCode, 'MCA');
+    expect(farm.status, 'Active');
+    expect(farm.hivesCount, 6);
+    // No district or address: fall back to region and country.
+    expect(farm.district, 'Central Region');
+    expect(farm.address, 'UG');
+    expect(farm.description, isNull);
+  });
 }

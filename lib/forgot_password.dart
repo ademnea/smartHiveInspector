@@ -1,7 +1,7 @@
 import 'package:HPGM/components/custom_text_field.dart';
+import 'package:HPGM/api/farmer_api.dart';
+import 'package:HPGM/reset_password.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-// import 'dart:convert';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class ForgotPassword extends StatefulWidget {
@@ -65,7 +65,9 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                               : () async {
                                 setState(() => _isSubmitting = true);
                                 await _handlePasswordReset();
-                                setState(() => _isSubmitting = false);
+                                if (mounted) {
+                                  setState(() => _isSubmitting = false);
+                                }
                               },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color.fromARGB(
@@ -89,7 +91,15 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 10),
+                  TextButton(
+                    onPressed: () => _openResetScreen(),
+                    child: const Text(
+                      'I already have a reset link',
+                      style: TextStyle(color: Color.fromARGB(255, 206, 109, 40)),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -131,40 +141,37 @@ class _ForgotPasswordState extends State<ForgotPassword> {
     }
 
     try {
-      final response = await http.post(
-        Uri.parse('http://196.43.168.57/api/v1/forgot-password'),
-        headers: {'Accept': 'application/json'},
-        body: {'email': email},
+      // Always 200 with the same message, whether or not the email exists.
+      final message = await FarmerApi.instance.forgotPassword(email);
+      if (!mounted) return;
+      _toast(
+        message ?? 'If that email is registered, a reset link has been sent.',
+        Colors.green,
       );
-
-      if (response.statusCode == 200) {
-        Fluttertoast.showToast(
-          msg: "Password reset email sent successfully",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.CENTER,
-          backgroundColor: Colors.green,
-          textColor: Colors.white,
-          fontSize: 16.0,
-        );
-      } else {
-        Fluttertoast.showToast(
-          msg: "Failed to send reset email",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.CENTER,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 16.0,
-        );
-      }
-    } catch (e) {
-      Fluttertoast.showToast(
-        msg: "Network error: $e",
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.CENTER,
-        backgroundColor: Colors.red,
-        textColor: Colors.white,
-        fontSize: 16.0,
-      );
+      _openResetScreen();
+    } on ApiException catch (e) {
+      // 429 means too many requests (5 per minute): wait before retrying.
+      _toast(e.fieldError('email') ?? e.message, Colors.red);
     }
+  }
+
+  void _openResetScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ResetPasswordScreen(email: emailController.text.trim()),
+      ),
+    );
+  }
+
+  void _toast(String msg, Color color) {
+    Fluttertoast.showToast(
+      msg: msg,
+      toastLength: Toast.LENGTH_LONG,
+      gravity: ToastGravity.CENTER,
+      backgroundColor: color,
+      textColor: Colors.white,
+      fontSize: 16.0,
+    );
   }
 }

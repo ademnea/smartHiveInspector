@@ -1,11 +1,12 @@
+import 'package:HPGM/config/api_config.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
 import 'Services/auth_manager.dart';
 import 'Services/connectivity_service.dart';
-import 'services/cache_service.dart';
-import 'services/offline_queue_service.dart';
+import 'Services/cache_service.dart';
+import 'Services/offline_queue_service.dart';
 
 class AddHiveForm extends StatefulWidget {
   final int farmId;
@@ -415,7 +416,7 @@ class _AddHiveFormState extends State<AddHiveForm> {
 
       try {
         final response = await AuthManager.post(
-          'http://196.43.168.57/api/v1/hives',
+          '${ApiConfig.legacyHost}/api/v1/hives',
           body: hiveData,
           context: context,
         );

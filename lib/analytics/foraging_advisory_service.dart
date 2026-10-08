@@ -1,4 +1,5 @@
 // This file contains all foraging analysis models and services
+import 'package:HPGM/config/api_config.dart';
 import 'dart:convert';
 import 'dart:math';
 import 'package:http/http.dart' as http;
@@ -261,7 +262,7 @@ class EnhancedForagingAdvisoryService {
   List<DailyRecommendation> _recommendations = [];
   List<DailyRecommendation> get recommendations => _recommendations;
 
-  final String baseUrl = 'http://196.43.168.57/api/v1';
+  String get baseUrl => '${ApiConfig.legacyHost}/api/v1';
 
   static const Map<String, Map<String, double>> enhancedThresholds = {
     'temperature': {
