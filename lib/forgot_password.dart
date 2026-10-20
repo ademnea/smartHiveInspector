@@ -41,7 +41,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                   ),
                   const SizedBox(height: 15),
                   const Text(
-                    'Enter your email to receive a reset link',
+                    'Enter your email to receive a reset code',
                     style: TextStyle(fontSize: 16),
                   ),
                   const SizedBox(height: 40),
@@ -95,8 +95,10 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                   TextButton(
                     onPressed: () => _openResetScreen(),
                     child: const Text(
-                      'I already have a reset link',
-                      style: TextStyle(color: Color.fromARGB(255, 206, 109, 40)),
+                      'I already have a reset code',
+                      style: TextStyle(
+                        color: Color.fromARGB(255, 206, 109, 40),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -145,7 +147,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
       final message = await FarmerApi.instance.forgotPassword(email);
       if (!mounted) return;
       _toast(
-        message ?? 'If that email is registered, a reset link has been sent.',
+        message ?? 'If that email is registered, a reset code has been sent.',
         Colors.green,
       );
       _openResetScreen();

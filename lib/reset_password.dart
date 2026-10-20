@@ -1,13 +1,10 @@
 import 'package:HPGM/api/farmer_api.dart';
 import 'package:HPGM/login.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
-/// Sets a new password using the token from the reset email.
-///
-/// The email links to /reset-password?token=…&email=…. Once the deep link is
-/// registered it will open this screen with both values filled in; until
-/// then the farmer can paste the token from the link.
+/// Sets a new password using the six-digit code from the reset email.
 class ResetPasswordScreen extends StatefulWidget {
   final String? email;
   final String? token;
@@ -74,8 +71,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         };
       });
       if (e.status == 422 && !_serverErrors.containsKey('password')) {
-        // Invalid or expired link.
-        _showExpiredLink(e.message);
+        // Invalid or expired code.
+        _showInvalidCode(e.message);
       } else if (_serverErrors.isEmpty) {
         Fluttertoast.showToast(
           msg: e.message,
@@ -86,14 +83,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     }
   }
 
-  Future<void> _showExpiredLink(String message) {
+  Future<void> _showInvalidCode(String message) {
     return showDialog<void>(
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Reset link not valid'),
+            title: const Text('Reset code not valid'),
             content: Text(
-              '$message\n\nThe link may have expired. Request a new one?',
+              '$message\n\nThe code may have expired. Request a new one?',
             ),
             actions: [
               TextButton(
@@ -105,7 +102,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   Navigator.pop(context);
                   await _resend();
                 },
-                child: const Text('Send new link'),
+                child: const Text('Send new code'),
               ),
             ],
           ),
@@ -118,7 +115,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         _emailController.text.trim(),
       );
       Fluttertoast.showToast(
-        msg: message ?? 'A new reset link has been sent.',
+        msg: message ?? 'A new reset code has been sent.',
         backgroundColor: Colors.green,
         textColor: Colors.white,
       );
@@ -156,7 +153,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Text(
-                  'Enter the token from your reset email and choose a new password.',
+                  'Enter the six-digit code sent to your email and choose a new password.',
                   style: TextStyle(fontSize: 15, color: Colors.grey),
                 ),
                 const SizedBox(height: 24),
@@ -175,13 +172,19 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 const SizedBox(height: 16),
                 _field(
                   controller: _tokenController,
-                  label: 'Reset token',
+                  label: 'Six-digit code',
                   icon: Icons.vpn_key,
                   apiField: 'token',
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(6),
+                  ],
+                  maxLength: 6,
                   validator:
                       (v) =>
-                          v == null || v.trim().isEmpty
-                              ? 'Paste the token from the email link'
+                          v == null || !RegExp(r'^\d{6}$').hasMatch(v)
+                              ? 'Enter the six-digit code from your email'
                               : null,
                 ),
                 const SizedBox(height: 16),
@@ -252,12 +255,16 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     String? apiField,
     bool obscure = false,
     TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
+    int? maxLength,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
       obscureText: obscure && _obscure,
       keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
+      maxLength: maxLength,
       validator: validator,
       forceErrorText: apiField == null ? null : _serverErrors[apiField],
       onChanged:
@@ -266,6 +273,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               : (_) => setState(() => _serverErrors.remove(apiField)),
       decoration: InputDecoration(
         labelText: label,
+        counterText: maxLength == null ? null : '',
         filled: true,
         fillColor: Colors.brown.shade100,
         prefixIcon: Icon(icon, color: Colors.brown),

@@ -6,17 +6,16 @@
 class ApiConfig {
   static const String _override = String.fromEnvironment('API_BASE_URL');
 
-  // Deployed backend.
-  static const String _production =
-      'https://smarthive.iot-ra.net/api/v1/farmer';
+  // Local backend.
+  static const String _local = 'http://127.0.0.1:8000/api/v1/farmer';
 
   // Old API server, still used by screens not yet moved to the farmer API.
-  // Disabled: those calls now go to the deployed backend instead.
+  // Disabled: those calls now go to the local backend instead.
   // static const String _legacyServer = 'http://196.43.168.57';
 
-  /// Host for the old `/api/v1/...` endpoints. Currently the deployed backend.
+  /// Host for the old `/api/v1/...` endpoints. Currently the local backend.
   static String get legacyHost => Uri.parse(baseUrl).origin;
 
   static String get baseUrl =>
-      _override.isNotEmpty ? _override : _production;
+      _override.isNotEmpty ? _override : _local;
 }

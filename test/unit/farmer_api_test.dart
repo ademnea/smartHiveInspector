@@ -192,6 +192,26 @@ void main() {
     );
   });
 
+  test('password reset submits the six-digit code as token', () async {
+    respondWith((_) => _json({'message': 'Password updated.'}, 200));
+
+    await api.resetPassword(
+      email: 'a@example.com',
+      token: '012345',
+      password: 'new-password',
+      passwordConfirmation: 'new-password',
+    );
+
+    expect(requests.single.method, 'POST');
+    expect(requests.single.url.path, endsWith('/password/reset'));
+    expect(jsonDecode(requests.single.body), {
+      'email': 'a@example.com',
+      'token': '012345',
+      'password': 'new-password',
+      'password_confirmation': 'new-password',
+    });
+  });
+
   test('logout clears local session even if the server call fails', () async {
     await TokenStorage.saveLoginData(token: 'tok-abc');
     respondWith((_) => http.Response('', 500));
@@ -209,7 +229,12 @@ void main() {
           'data': [
             {'id': 1, 'name': 'North', 'hives_count': 4},
           ],
-          'meta': {'current_page': 1, 'last_page': 3, 'per_page': 25, 'total': 51},
+          'meta': {
+            'current_page': 1,
+            'last_page': 3,
+            'per_page': 25,
+            'total': 51,
+          },
         }, 200),
       );
 
@@ -220,7 +245,10 @@ void main() {
       expect(page.lastPage, 3);
       expect(page.total, 51);
       expect(page.hasMore, isTrue);
-      expect(requests.single.url.queryParameters, {'page': '1', 'per_page': '25'});
+      expect(requests.single.url.queryParameters, {
+        'page': '1',
+        'per_page': '25',
+      });
     });
 
     test('parses envelope A (paginator inside data)', () async {
